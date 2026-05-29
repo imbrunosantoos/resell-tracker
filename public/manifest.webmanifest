@@ -1,0 +1,18 @@
+{
+  "name": "ReSell — tracker de revenda",
+  "short_name": "ReSell",
+  "description": "Custo real, margem, lucro e dias até vender. Para uma operação de revenda.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0C10",
+  "theme_color": "#0A0C10",
+  "lang": "pt",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
