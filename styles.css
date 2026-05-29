@@ -1,0 +1,275 @@
+/* =========================================================
+   ReSell — tracker de revenda
+   Tema escuro, acento azul elétrico. Vanilla CSS.
+   ========================================================= */
+
+:root {
+  /* superfícies */
+  --bg:         #0A0C10;
+  --surface:    #14171F;
+  --surface-2:  #1A1E28;
+  --line:       #262C38;
+  --line-soft:  #1C212C;
+
+  /* texto */
+  --text:  #ECEEF2;
+  --muted: #8B93A1;
+  --dim:   #59616F;
+
+  /* acentos */
+  --accent:      #3B82F6;
+  --accent-2:    #60A5FA;
+  --accent-soft: rgba(59, 130, 246, 0.12);
+  --pos:         #3FD68C;
+  --neg:         #FB7185;
+
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  --radius:    14px;
+  --radius-sm: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Archivo", system-ui, sans-serif;
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(1100px 520px at 50% -260px, rgba(59, 130, 246, 0.10), transparent 70%),
+    var(--bg);
+  min-height: 100vh;
+  padding-bottom: 64px;
+}
+
+/* grelha subtil de fundo, esbatida no topo */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(var(--line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+  background-size: 46px 46px;
+  opacity: 0.5;
+  -webkit-mask: radial-gradient(circle at 50% -10%, #000, transparent 75%);
+          mask: radial-gradient(circle at 50% -10%, #000, transparent 75%);
+  pointer-events: none;
+}
+
+.container { max-width: 1180px; margin: 0 auto; padding: 0 22px; }
+
+/* ---------- Cabeçalho ---------- */
+.topo {
+  padding: 34px 0 26px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 26px;
+}
+.marca { display: flex; align-items: baseline; gap: 12px; }
+.marca h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.6px; }
+.ponto { color: var(--accent); }
+.tagline {
+  font-size: 12.5px; color: var(--muted); font-weight: 500;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+
+.cartoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+.cartao {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 15px 17px;
+  transition: border-color 0.18s, transform 0.18s;
+}
+.cartao:hover { border-color: #313a48; transform: translateY(-2px); }
+.cartao-label {
+  display: block; font-size: 11px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600;
+}
+.cartao-valor {
+  display: block; font-family: var(--mono); font-size: 25px;
+  font-weight: 600; margin-top: 6px;
+}
+.cartao.destaque {
+  border-color: rgba(59, 130, 246, 0.4);
+  background: var(--accent-soft);
+}
+.cartao.destaque .cartao-valor { color: var(--accent-2); }
+
+.barra-acoes {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  margin-top: 18px;
+}
+
+/* ---------- Blocos ---------- */
+.bloco { margin-bottom: 30px; }
+.bloco > h2 {
+  font-size: 13px; text-transform: uppercase; letter-spacing: 0.9px;
+  color: var(--muted); font-weight: 700; margin-bottom: 14px;
+}
+
+/* ---------- Campos / inputs ---------- */
+.campo { display: flex; flex-direction: column; gap: 6px; }
+.campo > span {
+  font-size: 11px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+}
+.campo.inline { flex-direction: row; align-items: center; gap: 8px; }
+
+input {
+  font-family: inherit; font-size: 14px; color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+input::placeholder { color: var(--dim); }
+input.num { font-family: var(--mono); text-align: right; }
+input.pequeno { width: 76px; }
+input[type="date"] { font-family: var(--mono); color-scheme: dark; }
+
+/* ---------- Botões ---------- */
+.btn {
+  font-family: inherit; font-weight: 600; font-size: 13.5px;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 9px 15px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+.btn:hover { border-color: #38414f; }
+.btn:active { transform: scale(0.98); }
+.btn.primario {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+.btn.primario:hover { background: var(--accent-2); border-color: var(--accent-2); }
+.btn.fantasma {
+  background: transparent; border-color: transparent;
+  color: var(--muted); padding: 7px 9px;
+}
+.btn.fantasma:hover { color: var(--neg); }
+
+/* ---------- Formulário novo pedido ---------- */
+.form-novo {
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+.form-novo .campo input { min-width: 130px; }
+
+/* ---------- Lucro por categoria ---------- */
+.categorias { display: flex; flex-direction: column; gap: 10px; }
+.cat-linha { display: grid; grid-template-columns: 170px 1fr 90px; align-items: center; gap: 12px; }
+.cat-nome { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.cat-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.cat-barra { height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.cat-barra > span { display: block; height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+.cat-valor { font-family: var(--mono); font-size: 14px; text-align: right; }
+
+/* ---------- Cartão de pedido ---------- */
+.pedido {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 14px;
+  animation: surge 0.4s ease both;
+}
+.pedido-topo {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  flex-wrap: wrap; gap: 16px; margin-bottom: 14px;
+}
+.pedido-info { flex: 1; min-width: 240px; }
+.pedido-titulo { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.pedido-titulo input {
+  background: transparent; border: 1px solid transparent;
+  font-size: 19px; font-weight: 700; padding: 3px 6px;
+  width: auto; min-width: 140px; flex: 0 1 auto;
+}
+.pedido-titulo input:hover { border-color: var(--line); }
+.pedido-titulo input:focus { background: var(--bg); border-color: var(--accent); }
+.pedido-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+
+.pills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.pill {
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 7px 12px;
+  text-align: right; min-width: 82px;
+}
+.pill-label {
+  font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+}
+.pill-valor { font-family: var(--mono); font-size: 15px; font-weight: 600; margin-top: 2px; }
+.pill.azul { border-color: rgba(59, 130, 246, 0.35); }
+.pill.azul .pill-valor { color: var(--accent-2); }
+
+/* ---------- Tabela de itens ---------- */
+.tabela-scroll { overflow-x: auto; margin: 0 -4px; }
+table { width: 100%; border-collapse: collapse; min-width: 820px; }
+th {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--muted); font-weight: 600; text-align: left;
+  padding: 7px 8px; border-bottom: 1px solid var(--line);
+}
+th.dir, td.dir { text-align: right; }
+td { padding: 6px 8px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { transition: background 0.12s; }
+tbody tr:hover { background: rgba(255, 255, 255, 0.015); }
+
+.td-nome { display: flex; align-items: center; gap: 8px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+td input.w-nome { width: 150px; }
+td input.w-cat  { width: 140px; }
+td input.w-num  { width: 96px; }
+td input.w-data { width: 144px; }
+
+.calc { font-family: var(--mono); font-size: 14px; font-weight: 500; }
+.calc.dim { color: var(--muted); }
+.pos { color: var(--pos); }
+.neg { color: var(--neg); }
+
+.add-item { margin-top: 12px; }
+
+/* ---------- Estados / rodapé ---------- */
+.vazio {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--dim); font-size: 14px; padding: 18px 4px;
+}
+.pequeno { font-size: 12.5px; }
+.dim { color: var(--dim); }
+.rodape {
+  text-align: center; color: var(--dim); font-size: 12.5px;
+  padding-top: 12px; border-top: 1px solid var(--line-soft);
+}
+
+@keyframes surge {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pedido { animation: none; }
+  .cartao:hover { transform: none; }
+}
+
+@media (max-width: 600px) {
+  .marca h1 { font-size: 24px; }
+  .pills { justify-content: flex-start; }
+  .cat-linha { grid-template-columns: 120px 1fr 80px; }
+}
