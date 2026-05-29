@@ -20,8 +20,10 @@ export async function GET(request) {
     });
   }
 
-  // JSON: backup completo, igual ao que o importador aceita.
-  return new NextResponse(JSON.stringify(estado, null, 2), {
+  // JSON: backup completo, igual ao que o importador aceita. As credenciais
+  // ficam de fora de propósito — não faz sentido exportar passwords em claro.
+  const { credenciais, ...backup } = estado;
+  return new NextResponse(JSON.stringify(backup, null, 2), {
     headers: {
       "Content-Type": "application/json",
       "Content-Disposition": `attachment; filename="resell-tracker-${hoje}.json"`,
