@@ -1,0 +1,17 @@
+# dependências
+/node_modules
+
+# build do Next
+/.next
+/out
+
+# base de dados local (cada instalação tem a sua)
+/data
+
+# ambiente
+.env
+.env.local
+
+# sistema
+.DS_Store
+*.log
