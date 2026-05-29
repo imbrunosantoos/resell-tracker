@@ -18,16 +18,21 @@ E ao nível do negócio:
 - Resumo global: investido, stock por vender, receita, lucro das vendas, despesas fixas e **lucro real** (depois de tudo)
 - **Lucro por categoria**, com barras, **sell-through** (% já vendido) e dias médios por categoria
 - **Gráfico de lucro acumulado** semana a semana
-- Lucro real dividido pelo nº de sócios
+- **Relatório mensal** — lucro e nº de vendas deste mês vs. o anterior
+- **Lucro por sócio** — cada pedido feito com um sócio divide o lucro a meias; os pedidos a solo são 100% teus
 
 ## Funcionalidades
 
 - Pedidos com data de compra, data de chegada, taxa de PayPal e custo de saco
-- Itens com categoria livre, com sugestões
+- **Sócio por pedido** — escolhes com quem foi feito (ou sozinho); o lucro reparte-se a meias automaticamente
+- Itens com categoria livre, **foto** (qualquer formato) e **notas**
 - **Tabela ordenável** — clica num cabeçalho (margem, dias, custo…) para ordenar os itens
+- **Seleção múltipla** — escolhe vários itens e muda a categoria de todos de uma vez
+- **Pesquisa e filtros** — por texto, por estado (em stock / vendido) e por categoria
 - **Marcar como vendido** num clique — modal pequeno com preço + data (sugere já o preço mínimo e a data de hoje)
 - **Alerta de stock parado** — itens por vender há mais de X dias (configurável) ficam destacados com um badge
-- **Despesas fixas** recorrentes (chip, domínio, embalagens…) que saem do lucro real
+- **Despesas fixas** recorrentes (chip, domínio, embalagens…) que saem do lucro real — as mensais contam por cada mês ativo, as únicas uma vez
+- **Cofre de contas** — guarda logins/passwords por plataforma e por sócio; as passwords ficam **cifradas (AES-256)** no servidor
 - **Exportar** backup em **JSON** ou em **CSV** (uma linha por item, com as colunas já calculadas — abre direto no Excel/Sheets) e importar de volta
 - **Vários utilizadores**, cada um com o seu login, a partilhar os mesmos dados do negócio
 - **PWA** — instalável no telemóvel sem loja nenhuma
@@ -69,13 +74,19 @@ No telemóvel podes ainda usar "Adicionar ao ecrã principal" para instalar como
 
 ## Onde ficam os dados
 
-Numa base de dados SQLite em `data/resell.db` (criada no primeiro arranque, fora do git). Faz uma cópia desse ficheiro — ou usa o botão **Exportar JSON** — para teres backup.
+Tudo dentro da pasta `data/` (criada no primeiro arranque, fora do git):
+
+- `data/resell.db` — a base de dados SQLite (pedidos, itens, sócios, despesas, contas)
+- `data/uploads/` — as fotos das peças
+- `data/.chave` — a chave que cifra as passwords das contas (**não a percas nem a partilhes**)
+
+Faz uma cópia da pasta `data/` para teres backup completo. O botão **Exportar JSON** guarda os dados do negócio (pedidos, itens, sócios, despesas), mas **não** as passwords das contas — essas só com a cópia da BD + chave.
 
 ## Stack
 
 - **Next.js** (App Router) — páginas, API e renderização no servidor
 - **SQLite** via `node:sqlite` — sem dependências nativas para compilar; vem com o Node
-- **bcryptjs** — passwords cifradas
+- **bcryptjs** — passwords de login cifradas; **AES-256-GCM** (`node:crypto`) para as passwords das contas
 - Sem bibliotecas de UI nem de gráficos: o tema escuro é CSS à mão e o gráfico é SVG desenhado no próprio componente
 
 ## Estrutura
@@ -91,24 +102,26 @@ resell-tracker/
 ├── lib/
 │   ├── db.js                 ligação ao SQLite + migrações
 │   ├── repo.js               leituras/escritas (snake_case ↔ camelCase)
-│   ├── calculos.js           custo real, margem, dias, resumos, série de lucro
-│   ├── auth.js               sessões e passwords
+│   ├── calculos.js           custo real, margem, dias, resumos, lucro por sócio
+│   ├── auth.js               sessões e passwords de login
+│   ├── cripto.js             cifra das passwords das contas (AES-256)
+│   ├── fotos.js              guardar/servir as fotos das peças
 │   └── cores.js              cor estável por categoria
 ├── middleware.js             protege as rotas (sem sessão → /login)
 ├── public/                   manifest, service worker e ícone (PWA)
-└── data/resell.db            base de dados (gerada localmente)
+└── data/                     base de dados, fotos e chave (gerados localmente)
 ```
 
 ## Notas
 
-- As **despesas fixas** são subtraídas ao lucro como um total; o campo "período" (por mês / uma vez) é informativo, para te orientares.
+- As **despesas mensais** são contadas por cada mês que a operação leva ativa (desde a data mais antiga); as **únicas** contam uma só vez.
+- As **despesas não se dividem** pelos sócios — são overhead teu; a divisão a meias aplica-se só ao lucro das vendas de cada pedido.
 - A sincronização entre dispositivos é por *polling*: a app recarrega o estado de tempos a tempos e sempre que gravas algo, por isso o que o teu sócio mete aparece-te pouco depois.
 
 ## Ideias para o futuro
 
-- Notas/fotos por item
-- Filtros e pesquisa global por categoria ou estado
-- Relatório mensal (lucro do mês, comparação com o anterior)
+- Plataforma de venda por item (Vinted, OLX…) com taxas próprias
+- Metas mensais com barra de progresso
 - Sincronização em tempo real (websockets) em vez de polling
 
 ## Licença
