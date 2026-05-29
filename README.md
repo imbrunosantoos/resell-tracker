@@ -51,6 +51,22 @@ npm run build
 npm start
 ```
 
+### Aceder do telemóvel (rede local)
+
+Para usares a app no telemóvel sem domínio nem HTTPS, na mesma rede Wi-Fi:
+
+1. Copia `.env.example` para `.env.local` e põe `COOKIE_INSEGURO=1` (sem isto, em produção o browser recusa o cookie de sessão por HTTP e o login não funciona).
+2. Arranca o servidor a ouvir em toda a rede:
+   ```bash
+   npm run build
+   npx next start -H 0.0.0.0
+   ```
+3. Descobre o IP do PC (ex: `ipconfig getifaddr en0` no Mac) e no telemóvel abre `http://<ip-do-pc>:3000`.
+
+No telemóvel podes ainda usar "Adicionar ao ecrã principal" para instalar como app (PWA).
+
+> Quando passares para um domínio com HTTPS, volta a pôr `COOKIE_INSEGURO=0` — é mais seguro.
+
 ## Onde ficam os dados
 
 Numa base de dados SQLite em `data/resell.db` (criada no primeiro arranque, fora do git). Faz uma cópia desse ficheiro — ou usa o botão **Exportar JSON** — para teres backup.
