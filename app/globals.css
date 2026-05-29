@@ -356,10 +356,97 @@ td input.w-data { width: 144px; }
   .cartao:hover { transform: none; }
 }
 
+/* ---------- Relatório mensal ---------- */
+.relatorio { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.rel-cartao {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 15px 17px; display: flex; flex-direction: column; gap: 4px;
+}
+.rel-cartao .cartao-valor { font-size: 22px; }
+.rel-extra { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+
+/* ---------- Sócios ---------- */
+.socios-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.socio-linha {
+  display: grid; grid-template-columns: 1fr 130px 110px 40px; gap: 10px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 8px 12px;
+}
+.socio-linha.eu { border-color: rgba(59, 130, 246, 0.35); background: var(--accent-soft); }
+.socio-nome { font-size: 14px; font-weight: 600; }
+.socio-nome-input { background: transparent; border: 1px solid transparent; font-weight: 600; }
+.socio-nome-input:hover { border-color: var(--line); }
+.socio-nome-input:focus { background: var(--bg); border-color: var(--accent); }
+.socio-pedidos { font-size: 12px; color: var(--muted); font-family: var(--mono); text-align: right; }
+.socio-lucro { font-family: var(--mono); font-size: 15px; font-weight: 600; text-align: right; }
+
+.form-inline { display: flex; gap: 10px; flex-wrap: wrap; }
+.form-inline input { min-width: 200px; }
+
+/* ---------- Filtros ---------- */
+.filtros { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+.filtro-pesquisa { flex: 1; min-width: 220px; }
+
+/* ---------- Cofre de contas / credenciais ---------- */
+.cofre { display: flex; flex-direction: column; gap: 12px; }
+.cofre-topo { display: flex; align-items: center; gap: 12px; }
+.cofre-tabela { min-width: 720px; }
+.cofre-tabela th { border-bottom: 1px solid var(--line); }
+.cofre-tabela td { padding: 5px 8px; }
+.cofre-tabela input, .cofre-tabela select { width: 100%; padding: 7px 9px; }
+.cofre-pass { display: flex; align-items: center; gap: 2px; }
+.cofre-pass input { font-family: var(--mono); }
+.cofre-nova {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  border-top: 1px dashed var(--line); padding-top: 12px;
+}
+.cofre-nova input { min-width: 150px; flex: 1; }
+
+/* ---------- Seleção múltipla na tabela de itens ---------- */
+.col-check { width: 32px; text-align: center; }
+.col-check input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+tbody tr.selecionado { background: var(--accent-soft); }
+.bulk-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--accent-soft); border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 12px; font-size: 13.5px;
+}
+.bulk-bar input { width: 180px; }
+
+/* ---------- Foto + notas do item ---------- */
+.td-item { display: flex; align-items: flex-start; gap: 10px; }
+.td-item-campos { display: flex; flex-direction: column; gap: 4px; }
+.w-notas {
+  width: 200px; font-size: 12px; padding: 5px 8px;
+  background: transparent; border: 1px solid transparent; color: var(--muted);
+}
+.w-notas:hover { border-color: var(--line); }
+.w-notas:focus { background: var(--bg); border-color: var(--accent); color: var(--text); }
+
+.foto-item { position: relative; flex-shrink: 0; }
+.foto-item img {
+  width: 46px; height: 46px; object-fit: cover; border-radius: var(--radius-sm);
+  border: 1px solid var(--line); cursor: pointer; display: block;
+}
+.foto-add {
+  width: 46px; height: 46px; border-radius: var(--radius-sm);
+  border: 1px dashed var(--line); background: var(--surface-2);
+  color: var(--muted); cursor: pointer; font-size: 18px;
+}
+.foto-add:hover { border-color: var(--accent); color: var(--accent-2); }
+.foto-x {
+  position: absolute; top: -6px; right: -6px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--neg); color: #fff; border: none; cursor: pointer;
+  font-size: 10px; line-height: 1; display: flex; align-items: center; justify-content: center;
+}
+
 @media (max-width: 600px) {
   .marca h1 { font-size: 24px; }
   .pills { justify-content: flex-start; }
   .cat-linha { grid-template-columns: 120px 1fr 80px; }
   .despesa-linha { grid-template-columns: 1fr 90px 40px; }
   .despesa-linha select { grid-column: 1 / -1; }
+  .socio-linha { grid-template-columns: 1fr 90px 36px; }
+  .socio-pedidos { display: none; }
 }

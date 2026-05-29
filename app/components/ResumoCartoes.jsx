@@ -21,8 +21,8 @@ export default function ResumoCartoes({ resumo }) {
         </div>
       ))}
       <div className="cartao destaque">
-        <span className="cartao-label">Lucro por pessoa</span>
-        <span className="cartao-valor">{eur(resumo.porPessoa)}</span>
+        <span className="cartao-label">O teu lucro</span>
+        <span className="cartao-valor">{eur(resumo.meuLucro)}</span>
       </div>
     </div>
   );

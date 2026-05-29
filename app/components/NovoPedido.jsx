@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-const INICIAL = { nome: "", dataCompra: "", dataChegada: "", taxaPaypal: "3.99", saco: "0.17" };
+const INICIAL = { nome: "", dataCompra: "", dataChegada: "", taxaPaypal: "3.99", saco: "0.17", socioId: "" };
 
-export default function NovoPedido({ onCriar }) {
+export default function NovoPedido({ socios, onCriar }) {
   const [form, setForm] = useState(INICIAL);
   const set = (campo) => (e) => setForm((f) => ({ ...f, [campo]: e.target.value }));
 
@@ -19,6 +19,15 @@ export default function NovoPedido({ onCriar }) {
       <label className="campo">
         <span>Nome do pedido</span>
         <input value={form.nome} onChange={set("nome")} placeholder="ex: Lote 02 — futebol" />
+      </label>
+      <label className="campo">
+        <span>Sócio</span>
+        <select value={form.socioId} onChange={set("socioId")}>
+          <option value="">Sozinho</option>
+          {socios.map((s) => (
+            <option key={s.id} value={s.id}>{s.nome}</option>
+          ))}
+        </select>
       </label>
       <label className="campo">
         <span>Data compra</span>
