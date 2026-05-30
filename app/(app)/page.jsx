@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEstado } from "@/app/components/contexto";
-import { eur, toNumber } from "@/lib/calculos";
+import { toNumber } from "@/lib/calculos";
 import ResumoCartoes from "@/app/components/ResumoCartoes";
 import RelatorioMensal from "@/app/components/RelatorioMensal";
 import GraficoMensal from "@/app/components/GraficoMensal";
@@ -42,19 +42,28 @@ export default function PaginaInicio() {
         <h2>Atalhos</h2>
         <div className="atalhos">
           <Link href="/pedidos" className="atalho">
-            <span className="atalho-num">{estado.pedidos.length}</span>
-            <span className="atalho-label">Pedidos</span>
-            <span className="atalho-sub">{emStock} de {totalItens} itens em stock</span>
+            <span className="atalho-icone">▦</span>
+            <span className="atalho-texto">
+              <span className="atalho-label">Pedidos</span>
+              <span className="atalho-sub">{emStock} de {totalItens} itens em stock</span>
+            </span>
+            <span className="atalho-seta">›</span>
           </Link>
           <Link href="/lucro" className="atalho">
-            <span className="atalho-num">{eur(resumo.lucroReal)}</span>
-            <span className="atalho-label">Lucro real</span>
-            <span className="atalho-sub">ver gráfico e categorias</span>
+            <span className="atalho-icone">📈</span>
+            <span className="atalho-texto">
+              <span className="atalho-label">Lucro</span>
+              <span className="atalho-sub">gráfico, sócios e categorias</span>
+            </span>
+            <span className="atalho-seta">›</span>
           </Link>
           <Link href="/contas" className="atalho">
-            <span className="atalho-num">{estado.credenciais.length}</span>
-            <span className="atalho-label">Contas</span>
-            <span className="atalho-sub">logins guardados</span>
+            <span className="atalho-icone">🔑</span>
+            <span className="atalho-texto">
+              <span className="atalho-label">Contas</span>
+              <span className="atalho-sub">abrir o cofre de logins</span>
+            </span>
+            <span className="atalho-seta">›</span>
           </Link>
         </div>
       </section>

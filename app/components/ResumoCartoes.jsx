@@ -5,8 +5,8 @@ import { eur } from "@/lib/calculos";
 export default function ResumoCartoes({ resumo }) {
   const cartoes = [
     { label: "Investido", valor: eur(resumo.investido), cor: "ambar" },
-    { label: "Em stock", valor: eur(resumo.stock) },
-    { label: "Receita", valor: eur(resumo.receita) },
+    { label: "Em stock", valor: eur(resumo.stock), cor: "azul" },
+    { label: "Receita", valor: eur(resumo.receita), cor: "teal" },
     { label: "Lucro vendas", valor: eur(resumo.lucro), sinal: resumo.lucro },
     { label: "Despesas", valor: eur(resumo.despesasTotal), cor: "coral" },
     { label: "Lucro real", valor: eur(resumo.lucroReal), sinal: resumo.lucroReal },
