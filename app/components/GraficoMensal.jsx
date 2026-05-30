@@ -97,13 +97,15 @@ function VistaFluxo({ dados }) {
       <div className="barras fluxo">
         {dados.map((d) => (
           <div className="col" key={d.mes} title={`${rotulo(d.mes)} · recebido ${eur(d.recebido)} · investido ${eur(d.investido)}`}>
-            <span className="col-valor par">
-              <b className="pos">{eur(d.recebido)}</b>
-              <b className="neg">{eur(d.investido)}</b>
-            </span>
             <div className="pista par">
-              <span className="barra pos" style={{ height: `${Math.round((d.recebido / max) * 100)}%` }} />
-              <span className="barra neg" style={{ height: `${Math.round((d.investido / max) * 100)}%` }} />
+              <span className="fluxo-bar">
+                <span className="col-valor pos">{eur(d.recebido)}</span>
+                <span className="barra pos" style={{ height: `${Math.round((d.recebido / max) * 100)}%` }} />
+              </span>
+              <span className="fluxo-bar">
+                <span className="col-valor neg">{eur(d.investido)}</span>
+                <span className="barra neg" style={{ height: `${Math.round((d.investido / max) * 100)}%` }} />
+              </span>
             </div>
             <span className="col-mes">{rotulo(d.mes)}</span>
           </div>
