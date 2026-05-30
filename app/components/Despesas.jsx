@@ -2,18 +2,20 @@
 
 import { useState } from "react";
 
-// Despesas fixas/recorrentes (chip, domínio, sacos a granel...). O total sai
-// do lucro real lá em cima. Edição inline, debounce tratado pelo Dashboard.
-export default function Despesas({ despesas, onEditar, onCriar, onApagar }) {
+// Despesas fixas/recorrentes (chip, domínio, sacos a granel...). Podes marcar se
+// foi só tua ou dividida com um sócio (aí só metade sai do teu lucro). O total a
+// nível de negócio sai do "lucro real" lá em cima. Edição inline com debounce.
+export default function Despesas({ despesas, socios, onEditar, onCriar, onApagar }) {
   const [nome, setNome] = useState("");
   const [valor, setValor] = useState("");
   const [periodo, setPeriodo] = useState("mensal");
+  const [socioId, setSocioId] = useState("");
 
   function criar(e) {
     e.preventDefault();
     if (!nome.trim() && !valor) return;
-    onCriar({ nome, valor, periodo });
-    setNome(""); setValor(""); setPeriodo("mensal");
+    onCriar({ nome, valor, periodo, socioId });
+    setNome(""); setValor(""); setPeriodo("mensal"); setSocioId("");
   }
 
   return (
@@ -34,6 +36,16 @@ export default function Despesas({ despesas, onEditar, onCriar, onApagar }) {
             <select value={d.periodo} onChange={(e) => onEditar(d.id, "periodo", e.target.value)}>
               <option value="mensal">por mês</option>
               <option value="unico">uma vez</option>
+            </select>
+            <select
+              value={d.socioId ?? ""}
+              title="Com quem dividiste esta despesa"
+              onChange={(e) => onEditar(d.id, "socioId", e.target.value)}
+            >
+              <option value="">Sozinho</option>
+              {socios.map((s) => (
+                <option key={s.id} value={s.id}>½ {s.nome}</option>
+              ))}
             </select>
             <button className="btn fantasma" title="Apagar despesa" onClick={() => onApagar(d.id)}>✕</button>
           </div>
@@ -57,6 +69,15 @@ export default function Despesas({ despesas, onEditar, onCriar, onApagar }) {
           <select value={periodo} onChange={(e) => setPeriodo(e.target.value)}>
             <option value="mensal">por mês</option>
             <option value="unico">uma vez</option>
+          </select>
+        </label>
+        <label className="campo">
+          <span>Com quem</span>
+          <select value={socioId} onChange={(e) => setSocioId(e.target.value)}>
+            <option value="">Sozinho</option>
+            {socios.map((s) => (
+              <option key={s.id} value={s.id}>½ com {s.nome}</option>
+            ))}
           </select>
         </label>
         <button className="btn" type="submit">+ Adicionar despesa</button>

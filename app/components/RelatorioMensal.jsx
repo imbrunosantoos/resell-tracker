@@ -1,6 +1,6 @@
 import { eur } from "@/lib/calculos";
 
-// Comparação rápida: lucro e nº de vendas deste mês vs. o mês passado.
+// Comparação rápida: o TEU lucro e nº de vendas deste mês vs. o mês passado.
 export default function RelatorioMensal({ relatorio }) {
   const { atual, anterior, variacao } = relatorio;
   const subiu = variacao >= 0;
@@ -8,7 +8,7 @@ export default function RelatorioMensal({ relatorio }) {
   return (
     <div className="relatorio">
       <div className="rel-cartao">
-        <span className="cartao-label">Lucro este mês <span className="dim">({atual.label})</span></span>
+        <span className="cartao-label">O teu lucro este mês <span className="dim">({atual.label})</span></span>
         <span className={"cartao-valor " + (atual.lucro >= 0 ? "pos" : "neg")}>{eur(atual.lucro)}</span>
         <span className="rel-extra">{atual.vendas} venda(s)</span>
       </div>

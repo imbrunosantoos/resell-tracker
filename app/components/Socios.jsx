@@ -20,9 +20,9 @@ export default function Socios({ socios, porSocio, meuLucro, onCriar, onEditar, 
     <>
       <div className="socios-lista">
         <div className="socio-linha eu">
-          <span className="socio-nome">🫵 Tu <span className="dim pequeno">(a solo + metades)</span></span>
+          <span className="socio-nome">Bubu</span>
           <span className="socio-pedidos" />
-          <span className="socio-lucro pos">{eur(meuLucro)}</span>
+          <span className={"socio-lucro " + (meuLucro < 0 ? "neg" : "pos")}>{eur(meuLucro)}</span>
           <span />
         </div>
 
