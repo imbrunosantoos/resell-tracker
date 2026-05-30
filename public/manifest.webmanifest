@@ -4,8 +4,8 @@
   "description": "Custo real, margem, lucro e dias até vender. Para uma operação de revenda.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0A0C10",
-  "theme_color": "#0A0C10",
+  "background_color": "#0E1116",
+  "theme_color": "#0E1116",
   "lang": "pt",
   "icons": [
     {
