@@ -1,14 +1,14 @@
 import { eur } from "@/lib/calculos";
 
 // Os cartões de resumo no topo. "Lucro real" = lucro das vendas menos as
-// despesas fixas; é esse que se divide pelos sócios.
+// despesas; o destaque "O teu lucro" é a tua parte (já líquida das despesas).
 export default function ResumoCartoes({ resumo }) {
   const cartoes = [
-    { label: "Investido", valor: eur(resumo.investido) },
+    { label: "Investido", valor: eur(resumo.investido), cor: "ambar" },
     { label: "Em stock", valor: eur(resumo.stock) },
     { label: "Receita", valor: eur(resumo.receita) },
     { label: "Lucro vendas", valor: eur(resumo.lucro), sinal: resumo.lucro },
-    { label: "Despesas fixas", valor: eur(resumo.despesasTotal) },
+    { label: "Despesas", valor: eur(resumo.despesasTotal), cor: "coral" },
     { label: "Lucro real", valor: eur(resumo.lucroReal), sinal: resumo.lucroReal },
   ];
 
@@ -17,7 +17,7 @@ export default function ResumoCartoes({ resumo }) {
       {cartoes.map((c) => (
         <div className="cartao" key={c.label}>
           <span className="cartao-label">{c.label}</span>
-          <span className={"cartao-valor" + classeSinal(c.sinal)}>{c.valor}</span>
+          <span className={"cartao-valor" + classe(c)}>{c.valor}</span>
         </div>
       ))}
       <div className="cartao destaque">
@@ -28,7 +28,9 @@ export default function ResumoCartoes({ resumo }) {
   );
 }
 
-function classeSinal(sinal) {
-  if (sinal === undefined) return "";
-  return sinal > 0 ? " pos" : sinal < 0 ? " neg" : "";
+// Cor explícita (âmbar/coral) tem prioridade; senão verde/vermelho pelo sinal.
+function classe(c) {
+  if (c.cor) return " " + c.cor;
+  if (c.sinal === undefined) return "";
+  return c.sinal > 0 ? " pos" : c.sinal < 0 ? " neg" : "";
 }

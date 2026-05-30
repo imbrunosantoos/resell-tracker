@@ -121,6 +121,8 @@ body::before {
 }
 .cartao.destaque .cartao-valor { color: var(--accent); }
 .cartao.destaque:hover { border-color: rgba(52, 211, 153, 0.65); }
+.cartao-valor.ambar { color: var(--aviso); }
+.cartao-valor.coral { color: var(--neg); }
 .cartao-valor.pos { color: var(--pos); }
 .cartao-valor.neg { color: var(--neg); }
 
@@ -250,12 +252,19 @@ select { color-scheme: dark; }
 .col-valor { font-family: var(--mono); font-size: 10.5px; color: var(--muted); white-space: nowrap; }
 .col-mes { font-family: var(--mono); font-size: 10.5px; color: var(--dim); }
 .pista { width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 5px; }
-.pista.par { align-items: flex-end; }
+.pista.par { align-items: stretch; gap: 8px; }
 .barra {
   width: 60%; max-width: 46px; border-radius: 7px 7px 3px 3px; min-height: 2px;
   transition: height 0.45s cubic-bezier(.4,0,.2,1);
 }
-.pista.par .barra { width: 42%; }
+/* vista fluxo: cada barra é uma coluna com o seu valor por cima */
+.fluxo-bar {
+  flex: 1; max-width: 52px; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 5px;
+}
+.fluxo-bar .barra { width: 100%; }
+.fluxo-bar .col-valor.pos { color: var(--accent); }
+.fluxo-bar .col-valor.neg { color: var(--neg); }
 .barra.pos { background: linear-gradient(180deg, var(--accent), var(--accent-2)); box-shadow: 0 0 16px -4px var(--accent-glow); }
 .barra.neg { background: linear-gradient(180deg, #FB7185, #E11D48); }
 /* vista lucro com valores negativos: zero no meio */
@@ -266,7 +275,7 @@ select { color-scheme: dark; }
 .par-zero .barra { width: 60%; max-width: 46px; }
 .par-zero .barra.neg { border-radius: 3px 3px 7px 7px; }
 
-/* ---------- Despesas fixas ---------- */
+/* ---------- Despesas ---------- */
 .despesas-lista { display: flex; flex-direction: column; gap: 8px; }
 .despesa-linha {
   display: grid; grid-template-columns: 1fr 110px 110px 130px 40px; gap: 10px; align-items: center;
@@ -538,6 +547,45 @@ tbody tr.selecionado { background: var(--accent-soft); }
 }
 .voltar:hover { color: var(--accent); }
 
+/* ---------- Início: grelha (gráfico + não vende) ---------- */
+.inicio-grelha { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: start; }
+.inicio-grelha .bloco { margin-bottom: 0; }
+
+/* ---------- Lista "Não vende" ---------- */
+.parado-lista { display: flex; flex-direction: column; gap: 8px; }
+.parado-linha {
+  display: flex; align-items: center; gap: 12px; text-decoration: none;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 9px 12px; transition: border-color 0.15s, transform 0.15s;
+}
+.parado-linha:hover { border-color: #3a4452; transform: translateX(2px); }
+.parado-capa {
+  width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; font-weight: 800; color: #05140E; font-size: 16px;
+}
+.parado-capa img { width: 100%; height: 100%; object-fit: cover; }
+.parado-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.parado-nome { font-size: 14px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.parado-sub { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.parado-nums { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.parado-custo { font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+.parado-todos { color: var(--accent); font-size: 12.5px; font-weight: 600; text-decoration: none; padding: 4px 2px; }
+
+/* ---------- Últimas vendas ---------- */
+.vendas-lista { display: flex; flex-direction: column; gap: 7px; }
+.venda-linha {
+  display: flex; align-items: center; gap: 12px; text-decoration: none;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 9px 14px; transition: border-color 0.15s, transform 0.15s;
+}
+.venda-linha:hover { border-color: #3a4452; transform: translateX(2px); }
+.venda-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.venda-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.venda-nome { font-size: 14px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.venda-sub { font-size: 11.5px; color: var(--muted); font-family: var(--mono); }
+.venda-preco { font-family: var(--mono); font-size: 14px; color: var(--text); }
+.venda-margem { font-family: var(--mono); font-size: 13px; min-width: 96px; text-align: right; }
+
 /* ---------- Início: atalhos ---------- */
 .atalhos { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
 .atalho {
@@ -656,8 +704,6 @@ tbody tr.selecionado { background: var(--accent-soft); }
 }
 
 /* valores empilhados (recebido/investido) por cima das barras do fluxo */
-.col-valor.par { display: flex; flex-direction: column; line-height: 1.25; text-align: center; }
-.col-valor.par b { font-size: 10px; font-weight: 600; }
 
 @media (max-width: 600px) {
   .marca h1 { font-size: 24px; }
@@ -674,4 +720,9 @@ tbody tr.selecionado { background: var(--accent-soft); }
   .nav-user { display: none; }
   .pl-nums { flex-direction: column; gap: 2px; }
   .itens-grelha { grid-template-columns: 1fr; }
+  .inicio-grelha { grid-template-columns: 1fr; gap: 30px; }
+}
+
+@media (max-width: 900px) {
+  .inicio-grelha { grid-template-columns: 1fr; gap: 30px; }
 }
