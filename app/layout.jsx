@@ -1,5 +1,20 @@
 import "./globals.css";
+import { Archivo, JetBrains_Mono } from "next/font/google";
 import RegistarSW from "./components/RegistarSW";
+
+// Fontes self-hosted (servidas pela própria app — rápidas e funcionam offline).
+const archivo = Archivo({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-archivo",
+  display: "swap",
+});
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata = {
   title: "ReSell · tracker de revenda",
@@ -17,14 +32,8 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="pt">
+    <html lang="pt" className={`${archivo.variable} ${jetbrains.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
         <link rel="apple-touch-icon" href="/icon.svg" />
       </head>
       <body>
