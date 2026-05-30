@@ -87,22 +87,37 @@ Faz uma cópia da pasta `data/` para teres backup completo. O botão **Exportar 
 - **Next.js** (App Router) — páginas, API e renderização no servidor
 - **SQLite** via `node:sqlite` — sem dependências nativas para compilar; vem com o Node
 - **bcryptjs** — passwords de login cifradas; **AES-256-GCM** (`node:crypto`) para as passwords das contas
-- Sem bibliotecas de UI nem de gráficos: o tema escuro é CSS à mão e o gráfico é SVG desenhado no próprio componente
+- Sem bibliotecas de UI nem de gráficos: o tema (dark premium, acento esmeralda) é CSS à mão e os gráficos são barras em CSS no próprio componente
+
+## Páginas
+
+A app está organizada por abas no topo, cada uma na sua página:
+
+- **Início** (`/`) — resumo: cartões (investido, stock, lucro real, o teu lucro…), "Este mês" e atalhos.
+- **Pedidos** (`/pedidos`) — criar pedido, filtrar/pesquisar e lista compacta. Clicas num pedido → **detalhe** (`/pedidos/[id]`) com os itens em cartões, **fotos grandes** (clique para ampliar), marcar vendido, etc.
+- **Lucro** (`/lucro`) — gráfico mês a mês (lucro / recebido vs investido), lucro por sócio, lucro por categoria e despesas fixas.
+- **Contas** (`/contas`) — logins e passwords por plataforma/sócio (cifradas).
+- **Definições** (`/definicoes`) — margem mínima, alerta de dias, exportar/importar backup e terminar sessão.
 
 ## Estrutura
 
 ```
 resell-tracker/
 ├── app/
-│   ├── page.jsx              dashboard (Server Component, garante a sessão)
+│   ├── layout.jsx            raiz (html, fontes, PWA)
 │   ├── login/                ecrã de entrada / criar conta
+│   ├── (app)/                páginas autenticadas (partilham o AppShell)
+│   │   ├── layout.jsx        garante a sessão + entrega o estado ao AppShell
+│   │   ├── page.jsx          Início
+│   │   ├── pedidos/          lista + [id] (detalhe)
+│   │   ├── lucro/  contas/  definicoes/
 │   ├── api/                  endpoints (estado, pedidos, itens, despesas, config, exportar…)
-│   ├── components/           Dashboard e os blocos de UI (cliente)
-│   └── globals.css           tema escuro + acento azul
+│   ├── components/           AppShell (estado), TopNav, páginas e blocos de UI
+│   └── globals.css           tema dark premium + acento esmeralda
 ├── lib/
 │   ├── db.js                 ligação ao SQLite + migrações
 │   ├── repo.js               leituras/escritas (snake_case ↔ camelCase)
-│   ├── calculos.js           custo real, margem, dias, resumos, lucro por sócio
+│   ├── calculos.js           custo real, margem, dias, resumos, lucro por sócio, dados mensais
 │   ├── auth.js               sessões e passwords de login
 │   ├── cripto.js             cifra das passwords das contas (AES-256)
 │   ├── fotos.js              guardar/servir as fotos das peças
@@ -111,6 +126,9 @@ resell-tracker/
 ├── public/                   manifest, service worker e ícone (PWA)
 └── data/                     base de dados, fotos e chave (gerados localmente)
 ```
+
+O estado do negócio vive num único sítio no cliente (`app/components/AppShell.jsx`, fornecido por
+contexto), que se mantém vivo ao navegar entre abas — com edição otimista e sincronização por *polling*.
 
 ## Notas
 
