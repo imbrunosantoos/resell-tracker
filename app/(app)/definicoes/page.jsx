@@ -1,14 +1,10 @@
 "use client";
 
 import { useEstado } from "@/app/components/contexto";
-import Despesas from "@/app/components/Despesas";
 
-// Definições: margem mínima, alerta de dias, despesas, backup e sair.
+// Definições: margem mínima, alerta de dias, backup e sair.
 export default function PaginaDefinicoes() {
-  const {
-    estado, resumo, editarConfig, editarCampo,
-    novaDespesa, apagarDespesa, exportar, importar, sair,
-  } = useEstado();
+  const { estado, editarConfig, exportar, importar, sair } = useEstado();
 
   return (
     <div className="pagina">
@@ -28,15 +24,6 @@ export default function PaginaDefinicoes() {
               onChange={(e) => editarConfig("diasAlerta", e.target.value)} />
           </label>
         </div>
-      </section>
-
-      <section className="bloco">
-        <h2>Despesas <span className="conta">— saem do lucro real ({resumo.mesesAtivos} mes(es) ativos)</span></h2>
-        <Despesas
-          despesas={estado.despesas} socios={estado.socios}
-          onEditar={(id, campo, valor) => editarCampo("despesas", id, campo, valor)}
-          onCriar={novaDespesa} onApagar={apagarDespesa}
-        />
       </section>
 
       <section className="bloco">
