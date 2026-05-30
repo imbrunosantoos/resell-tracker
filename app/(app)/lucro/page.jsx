@@ -16,11 +16,6 @@ export default function PaginaLucro() {
   return (
     <div className="pagina">
       <section className="bloco">
-        <h2>Lucro por mês</h2>
-        <GraficoMensal dados={mensal} />
-      </section>
-
-      <section className="bloco">
         <h2>Sócios <span className="conta">— Lucro por sócio</span></h2>
         <Socios
           socios={estado.socios} porSocio={resumo.porSocio} meuLucro={resumo.meuLucro}
@@ -28,6 +23,11 @@ export default function PaginaLucro() {
           onEditar={(id, campo, valor) => editarCampo("socios", id, campo, valor)}
           onApagar={apagarSocio}
         />
+      </section>
+
+      <section className="bloco">
+        <h2>Lucro por mês</h2>
+        <GraficoMensal dados={mensal} />
       </section>
 
       <section className="bloco">
