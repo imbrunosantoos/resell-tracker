@@ -28,7 +28,7 @@ export default function PedidoLinha({ pedido, socios }) {
       </span>
 
       <span className="pl-nums">
-        <span className="pl-num"><span className="pl-rotulo">Investido</span>{eur(r.investido)}</span>
+        <span className="pl-num roxo"><span className="pl-rotulo">Investido</span>{eur(r.investido)}</span>
         <span className="pl-num"><span className="pl-rotulo">Lucro</span>
           <b className={r.lucro > 0 ? "pos" : r.lucro < 0 ? "neg" : ""}>{eur(r.lucro)}</b>
         </span>

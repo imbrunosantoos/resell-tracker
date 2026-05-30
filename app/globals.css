@@ -636,6 +636,7 @@ tbody tr.selecionado { background: var(--accent-soft); }
 .chip.solo { background: var(--surface-2); color: var(--muted); border-color: var(--line); }
 .pl-nums { display: flex; gap: 18px; }
 .pl-num { display: flex; flex-direction: column; align-items: flex-end; font-family: var(--mono); font-size: 14.5px; color: var(--text); }
+.pl-num.roxo { color: #A78BFA; }
 .pl-rotulo { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-family: var(--font-archivo), sans-serif; font-weight: 600; }
 .pl-seta { color: var(--dim); font-size: 22px; }
 
