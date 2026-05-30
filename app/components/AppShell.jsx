@@ -2,31 +2,21 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  resumoGlobal, categoriasOrdenadas, serieLucroAcumulado, relatorioMensal, estaVendido,
-} from "@/lib/calculos";
-import ResumoCartoes from "./ResumoCartoes";
-import RelatorioMensal from "./RelatorioMensal";
-import Categorias from "./Categorias";
-import GraficoLucro from "./GraficoLucro";
-import Socios from "./Socios";
-import Credenciais from "./Credenciais";
-import Despesas from "./Despesas";
-import NovoPedido from "./NovoPedido";
-import Filtros from "./Filtros";
-import Pedido from "./Pedido";
+import { resumoGlobal, categoriasOrdenadas, dadosMensais, relatorioMensal, estaVendido } from "@/lib/calculos";
+import { EstadoContexto } from "./contexto";
+import TopNav from "./TopNav";
 
-const FILTROS_VAZIO = { texto: "", estado: "todos", categoria: "" };
-
-export default function Dashboard({ utilizador, estadoInicial }) {
+/* O AppShell é o dono do estado do negócio. Vive no layout do grupo (app), por
+   isso sobrevive à navegação entre páginas — o estado e o polling mantêm-se.
+   Toda a lógica que antes estava no Dashboard está aqui, exposta por contexto. */
+export default function AppShell({ utilizador, estadoInicial, children }) {
   const router = useRouter();
   const [estado, setEstado] = useState(estadoInicial);
-  const [filtros, setFiltros] = useState(FILTROS_VAZIO);
 
-  const timers = useRef({});
-  const pendentes = useRef(0);
+  const timers = useRef({}); // debounce por campo
+  const pendentes = useRef(0); // nº de escritas por confirmar
 
-  // ---------- Sincronização ----------
+  // ---------- Sincronização (apanha alterações do sócio) ----------
   async function recarregar() {
     const r = await fetch("/api/estado");
     if (r.ok) setEstado(await r.json());
@@ -77,11 +67,13 @@ export default function Dashboard({ utilizador, estadoInicial }) {
     const r = await persistir("/api/pedidos", "POST", dados);
     const pedido = await r.json();
     setEstado((prev) => ({ ...prev, pedidos: [pedido, ...prev.pedidos] }));
+    return pedido;
   }
   async function apagarPedido(id) {
-    if (!confirm("Apagar este pedido e todos os seus itens?")) return;
+    if (!confirm("Apagar este pedido e todos os seus itens?")) return false;
     await persistir(`/api/pedidos/${id}`, "DELETE");
     setEstado((prev) => ({ ...prev, pedidos: prev.pedidos.filter((p) => p.id !== id) }));
+    return true;
   }
   async function novoItem(pedidoId) {
     const r = await persistir("/api/itens", "POST", { pedidoId });
@@ -169,7 +161,7 @@ export default function Dashboard({ utilizador, estadoInicial }) {
     setEstado((prev) => ({ ...prev, credenciais: prev.credenciais.filter((c) => c.id !== id) }));
   }
 
-  // ---------- Backup ----------
+  // ---------- Backup / sessão ----------
   function exportar(formato) {
     window.location.href = `/api/exportar?formato=${formato}`;
   }
@@ -194,136 +186,23 @@ export default function Dashboard({ utilizador, estadoInicial }) {
   // ---------- Derivados ----------
   const resumo = useMemo(() => resumoGlobal(estado), [estado]);
   const categorias = useMemo(() => categoriasOrdenadas(resumo.categorias), [resumo]);
-  const serie = useMemo(() => serieLucroAcumulado(estado.pedidos), [estado.pedidos]);
-  const relatorio = useMemo(() => relatorioMensal(estado.pedidos), [estado.pedidos]);
+  const mensal = useMemo(() => dadosMensais(estado), [estado]);
+  const relatorio = useMemo(() => relatorioMensal(estado), [estado]);
   const listaCategorias = useMemo(() => nomesDeCategorias(estado.pedidos), [estado.pedidos]);
 
-  // ---------- Filtros ----------
-  const filtroAtivo = filtros.texto || filtros.estado !== "todos" || filtros.categoria;
-  function corresponde(item, pedido) {
-    if (filtros.estado === "vendido" && !estaVendido(item)) return false;
-    if (filtros.estado === "stock" && estaVendido(item)) return false;
-    if (filtros.categoria && item.categoria !== filtros.categoria) return false;
-    if (filtros.texto) {
-      const alvo = `${item.nome} ${item.categoria} ${item.notas} ${pedido.nome}`.toLowerCase();
-      if (!alvo.includes(filtros.texto.toLowerCase())) return false;
-    }
-    return true;
-  }
-  const pedidosVisiveis = filtroAtivo
-    ? estado.pedidos.filter((p) => p.itens.some((it) => corresponde(it, p)))
-    : estado.pedidos;
+  const valor = {
+    utilizador, estado, resumo, categorias, mensal, relatorio, listaCategorias, estaVendido,
+    editarCampo, editarConfig,
+    novoPedido, apagarPedido, novoItem, apagarItem, marcarVendido, bulkCategoria,
+    uploadFoto, removerFoto,
+    novoSocio, apagarSocio, novaDespesa, apagarDespesa, novaCredencial, apagarCredencial,
+    exportar, importar, sair,
+  };
 
   return (
-    <div className="container">
-      <header className="topo">
-        <div className="topo-linha">
-          <div className="marca">
-            <h1>ReSell<span className="ponto">.</span></h1>
-            <span className="tagline">tracker de revenda</span>
-          </div>
-          <div className="sessao">
-            <span>olá, <strong>{utilizador.nome}</strong></span>
-            <button className="btn mini" onClick={sair}>Sair</button>
-          </div>
-        </div>
-
-        <ResumoCartoes resumo={resumo} />
-
-        <div className="barra-acoes">
-          <label className="campo inline">
-            <span>Margem mín. %</span>
-            <input type="number" className="num pequeno" min="0" max="99" step="1"
-              value={estado.config.margemMinima ?? 20} onChange={(e) => editarConfig("margemMinima", e.target.value)} />
-          </label>
-          <label className="campo inline">
-            <span>Alerta após (dias)</span>
-            <input type="number" className="num pequeno" min="1" step="1"
-              value={estado.config.diasAlerta ?? 30} onChange={(e) => editarConfig("diasAlerta", e.target.value)} />
-          </label>
-          <span className="espaco" />
-          <button className="btn" onClick={() => exportar("json")}>Exportar JSON</button>
-          <button className="btn" onClick={() => exportar("csv")}>Exportar CSV</button>
-          <label className="btn" style={{ cursor: "pointer" }}>
-            Importar
-            <input type="file" accept="application/json" hidden
-              onChange={(e) => { importar(e.target.files[0]); e.target.value = ""; }} />
-          </label>
-        </div>
-      </header>
-
-      <section className="bloco">
-        <h2>Este mês</h2>
-        <RelatorioMensal relatorio={relatorio} />
-      </section>
-
-      <section className="bloco">
-        <h2>Lucro acumulado</h2>
-        <GraficoLucro serie={serie} />
-      </section>
-
-      <section className="bloco">
-        <h2>Sócios <span className="conta">— lucro a meias por pedido</span></h2>
-        <Socios
-          socios={estado.socios} porSocio={resumo.porSocio} meuLucro={resumo.meuLucro}
-          onCriar={novoSocio}
-          onEditar={(id, campo, valor) => editarCampo("socios", id, campo, valor)}
-          onApagar={apagarSocio}
-        />
-      </section>
-
-      <section className="bloco">
-        <h2>Lucro por categoria</h2>
-        <Categorias categorias={categorias} />
-      </section>
-
-      <section className="bloco">
-        <h2>Contas e passwords <span className="conta">— cifradas no servidor</span></h2>
-        <Credenciais
-          credenciais={estado.credenciais} socios={estado.socios}
-          onCriar={novaCredencial}
-          onEditar={(id, campo, valor) => editarCampo("credenciais", id, campo, valor)}
-          onApagar={apagarCredencial}
-        />
-      </section>
-
-      <section className="bloco">
-        <h2>Despesas fixas <span className="conta">— saem do lucro real ({resumo.mesesAtivos} mes(es) ativos)</span></h2>
-        <Despesas
-          despesas={estado.despesas}
-          onEditar={(id, campo, valor) => editarCampo("despesas", id, campo, valor)}
-          onCriar={novaDespesa} onApagar={apagarDespesa}
-        />
-      </section>
-
-      <section className="bloco">
-        <h2>Novo pedido</h2>
-        <NovoPedido socios={estado.socios} onCriar={novoPedido} />
-      </section>
-
-      <section className="bloco">
-        <h2>Pedidos <span className="conta">— {pedidosVisiveis.length}{filtroAtivo ? ` de ${estado.pedidos.length}` : ""}</span></h2>
-        <Filtros valor={filtros} onMudar={setFiltros} categorias={listaCategorias} />
-        {estado.pedidos.length === 0 ? (
-          <div className="vazio">Ainda não há pedidos. Cria o primeiro acima.</div>
-        ) : pedidosVisiveis.length === 0 ? (
-          <div className="vazio">Nenhum item corresponde aos filtros.</div>
-        ) : (
-          pedidosVisiveis.map((pedido, i) => (
-            <Pedido
-              key={pedido.id} pedido={pedido} indice={i} config={estado.config} socios={estado.socios}
-              corresponde={filtroAtivo ? (it) => corresponde(it, pedido) : undefined}
-              onEditarPedido={(campo, valor) => editarCampo("pedidos", pedido.id, campo, valor)}
-              onEditarItem={(itemId, campo, valor) => editarCampo("itens", itemId, campo, valor)}
-              onMarcarVendido={(itemId, preco, data) => marcarVendido(pedido.id, itemId, preco, data)}
-              onNovoItem={() => novoItem(pedido.id)}
-              onApagarItem={(itemId) => apagarItem(pedido.id, itemId)}
-              onApagarPedido={() => apagarPedido(pedido.id)}
-              onUploadFoto={uploadFoto} onRemoverFoto={removerFoto} onBulkCategoria={bulkCategoria}
-            />
-          ))
-        )}
-      </section>
+    <EstadoContexto.Provider value={valor}>
+      <TopNav utilizador={utilizador} onSair={sair} />
+      <main className="container">{children}</main>
 
       <footer className="rodape">
         Next.js + SQLite · dados sincronizados entre dispositivos · sessão de {utilizador.nome}
@@ -336,7 +215,7 @@ export default function Dashboard({ utilizador, estadoInicial }) {
         <option value="Camisola" />
         <option value="Acessório" />
       </datalist>
-    </div>
+    </EstadoContexto.Provider>
   );
 }
 
@@ -373,7 +252,6 @@ function substituirItemCampos(estado, pedidoId, itemId, campos) {
   };
 }
 
-// substitui um item inteiro (vindo do servidor) pelo seu id
 function substituirItem(estado, item) {
   return {
     ...estado,
