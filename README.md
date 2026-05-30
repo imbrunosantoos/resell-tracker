@@ -1,147 +1,147 @@
-# ReSell — tracker de revenda
+# ReSell — reselling tracker
 
-Aplicação web para gerir uma operação de revenda. Organiza tudo por **pedido** e, dentro de cada um, pelos **itens** que compraste, e calcula automaticamente o que interessa: custo real, margem, lucro e quanto tempo demoraste a vender.
+Web app to run a reselling operation. It organizes everything by **order** and, inside each one, by the **items** you bought, and automatically works out what matters: real cost, margin, profit and how long it took to sell.
 
-Começou como uma página estática em JavaScript puro e está agora em **Next.js + SQLite**, com login próprio para cada pessoa, dados partilhados e sincronizados entre dispositivos e instalável no telemóvel como app (PWA).
+It started as a static page in plain JavaScript and is now built on **Next.js + SQLite**, with a personal login per person, data shared and synced across devices, and installable on the phone as an app (PWA).
 
-## O que calcula
+## What it calculates
 
-Para cada item:
+For each item:
 
-- **Custo real** — o que pagaste pela peça + a taxa de PayPal diluída pelos itens do pedido + o saco
-- **Margem** em euros e em percentagem
-- **Dias até vender** — da data de chegada da mercadoria até à data da venda
-- **Preço mínimo de venda** — para a margem mínima que definires (ex: 20%), mostra "não vendas abaixo de €X"
+- **Real cost** — what you paid for the piece + the PayPal fee spread across the order's items + the bag
+- **Margin** in euros and as a percentage
+- **Days to sell** — from the goods' arrival date to the sale date
+- **Minimum sale price** — for the minimum margin you set (e.g. 20%), it shows "don't sell below €X"
 
-E ao nível do negócio:
+And at the business level:
 
-- Resumo global: investido, stock por vender, receita, lucro das vendas, despesas fixas e **lucro real** (depois de tudo)
-- **Lucro por categoria**, com barras, **sell-through** (% já vendido) e dias médios por categoria
-- **Gráfico de lucro acumulado** semana a semana
-- **Relatório mensal** — lucro e nº de vendas deste mês vs. o anterior
-- **Lucro por sócio** — cada pedido feito com um sócio divide o lucro a meias; os pedidos a solo são 100% teus
+- Global summary: invested, unsold stock, revenue, sales profit, expenses and **real profit** (after everything)
+- **Profit per category**, with bars, **sell-through** (% already sold) and average days per category
+- **Monthly chart** — profit per month, or received vs invested per month (toggle)
+- **Monthly report** — your profit and number of sales this month vs. the previous one
+- **Profit per partner** — each order made with a partner splits the profit in half; solo orders are 100% yours
 
-## Funcionalidades
+## Features
 
-- Pedidos com data de compra, data de chegada, taxa de PayPal e custo de saco
-- **Sócio por pedido** — escolhes com quem foi feito (ou sozinho); o lucro reparte-se a meias automaticamente
-- Itens com categoria livre, **foto** (qualquer formato) e **notas**
-- **Tabela ordenável** — clica num cabeçalho (margem, dias, custo…) para ordenar os itens
-- **Seleção múltipla** — escolhe vários itens e muda a categoria de todos de uma vez
-- **Pesquisa e filtros** — por texto, por estado (em stock / vendido) e por categoria
-- **Marcar como vendido** num clique — modal pequeno com preço + data (sugere já o preço mínimo e a data de hoje)
-- **Alerta de stock parado** — itens por vender há mais de X dias (configurável) ficam destacados com um badge
-- **Despesas fixas** recorrentes (chip, domínio, embalagens…) que saem do lucro real — as mensais contam por cada mês ativo, as únicas uma vez
-- **Cofre de contas** — guarda logins/passwords por plataforma e por sócio; as passwords ficam **cifradas (AES-256)** no servidor
-- **Exportar** backup em **JSON** ou em **CSV** (uma linha por item, com as colunas já calculadas — abre direto no Excel/Sheets) e importar de volta
-- **Vários utilizadores**, cada um com o seu login, a partilhar os mesmos dados do negócio
-- **PWA** — instalável no telemóvel sem loja nenhuma
+- Orders with purchase date, arrival date, PayPal fee and bag cost
+- **Partner per order** — choose who it was made with (or solo); profit splits in half automatically
+- Items with free-text category, **photo** (any format) and **notes**
+- **Order detail page** with items as cards, **large photos** (click to zoom in a lightbox), mark as sold, etc.
+- **Bulk select** — pick several items and change the category of all at once
+- **Search and filters** — by text, partner, status (in stock / sold) and category
+- **Mark as sold** in one click — small modal with price + date (suggests the minimum price and today's date)
+- **Stale-stock alert** — items unsold for more than X days (configurable) are highlighted with a badge, and a "Not selling" list on the home page
+- **Expenses** (chip, domain, packaging…) that come out of the real profit — monthly ones count for each active month, one-offs count once; each can be solo or split with a partner
+- **Accounts vault** — stores logins/passwords per platform and per partner; passwords are **encrypted (AES-256)** on the server
+- **Export** a backup as **JSON** or **CSV** (one row per item, with the calculated columns — opens straight in Excel/Sheets) and import it back
+- **Multiple users**, each with their own login, sharing the same business data
+- **PWA** — installable on the phone without any app store
 
-## Como correr
+## Running it
 
-Precisas do Node.js 22 ou superior (a app usa o módulo `node:sqlite`, nativo).
+You need Node.js 22 or newer (the app uses the native `node:sqlite` module).
 
 ```bash
 npm install
 npm run dev
-# abre http://localhost:3000
+# open http://localhost:3000
 ```
 
-Na primeira vez, cria a tua conta no ecrã de login. A partir daí o teu sócio pode criar a conta dele e ambos trabalham sobre os mesmos dados.
+The first time, create your account on the login screen. From there your partner can create their own account and you both work on the same data.
 
-Para produção:
+For production:
 
 ```bash
 npm run build
 npm start
 ```
 
-### Aceder do telemóvel (rede local)
+### Accessing from the phone (local network)
 
-Para usares a app no telemóvel sem domínio nem HTTPS, na mesma rede Wi-Fi:
+To use the app on your phone without a domain or HTTPS, on the same Wi-Fi:
 
-1. Copia `.env.example` para `.env.local` e põe `COOKIE_INSEGURO=1` (sem isto, em produção o browser recusa o cookie de sessão por HTTP e o login não funciona).
-2. Arranca o servidor a ouvir em toda a rede:
+1. Copy `.env.example` to `.env.local` and set `COOKIE_INSEGURO=1` (without this, in production the browser rejects the session cookie over HTTP and login won't work).
+2. Start the server listening on the whole network:
    ```bash
    npm run build
    npx next start -H 0.0.0.0
    ```
-3. Descobre o IP do PC (ex: `ipconfig getifaddr en0` no Mac) e no telemóvel abre `http://<ip-do-pc>:3000`.
+3. Find the computer's IP (e.g. `ipconfig getifaddr en0` on a Mac) and on the phone open `http://<computer-ip>:3000`.
 
-No telemóvel podes ainda usar "Adicionar ao ecrã principal" para instalar como app (PWA).
+On the phone you can also use "Add to Home Screen" to install it as an app (PWA).
 
-> Quando passares para um domínio com HTTPS, volta a pôr `COOKIE_INSEGURO=0` — é mais seguro.
+> When you move to a domain with HTTPS, set `COOKIE_INSEGURO=0` again — it's safer.
 
-## Onde ficam os dados
+## Where the data lives
 
-Tudo dentro da pasta `data/` (criada no primeiro arranque, fora do git):
+Everything inside the `data/` folder (created on first run, outside git):
 
-- `data/resell.db` — a base de dados SQLite (pedidos, itens, sócios, despesas, contas)
-- `data/uploads/` — as fotos das peças
-- `data/.chave` — a chave que cifra as passwords das contas (**não a percas nem a partilhes**)
+- `data/resell.db` — the SQLite database (orders, items, partners, expenses, accounts)
+- `data/uploads/` — the item photos
+- `data/.chave` — the key that encrypts the account passwords (**don't lose it or share it**)
 
-Faz uma cópia da pasta `data/` para teres backup completo. O botão **Exportar JSON** guarda os dados do negócio (pedidos, itens, sócios, despesas), mas **não** as passwords das contas — essas só com a cópia da BD + chave.
+Copy the `data/` folder for a full backup. The **Export JSON** button saves the business data (orders, items, partners, expenses), but **not** the account passwords — those only with a copy of the DB + key.
 
 ## Stack
 
-- **Next.js** (App Router) — páginas, API e renderização no servidor
-- **SQLite** via `node:sqlite` — sem dependências nativas para compilar; vem com o Node
-- **bcryptjs** — passwords de login cifradas; **AES-256-GCM** (`node:crypto`) para as passwords das contas
-- Sem bibliotecas de UI nem de gráficos: o tema (dark premium, acento esmeralda) é CSS à mão e os gráficos são barras em CSS no próprio componente
+- **Next.js** (App Router) — pages, API and server rendering
+- **SQLite** via `node:sqlite` — no native dependencies to compile; ships with Node
+- **bcryptjs** — login passwords hashed; **AES-256-GCM** (`node:crypto`) for the account passwords
+- No UI or charting libraries: the theme (dark premium, emerald accent) is hand-written CSS and the charts are CSS bars inside the component
 
-## Páginas
+## Pages
 
-A app está organizada por abas no topo, cada uma na sua página:
+The app is organized by tabs at the top, each on its own page:
 
-- **Início** (`/`) — resumo: cartões (investido, stock, lucro real, o teu lucro…), "Este mês" e atalhos.
-- **Pedidos** (`/pedidos`) — criar pedido, filtrar/pesquisar e lista compacta. Clicas num pedido → **detalhe** (`/pedidos/[id]`) com os itens em cartões, **fotos grandes** (clique para ampliar), marcar vendido, etc.
-- **Lucro** (`/lucro`) — gráfico mês a mês (lucro / recebido vs investido), lucro por sócio, lucro por categoria e despesas fixas.
-- **Contas** (`/contas`) — logins e passwords por plataforma/sócio (cifradas).
-- **Definições** (`/definicoes`) — margem mínima, alerta de dias, exportar/importar backup e terminar sessão.
+- **Home** (`/`) — overview: summary cards, "this month", monthly profit chart and a "not selling" list.
+- **Orders** (`/pedidos`) — create an order, filter/search and a compact list. Click an order → **detail** (`/pedidos/[id]`) with items as cards, **large photos** (click to zoom), mark as sold, etc.
+- **Profit** (`/lucro`) — monthly chart (profit / received vs invested), profit per partner, profit per category and recent sales.
+- **Accounts** (`/contas`) — logins and passwords per platform/partner (encrypted).
+- **Settings** (`/definicoes`) — minimum margin, day alert, expenses, export/import backup and sign out.
 
-## Estrutura
+## Structure
 
 ```
 resell-tracker/
 ├── app/
-│   ├── layout.jsx            raiz (html, fontes, PWA)
-│   ├── login/                ecrã de entrada / criar conta
-│   ├── (app)/                páginas autenticadas (partilham o AppShell)
-│   │   ├── layout.jsx        garante a sessão + entrega o estado ao AppShell
-│   │   ├── page.jsx          Início
-│   │   ├── pedidos/          lista + [id] (detalhe)
+│   ├── layout.jsx            root (html, fonts, PWA)
+│   ├── login/                sign in / create account screen
+│   ├── (app)/                authenticated pages (share the AppShell)
+│   │   ├── layout.jsx        guards the session + hands the state to AppShell
+│   │   ├── page.jsx          Home
+│   │   ├── pedidos/          list + [id] (detail)
 │   │   ├── lucro/  contas/  definicoes/
-│   ├── api/                  endpoints (estado, pedidos, itens, despesas, config, exportar…)
-│   ├── components/           AppShell (estado), TopNav, páginas e blocos de UI
-│   └── globals.css           tema dark premium + acento esmeralda
+│   ├── api/                  endpoints (state, orders, items, expenses, config, export…)
+│   ├── components/           AppShell (state), TopNav, pages and UI blocks
+│   └── globals.css           dark premium theme + emerald accent
 ├── lib/
-│   ├── db.js                 ligação ao SQLite + migrações
-│   ├── repo.js               leituras/escritas (snake_case ↔ camelCase)
-│   ├── calculos.js           custo real, margem, dias, resumos, lucro por sócio, dados mensais
-│   ├── auth.js               sessões e passwords de login
-│   ├── cripto.js             cifra das passwords das contas (AES-256)
-│   ├── fotos.js              guardar/servir as fotos das peças
-│   └── cores.js              cor estável por categoria
-├── middleware.js             protege as rotas (sem sessão → /login)
-├── public/                   manifest, service worker e ícone (PWA)
-└── data/                     base de dados, fotos e chave (gerados localmente)
+│   ├── db.js                 SQLite connection + migrations
+│   ├── repo.js               reads/writes (snake_case ↔ camelCase)
+│   ├── calculos.js           real cost, margin, days, summaries, profit per partner, monthly data
+│   ├── auth.js               sessions and login passwords
+│   ├── cripto.js             encryption of account passwords (AES-256)
+│   ├── fotos.js              store/serve the item photos
+│   └── cores.js              stable color per category
+├── middleware.js             protects routes (no session → /login)
+├── public/                   manifest, service worker and icon (PWA)
+└── data/                     database, photos and key (generated locally)
 ```
 
-O estado do negócio vive num único sítio no cliente (`app/components/AppShell.jsx`, fornecido por
-contexto), que se mantém vivo ao navegar entre abas — com edição otimista e sincronização por *polling*.
+The business state lives in a single place on the client (`app/components/AppShell.jsx`, provided via
+context), kept alive while navigating between tabs — with optimistic editing and *polling* sync.
 
-## Notas
+## Notes
 
-- As **despesas mensais** são contadas por cada mês que a operação leva ativa (desde a data mais antiga); as **únicas** contam uma só vez.
-- As **despesas não se dividem** pelos sócios — são overhead teu; a divisão a meias aplica-se só ao lucro das vendas de cada pedido.
-- A sincronização entre dispositivos é por *polling*: a app recarrega o estado de tempos a tempos e sempre que gravas algo, por isso o que o teu sócio mete aparece-te pouco depois.
+- **Monthly expenses** are counted for each month the operation has been active (since the earliest date); **one-offs** count once.
+- A partner only bears their **half** of expenses marked as split with them; solo expenses are fully yours.
+- Sync between devices is by *polling*: the app reloads the state every so often and whenever you save, so what your partner enters shows up to you shortly after.
 
-## Ideias para o futuro
+## Ideas for the future
 
-- Plataforma de venda por item (Vinted, OLX…) com taxas próprias
-- Metas mensais com barra de progresso
-- Sincronização em tempo real (websockets) em vez de polling
+- Sales platform per item (Vinted, OLX…) with their own fees
+- Monthly goals with a progress bar
+- Real-time sync (websockets) instead of polling
 
-## Licença
+## License
 
-MIT — usa, modifica e partilha à vontade.
+MIT — use, modify and share freely.
