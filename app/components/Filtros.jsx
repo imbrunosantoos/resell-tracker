@@ -1,10 +1,9 @@
 "use client";
 
-// Barra de pesquisa + filtros por estado e categoria. O estado vive no
-// Dashboard; aqui é só a UI que o controla.
-export default function Filtros({ valor, onMudar, categorias }) {
+// Barra de pesquisa + filtros por estado, sócio e categoria.
+export default function Filtros({ valor, onMudar, categorias, socios = [] }) {
   const set = (campo) => (e) => onMudar({ ...valor, [campo]: e.target.value });
-  const ativo = valor.texto || valor.estado !== "todos" || valor.categoria;
+  const ativo = valor.texto || valor.estado !== "todos" || valor.categoria || valor.socio;
 
   return (
     <div className="filtros">
@@ -15,6 +14,13 @@ export default function Filtros({ valor, onMudar, categorias }) {
         value={valor.texto}
         onChange={set("texto")}
       />
+      <select value={valor.socio} onChange={set("socio")}>
+        <option value="">Todos os sócios</option>
+        <option value="solo">Sozinho</option>
+        {socios.map((s) => (
+          <option key={s.id} value={s.id}>{s.nome}</option>
+        ))}
+      </select>
       <select value={valor.estado} onChange={set("estado")}>
         <option value="todos">Todos</option>
         <option value="stock">Em stock</option>
@@ -27,7 +33,7 @@ export default function Filtros({ valor, onMudar, categorias }) {
         ))}
       </select>
       {ativo && (
-        <button className="btn mini" onClick={() => onMudar({ texto: "", estado: "todos", categoria: "" })}>
+        <button className="btn mini" onClick={() => onMudar({ texto: "", estado: "todos", categoria: "", socio: "" })}>
           Limpar
         </button>
       )}

@@ -22,7 +22,7 @@ export default function PedidoLinha({ pedido, socios }) {
       <span className="pl-info">
         <span className="pl-nome">{pedido.nome}</span>
         <span className="pl-meta">
-          {socio ? <span className="chip">{socio.nome}</span> : <span className="chip solo">sozinho</span>}
+          {socio ? <span className="chip">{socio.nome}</span> : <span className="chip solo">Sozinho</span>}
           <span className="pl-dim">{r.vendidos}/{r.total} vendidos</span>
         </span>
       </span>
