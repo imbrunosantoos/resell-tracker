@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { resumoGlobal, categoriasOrdenadas, dadosMensais, relatorioMensal, estaVendido } from "@/lib/calculos";
 import { EstadoContexto } from "./contexto";
+import { prepararImagem } from "./prepararImagem";
 import TopNav from "./TopNav";
 
 /* O AppShell é o dono do estado do negócio. Vive no layout do grupo (app), por
@@ -11,15 +12,27 @@ import TopNav from "./TopNav";
    Toda a lógica que antes estava no Dashboard está aqui, exposta por contexto. */
 export default function AppShell({ utilizador, estadoInicial, children }) {
   const router = useRouter();
-  const [estado, setEstado] = useState(estadoInicial);
+  // As credenciais não vêm no estado inicial (carregam-se só na aba Contas).
+  const [estado, setEstado] = useState(() => ({ ...estadoInicial, credenciais: [] }));
 
   const timers = useRef({}); // debounce por campo
   const pendentes = useRef(0); // nº de escritas por confirmar
+  const credsCarregadas = useRef(false);
 
   // ---------- Sincronização (apanha alterações do sócio) ----------
   async function recarregar() {
     const r = await fetch("/api/estado");
-    if (r.ok) setEstado(await r.json());
+    // /api/estado já não traz as credenciais — preservar as que já carregámos.
+    if (r.ok) { const nova = await r.json(); setEstado((prev) => ({ ...nova, credenciais: prev.credenciais })); }
+  }
+
+  // Carrega as credenciais à parte (chamado pela aba Contas, uma vez).
+  async function carregarCredenciais() {
+    if (credsCarregadas.current) return;
+    credsCarregadas.current = true;
+    const r = await fetch("/api/credenciais");
+    if (r.ok) { const credenciais = await r.json(); setEstado((prev) => ({ ...prev, credenciais })); }
+    else credsCarregadas.current = false; // deixa tentar de novo
   }
   useEffect(() => {
     const intervalo = setInterval(() => {
@@ -108,8 +121,9 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
 
   // ---------- Fotos ----------
   async function uploadFoto(itemId, ficheiro) {
+    const otimizada = await prepararImagem(ficheiro); // encolhe + converte HEIC→JPEG
     const fd = new FormData();
-    fd.append("foto", ficheiro);
+    fd.append("foto", otimizada);
     const r = await fetch(`/api/itens/${itemId}/foto`, { method: "POST", body: fd });
     if (!r.ok) return;
     const item = await r.json();
@@ -196,7 +210,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     novoPedido, apagarPedido, novoItem, apagarItem, marcarVendido, bulkCategoria,
     uploadFoto, removerFoto,
     novoSocio, apagarSocio, novaDespesa, apagarDespesa, novaCredencial, apagarCredencial,
-    exportar, importar, sair,
+    carregarCredenciais, exportar, importar, sair,
   };
 
   return (
