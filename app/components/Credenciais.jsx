@@ -8,17 +8,8 @@ import { useState } from "react";
 const NOVA = { plataforma: "", utilizador: "", password: "", socioId: "", notas: "" };
 
 export default function Credenciais({ credenciais, socios, onCriar, onEditar, onApagar }) {
-  const [filtro, setFiltro] = useState("todos"); // "todos" | "sem" | socioId
   const [reveladas, setReveladas] = useState(() => new Set());
   const [nova, setNova] = useState(NOVA);
-
-  const nomeSocio = (id) => socios.find((s) => s.id === id)?.nome ?? "—";
-
-  const visiveis = credenciais.filter((c) => {
-    if (filtro === "todos") return true;
-    if (filtro === "sem") return !c.socioId;
-    return c.socioId === filtro;
-  });
 
   function alternarVer(id) {
     setReveladas((r) => {
@@ -40,14 +31,7 @@ export default function Credenciais({ credenciais, socios, onCriar, onEditar, on
   return (
     <div className="cofre">
       <div className="cofre-topo">
-        <select value={filtro} onChange={(e) => setFiltro(e.target.value)}>
-          <option value="todos">Todas as contas</option>
-          <option value="sem">Sem sócio (minhas)</option>
-          {socios.map((s) => (
-            <option key={s.id} value={s.id}>{s.nome}</option>
-          ))}
-        </select>
-        <span className="dim pequeno">{visiveis.length} conta(s)</span>
+        <span className="dim pequeno">{credenciais.length} conta(s)</span>
       </div>
 
       <div className="tabela-scroll">
@@ -63,7 +47,7 @@ export default function Credenciais({ credenciais, socios, onCriar, onEditar, on
             </tr>
           </thead>
           <tbody>
-            {visiveis.map((c) => (
+            {credenciais.map((c) => (
               <tr key={c.id}>
                 <td><input value={c.plataforma} placeholder="ex: Vinted" onChange={(e) => onEditar(c.id, "plataforma", e.target.value)} /></td>
                 <td><input value={c.utilizador} placeholder="email / user" onChange={(e) => onEditar(c.id, "utilizador", e.target.value)} /></td>
@@ -96,8 +80,8 @@ export default function Credenciais({ credenciais, socios, onCriar, onEditar, on
                 <td className="dir"><button className="btn fantasma" title="Apagar conta" onClick={() => onApagar(c.id)}>✕</button></td>
               </tr>
             ))}
-            {visiveis.length === 0 && (
-              <tr><td colSpan={6} className="vazio" style={{ padding: "14px 8px" }}>Sem contas {filtro !== "todos" ? "neste filtro" : "guardadas"}.</td></tr>
+            {credenciais.length === 0 && (
+              <tr><td colSpan={6} className="vazio" style={{ padding: "14px 8px" }}>Sem contas guardadas.</td></tr>
             )}
           </tbody>
         </table>
