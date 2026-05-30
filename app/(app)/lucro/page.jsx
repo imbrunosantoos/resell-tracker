@@ -4,13 +4,13 @@ import { useEstado } from "@/app/components/contexto";
 import GraficoMensal from "@/app/components/GraficoMensal";
 import Categorias from "@/app/components/Categorias";
 import Socios from "@/app/components/Socios";
-import Despesas from "@/app/components/Despesas";
+import UltimasVendas from "@/app/components/UltimasVendas";
 
-// Página de análise: gráfico mensal, lucro por sócio, categorias e despesas.
+// Página de análise: gráfico mensal, lucro por sócio e categorias.
 export default function PaginaLucro() {
   const {
     estado, resumo, categorias, mensal,
-    editarCampo, novoSocio, apagarSocio, novaDespesa, apagarDespesa,
+    editarCampo, novoSocio, apagarSocio,
   } = useEstado();
 
   return (
@@ -36,12 +36,8 @@ export default function PaginaLucro() {
       </section>
 
       <section className="bloco">
-        <h2>Despesas fixas <span className="conta">— saem do lucro real ({resumo.mesesAtivos} mes(es) ativos)</span></h2>
-        <Despesas
-          despesas={estado.despesas} socios={estado.socios}
-          onEditar={(id, campo, valor) => editarCampo("despesas", id, campo, valor)}
-          onCriar={novaDespesa} onApagar={apagarDespesa}
-        />
+        <h2>Últimas vendas</h2>
+        <UltimasVendas pedidos={estado.pedidos} />
       </section>
     </div>
   );

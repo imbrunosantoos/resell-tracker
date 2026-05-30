@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-// Despesas fixas/recorrentes (chip, domínio, sacos a granel...). Podes marcar se
+// Despesas recorrentes ou únicas (chip, domínio, sacos a granel...). Podes marcar se
 // foi só tua ou dividida com um sócio (aí só metade sai do teu lucro). O total a
 // nível de negócio sai do "lucro real" lá em cima. Edição inline com debounce.
 export default function Despesas({ despesas, socios, onEditar, onCriar, onApagar }) {
@@ -51,7 +51,7 @@ export default function Despesas({ despesas, socios, onEditar, onCriar, onApagar
           </div>
         ))}
         {despesas.length === 0 && (
-          <p className="dim pequeno">Sem despesas fixas. Adiciona uma abaixo (ex: chip, domínio, embalagens).</p>
+          <p className="dim pequeno">Sem despesas. Adiciona uma abaixo (ex: chip, domínio, embalagens).</p>
         )}
       </div>
 
