@@ -34,7 +34,7 @@ export async function GET(request) {
 // CSV com uma linha por item e as colunas já calculadas — pronto para Excel/Sheets.
 function gerarCSV(estado) {
   const cabecalho = [
-    "Pedido", "Item", "Categoria", "Preço compra", "Preço venda",
+    "Pedido", "Item", "Categoria", "Tamanho", "Preço compra", "Preço venda",
     "Data venda", "Custo real", "Margem", "Margem %", "Dias até vender", "Estado",
   ];
 
@@ -46,6 +46,7 @@ function gerarCSV(estado) {
         pedido.nome,
         item.nome,
         item.categoria,
+        item.tamanho || "",
         item.precoCompra,
         vendido ? item.precoVenda : "",
         item.dataVenda || "",
