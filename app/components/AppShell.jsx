@@ -95,6 +95,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
       ...prev,
       pedidos: prev.pedidos.map((p) => (p.id === pedidoId ? { ...p, itens: [...p.itens, item] } : p)),
     }));
+    return item;
   }
   async function apagarItem(pedidoId, itemId) {
     await persistir(`/api/itens/${itemId}`, "DELETE");

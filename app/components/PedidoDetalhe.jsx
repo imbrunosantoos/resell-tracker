@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useEstado } from "./contexto";
 import {
@@ -48,6 +48,33 @@ export default function PedidoDetalhe({ pedido }) {
     setCatBulk("");
   }
 
+  // Colar (Cmd/Ctrl+V) uma imagem: se houver 1 item selecionado, vai para esse;
+  // senão cria um item novo já com a foto. Um ref guarda os valores frescos para
+  // o listener não precisar de ser re-registado a cada render.
+  const colarRef = useRef(null);
+  colarRef.current = { selecionados, pedidoId: pedido.id, novoItem, uploadFoto };
+  useEffect(() => {
+    async function aoColar(e) {
+      const itens = e.clipboardData?.items;
+      if (!itens) return;
+      let ficheiro = null;
+      for (const it of itens) {
+        if (it.kind === "file" && it.type.startsWith("image/")) { ficheiro = it.getAsFile(); break; }
+      }
+      if (!ficheiro) return; // sem imagem na área de transferência → deixa o paste normal
+      e.preventDefault();
+      const { selecionados, pedidoId, novoItem, uploadFoto } = colarRef.current;
+      if (selecionados.size === 1) {
+        await uploadFoto([...selecionados][0], ficheiro);
+      } else {
+        const novo = await novoItem(pedidoId);
+        await uploadFoto(novo.id, ficheiro);
+      }
+    }
+    window.addEventListener("paste", aoColar);
+    return () => window.removeEventListener("paste", aoColar);
+  }, []);
+
   return (
     <article className="detalhe">
       <div className="detalhe-topo">
@@ -90,6 +117,8 @@ export default function PedidoDetalhe({ pedido }) {
           <button className="btn mini" onClick={() => setSelecionados(new Set())}>Limpar</button>
         </div>
       )}
+
+      <p className="colar-dica">📋 Cola uma imagem (⌘V) para criar um item com a foto — ou seleciona 1 item para colar nesse.</p>
 
       <div className="itens-grelha">
         {pedido.itens.map((item) => (
