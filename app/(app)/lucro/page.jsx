@@ -37,7 +37,7 @@ export default function PaginaLucro() {
 
       <section className="bloco">
         <h2>Últimas vendas</h2>
-        <UltimasVendas pedidos={estado.pedidos} />
+        <UltimasVendas pedidos={estado.pedidos} socios={estado.socios} />
       </section>
     </div>
   );
