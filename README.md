@@ -25,13 +25,15 @@ And at the business level:
 
 - Orders with purchase date, arrival date, PayPal fee and bag cost
 - **Partner per order** — choose who it was made with (or solo); profit splits in half automatically
-- Items with free-text category, **photo** (any format) and **notes**
+- Items with free-text category, **photo** and **notes**. Photos are **downscaled in the browser** before upload (and iPhone **HEIC is converted to JPEG**, so it shows everywhere)
+- **Paste a photo** (⌘/Ctrl+V) inside an order — pastes into the selected item, or creates a new item with it
 - **Order detail page** with items as cards, **large photos** (click to zoom in a lightbox), mark as sold, etc.
 - **Bulk select** — pick several items and change the category of all at once
 - **Search and filters** — by text, partner, status (in stock / sold) and category
+- **Recent sales** — filterable by partner, showing each person's **profit share**
 - **Mark as sold** in one click — small modal with price + date (suggests the minimum price and today's date)
 - **Stale-stock alert** — items unsold for more than X days (configurable) are highlighted with a badge, and a "Not selling" list on the home page
-- **Expenses** (chip, domain, packaging…) that come out of the real profit — monthly ones count for each active month, one-offs count once; each can be solo or split with a partner
+- **Expenses** (chip, domain, packaging…) in their own tab, coming out of the real profit — monthly ones count for each active month, one-offs count once; each can be solo or split with a partner
 - **Accounts vault** — stores logins/passwords per platform and per partner; passwords are **encrypted (AES-256)** on the server
 - **Export** a backup as **JSON** or **CSV** (one row per item, with the calculated columns — opens straight in Excel/Sheets) and import it back
 - **Multiple users**, each with their own login, sharing the same business data
@@ -93,11 +95,12 @@ Copy the `data/` folder for a full backup. The **Export JSON** button saves the 
 
 The app is organized by tabs at the top, each on its own page:
 
-- **Home** (`/`) — overview: summary cards, "this month", monthly profit chart and a "not selling" list.
-- **Orders** (`/pedidos`) — create an order, filter/search and a compact list. Click an order → **detail** (`/pedidos/[id]`) with items as cards, **large photos** (click to zoom), mark as sold, etc.
-- **Profit** (`/lucro`) — monthly chart (profit / received vs invested), profit per partner, profit per category and recent sales.
-- **Accounts** (`/contas`) — logins and passwords per platform/partner (encrypted).
-- **Settings** (`/definicoes`) — minimum margin, day alert, expenses, export/import backup and sign out.
+- **Home** (`/`) — overview: colored summary cards, "this month", monthly profit chart and a "not selling" list.
+- **Orders** (`/pedidos`) — create an order, filter/search (text, partner, status, category) and a compact list. Click an order → **detail** (`/pedidos/[id]`) with items as cards, **large photos** (paste or upload, click to zoom), mark as sold and bulk category.
+- **Profit** (`/lucro`) — profit per partner, monthly chart (profit / received vs invested), profit per category, and recent sales (filterable by partner, showing each person's share).
+- **Expenses** (`/despesas`) — recurring or one-off expenses, solo or split with a partner.
+- **Accounts** (`/contas`) — logins and passwords per platform/partner (encrypted; loaded only on this page).
+- **Settings** (`/definicoes`) — minimum margin, day alert, export/import backup and sign out.
 
 ## Structure
 
@@ -110,7 +113,7 @@ resell-tracker/
 │   │   ├── layout.jsx        guards the session + hands the state to AppShell
 │   │   ├── page.jsx          Home
 │   │   ├── pedidos/          list + [id] (detail)
-│   │   ├── lucro/  contas/  definicoes/
+│   │   ├── lucro/  despesas/  contas/  definicoes/
 │   ├── api/                  endpoints (state, orders, items, expenses, config, export…)
 │   ├── components/           AppShell (state), TopNav, pages and UI blocks
 │   └── globals.css           dark premium theme + emerald accent
