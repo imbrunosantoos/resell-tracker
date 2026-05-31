@@ -25,7 +25,8 @@ And at the business level:
 
 - Orders with purchase date, arrival date, PayPal fee and bag cost
 - **Partner per order** — choose who it was made with (or solo); profit splits in half automatically
-- Items with free-text category, **photo** and **notes**. Photos are **downscaled in the browser** before upload (and iPhone **HEIC is converted to JPEG**, so it shows everywhere)
+- Items with free-text category, **size** (Polo XS–XXL, football shirts S–XL), **photo** and **notes**. Photos are **downscaled in the browser** before upload (and iPhone **HEIC is converted to JPEG**, so it shows everywhere)
+- **Autofill from past items** — type an item's name and pick a previous one to copy its photo, purchase price and category (the photo is copied, not shared)
 - **Paste a photo** (⌘/Ctrl+V) inside an order — pastes into the selected item, or creates a new item with it
 - **Order detail page** with items as cards, **large photos** (click to zoom in a lightbox), mark as sold, etc.
 - **Bulk select** — pick several items and change the category of all at once
