@@ -5,11 +5,12 @@ import Link from "next/link";
 import { eur, margem, margemPct, estaVendido } from "@/lib/calculos";
 import { corCategoria } from "@/lib/cores";
 
-// As vendas mais recentes (por data de venda). Dá para filtrar por sócio e mostra
-// a "Parte" — a fatia do lucro que vem para cada pessoa (lucro÷2 nos pedidos com
-// sócio; lucro inteiro a solo). A margem/lucro em si não muda — só se divide.
+// As vendas mais recentes (por data de venda). Filtra por "Eu" (todas as vendas,
+// porque participas em todas) ou por um sócio (só as dele). A coluna "Parte" é a
+// fatia do lucro de quem está selecionado (lucro÷2 nos pedidos com sócio; lucro
+// inteiro a solo, no caso "Eu").
 export default function UltimasVendas({ pedidos, socios = [], limite = 8 }) {
-  const [filtro, setFiltro] = useState(""); // "" todos | "solo" | socioId
+  const [filtro, setFiltro] = useState("eu"); // "eu" | socioId
   const idsValidos = new Set(socios.map((s) => s.id));
   const socioSel = socios.find((s) => s.id === filtro);
 
@@ -17,43 +18,42 @@ export default function UltimasVendas({ pedidos, socios = [], limite = 8 }) {
   for (const pedido of pedidos) {
     for (const item of pedido.itens) {
       if (!estaVendido(item)) continue;
-      // filtro por sócio (ao nível do pedido)
-      if (filtro === "solo" && pedido.socioId) continue;
-      if (filtro && filtro !== "solo" && pedido.socioId !== filtro) continue;
+      if (socioSel && pedido.socioId !== filtro) continue; // por sócio: só as dele
 
       const m = margem(pedido, item);
       const comSocio = pedido.socioId && idsValidos.has(pedido.socioId);
-      // parte: se filtrar por um sócio, mostra a parte dele; senão a minha
-      const parte = socioSel ? m / 2 : (comSocio ? m / 2 : m);
+      const parte = socioSel ? m / 2 : comSocio ? m / 2 : m; // dele, ou a minha
       vendas.push({ pedido, item, m, pct: margemPct(pedido, item), parte });
     }
   }
   vendas.sort((a, b) => (a.item.dataVenda < b.item.dataVenda ? 1 : -1));
 
-  const rotuloParte = socioSel ? `Parte de ${socioSel.nome}` : "Para mim";
+  const legenda = socioSel
+    ? `Vendas com ${socioSel.nome} · "Parte" = metade do lucro dele`
+    : `Todas as vendas · "Parte" = a tua fatia do lucro`;
 
   return (
     <div className="vendas">
       <div className="vendas-topo">
         <select value={filtro} onChange={(e) => setFiltro(e.target.value)}>
-          <option value="">Todos os sócios</option>
-          <option value="solo">Sozinho</option>
+          <option value="eu">Eu</option>
           {socios.map((s) => (
             <option key={s.id} value={s.id}>{s.nome}</option>
           ))}
         </select>
         <span className="dim pequeno">{vendas.length} venda(s)</span>
       </div>
+      <p className="vendas-legenda">{legenda}</p>
 
       {vendas.length === 0 ? (
-        <p className="dim pequeno">Sem vendas {filtro ? "neste filtro" : "ainda"}.</p>
+        <p className="dim pequeno">Sem vendas {socioSel ? "com este sócio" : "ainda"}.</p>
       ) : (
         <div className="vendas-lista">
           <div className="vendas-cabecalho">
-            <span className="venda-info">Venda</span>
-            <span className="venda-preco">Preço</span>
-            <span className="venda-margem">Lucro</span>
-            <span className="venda-parte">{rotuloParte}</span>
+            <span>Venda</span>
+            <span>Preço</span>
+            <span>Lucro</span>
+            <span>Parte</span>
           </div>
           {vendas.slice(0, limite).map(({ pedido, item, m, pct, parte }) => (
             <Link key={item.id} href={`/pedidos/${pedido.id}`} className="venda-linha">
@@ -65,7 +65,9 @@ export default function UltimasVendas({ pedidos, socios = [], limite = 8 }) {
                 </span>
               </span>
               <span className="venda-preco">{eur(item.precoVenda)}</span>
-              <span className={"venda-margem " + (m >= 0 ? "pos" : "neg")}>{eur(m)}{pct !== null ? ` · ${pct}%` : ""}</span>
+              <span className={"venda-margem " + (m >= 0 ? "pos" : "neg")}>
+                {eur(m)}<small>{pct !== null ? ` ${pct}%` : ""}</small>
+              </span>
               <span className="venda-parte">{eur(parte)}</span>
             </Link>
           ))}
