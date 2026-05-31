@@ -108,6 +108,13 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     setEstado((prev) => substituirItemCampos(prev, pedidoId, itemId, { precoVenda, dataVenda }));
     await persistir(`/api/itens/${itemId}`, "PATCH", { precoVenda, dataVenda });
   }
+  // Autofill: preenche um item a partir de outro (copia nome/categoria/preço + foto).
+  async function aplicarTemplate(itemId, origemId) {
+    const r = await persistir(`/api/itens/${itemId}/template`, "POST", { origemId });
+    if (!r.ok) return;
+    const item = await r.json();
+    setEstado((prev) => substituirItem(prev, item));
+  }
   async function bulkCategoria(ids, categoria) {
     if (ids.length === 0) return;
     await persistir("/api/itens/categoria", "POST", { ids, categoria });
@@ -208,7 +215,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   const valor = {
     utilizador, estado, resumo, categorias, mensal, relatorio, listaCategorias, estaVendido,
     editarCampo, editarConfig,
-    novoPedido, apagarPedido, novoItem, apagarItem, marcarVendido, bulkCategoria,
+    novoPedido, apagarPedido, novoItem, apagarItem, marcarVendido, bulkCategoria, aplicarTemplate,
     uploadFoto, removerFoto,
     novoSocio, apagarSocio, novaDespesa, apagarDespesa, novaCredencial, apagarCredencial,
     carregarCredenciais, exportar, importar, sair,

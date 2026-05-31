@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useEstado } from "./contexto";
 import {
@@ -8,6 +8,7 @@ import {
   estaVendido, precoMinimo, resumoPedido,
 } from "@/lib/calculos";
 import { corCategoria } from "@/lib/cores";
+import { tamanhosPara } from "@/lib/tamanhos";
 import ModalVenda from "./ModalVenda";
 import Lightbox from "./Lightbox";
 
@@ -17,10 +18,32 @@ export default function PedidoDetalhe({ pedido }) {
   const router = useRouter();
   const {
     estado, editarCampo, marcarVendido, novoItem, apagarItem, apagarPedido,
-    uploadFoto, removerFoto, bulkCategoria,
+    uploadFoto, removerFoto, bulkCategoria, aplicarTemplate,
   } = useEstado();
   const socios = estado.socios;
   const config = estado.config;
+
+  // Templates para o autofill: itens já existentes, distintos por nome (preferindo
+  // os que têm foto e preço). Ao escolher um, copia-se foto/preço/categoria.
+  const templates = useMemo(() => {
+    const porNome = new Map();
+    for (const p of estado.pedidos) {
+      for (const it of p.itens) {
+        const nome = it.nome?.trim();
+        if (!nome) continue;
+        const chave = nome.toLowerCase();
+        const atual = porNome.get(chave);
+        const pontos = (it.foto ? 2 : 0) + (toNumber(it.precoCompra) > 0 ? 1 : 0);
+        if (!atual || pontos > atual.pontos) {
+          porNome.set(chave, {
+            pontos, origemId: it.id, nome, categoria: it.categoria,
+            precoCompra: it.precoCompra, foto: it.foto,
+          });
+        }
+      }
+    }
+    return [...porNome.values()];
+  }, [estado.pedidos]);
 
   const [vendaItem, setVendaItem] = useState(null);
   const [zoom, setZoom] = useState(null); // src da foto em lightbox
@@ -133,6 +156,8 @@ export default function PedidoDetalhe({ pedido }) {
             onUploadFoto={(f) => uploadFoto(item.id, f)}
             onRemoverFoto={() => removerFoto(item.id)}
             onZoom={(src) => setZoom(src)}
+            templates={templates}
+            onTemplate={(origemId) => aplicarTemplate(item.id, origemId)}
           />
         ))}
         <button className="item-add" onClick={() => novoItem(pedido.id)}>+ Adicionar item</button>
@@ -154,8 +179,19 @@ export default function PedidoDetalhe({ pedido }) {
 function ItemCartao({
   pedido, item, margemMin, diasAlerta, selecionado,
   onSelecionar, onEditar, onVender, onApagar, onUploadFoto, onRemoverFoto, onZoom,
+  templates = [], onTemplate,
 }) {
   const input = useRef(null);
+  const [aberto, setAberto] = useState(false); // dropdown de sugestões aberto
+
+  // sugestões de itens antigos que casam com o que está escrito no nome
+  const procura = item.nome.trim().toLowerCase();
+  const sugestoes = procura
+    ? templates
+        .filter((t) => t.origemId !== item.id && t.nome.toLowerCase().includes(procura) && t.nome.toLowerCase() !== procura)
+        .slice(0, 6)
+    : [];
+
   const vendido = estaVendido(item);
   const m = margem(pedido, item);
   const dias = diasParaVender(pedido, item);
@@ -163,6 +199,7 @@ function ItemCartao({
   const parado = !vendido && emStock !== null && emStock > diasAlerta;
   const minimo = precoMinimo(pedido, item, margemMin);
   const fotoUrl = item.foto ? `/api/fotos/${item.foto}` : null;
+  const tamanhos = tamanhosPara(item.categoria);
 
   return (
     <div className={"item-cartao" + (selecionado ? " selecionado" : "") + (vendido ? " vendido" : "")}>
@@ -187,9 +224,43 @@ function ItemCartao({
       <div className="item-campos">
         <span className="td-nome">
           <span className="dot" style={{ background: corCategoria(item.categoria) }} />
-          <input className="item-nome" placeholder="ex: Brasil #10" value={item.nome} onChange={(e) => onEditar("nome", e.target.value)} />
+          <span className="nome-wrap">
+            <input
+              className="item-nome" placeholder="ex: Brasil #10" value={item.nome}
+              onChange={(e) => { onEditar("nome", e.target.value); setAberto(true); }}
+              onFocus={() => setAberto(true)}
+              onBlur={() => setTimeout(() => setAberto(false), 150)}
+            />
+            {aberto && sugestoes.length > 0 && (
+              <div className="sugestoes">
+                {sugestoes.map((t) => (
+                  <button
+                    type="button" className="sugestao" key={t.origemId}
+                    onMouseDown={(e) => { e.preventDefault(); onTemplate(t.origemId); setAberto(false); }}
+                  >
+                    <span className="sugestao-foto" style={t.foto ? undefined : { background: corCategoria(t.categoria) }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {t.foto ? <img src={`/api/fotos/${t.foto}`} alt="" /> : (t.nome[0] || "?")}
+                    </span>
+                    <span className="sugestao-txt">
+                      <span className="sugestao-nome">{t.nome}</span>
+                      <span className="sugestao-sub">{t.categoria || "sem categoria"}{toNumber(t.precoCompra) > 0 ? ` · ${eur(toNumber(t.precoCompra))}` : ""}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </span>
         </span>
-        <input className="item-cat" list="categorias" placeholder="categoria" value={item.categoria} onChange={(e) => onEditar("categoria", e.target.value)} />
+        <div className="item-linha">
+          <input className="item-cat" list="categorias" placeholder="categoria" value={item.categoria} onChange={(e) => onEditar("categoria", e.target.value)} />
+          {tamanhos.length > 0 && (
+            <select className="item-tam" value={item.tamanho} onChange={(e) => onEditar("tamanho", e.target.value)}>
+              <option value="">Tam.</option>
+              {tamanhos.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          )}
+        </div>
 
         <div className="item-grid">
           <label><span>Compra €</span>
