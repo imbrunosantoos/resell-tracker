@@ -711,8 +711,9 @@ tbody tr.selecionado { background: var(--accent-soft); }
 .nome-wrap { position: relative; flex: 1; min-width: 0; }
 .item-nome { width: 100%; font-weight: 600; }
 .item-linha { display: flex; gap: 8px; }
-.item-cat { flex: 1; min-width: 0; }
-.item-tam { width: 78px; flex-shrink: 0; }
+/* especificidade extra para vencer ".item-campos input/select { width:100% }" */
+.item-linha .item-cat { flex: 1 1 auto; width: auto; min-width: 0; }
+.item-linha .item-tam { flex: 0 0 88px; width: 88px; }
 
 /* autocomplete de itens (autofill) */
 .sugestoes {
