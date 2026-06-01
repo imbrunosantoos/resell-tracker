@@ -604,6 +604,31 @@ tbody tr.selecionado { background: var(--accent-soft); }
 .venda-margem small { color: var(--dim); font-size: 11px; }
 .venda-parte { font-family: var(--mono); font-size: 14.5px; font-weight: 700; color: var(--accent); text-align: right; }
 
+/* ---------- Construtor de pedido (aba Novo Pedido) ---------- */
+.linhas { display: flex; flex-direction: column; gap: 12px; }
+.linha-camisa {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 14px; box-shadow: var(--sombra);
+}
+.linha-foto { width: 96px; height: 96px; flex-shrink: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--bg); }
+.linha-foto img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; display: block; }
+.linha-foto .foto-vazia { width: 100%; height: 100%; }
+.linha-campos { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.linha-campos .td-nome { display: flex; align-items: center; gap: 8px; }
+.linha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.linha-grid label { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.linha-grid label span { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; }
+.linha-grid input { width: 100%; min-width: 0; }
+.linha-x { flex-shrink: 0; }
+.criar-acoes { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn.grande { font-size: 15px; padding: 13px 22px; }
+.sucesso {
+  background: radial-gradient(140% 140% at 0% 0%, var(--accent-soft), transparent 60%), var(--surface);
+  border: 1px solid rgba(52,211,153,0.4); border-radius: var(--radius); padding: 24px; box-shadow: var(--sombra);
+}
+.sucesso h2 { font-size: 20px; margin-bottom: 6px; }
+
 /* dica de colar foto no detalhe */
 .colar-dica { font-size: 12px; color: var(--muted); background: var(--surface); border: 1px dashed var(--line);
   border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 12px; }

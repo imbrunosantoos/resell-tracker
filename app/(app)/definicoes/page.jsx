@@ -23,7 +23,17 @@ export default function PaginaDefinicoes() {
               value={estado.config.diasAlerta ?? 30}
               onChange={(e) => editarConfig("diasAlerta", e.target.value)} />
           </label>
+          <label className="campo">
+            <span>WhatsApp do fornecedor</span>
+            <input type="tel" inputMode="tel" placeholder="ex: 351912345678"
+              value={estado.config.fornecedorWhats ?? ""}
+              onChange={(e) => editarConfig("fornecedorWhats", e.target.value)} />
+          </label>
         </div>
+        <p className="dim pequeno" style={{ marginTop: 8 }}>
+          Número com indicativo do país, só dígitos (ex.: <code>351912345678</code>). Usado no botão
+          “Criar pedido” para abrir a conversa do fornecedor com a lista.
+        </p>
       </section>
 
       <section className="bloco">
