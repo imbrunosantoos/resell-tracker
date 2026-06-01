@@ -11,6 +11,7 @@ import { corCategoria } from "@/lib/cores";
 import { tamanhosPara } from "@/lib/tamanhos";
 import ModalVenda from "./ModalVenda";
 import Lightbox from "./Lightbox";
+import SugestoesItem from "./SugestoesItem";
 
 // Detalhe de um pedido: cabeçalho editável, resumo e os itens em cartões com
 // foto grande. Reusa os handlers do contexto.
@@ -182,16 +183,6 @@ function ItemCartao({
   templates = [], onTemplate,
 }) {
   const input = useRef(null);
-  const [aberto, setAberto] = useState(false); // dropdown de sugestões aberto
-
-  // sugestões de itens antigos que casam com o que está escrito no nome
-  const procura = item.nome.trim().toLowerCase();
-  const sugestoes = procura
-    ? templates
-        .filter((t) => t.origemId !== item.id && t.nome.toLowerCase().includes(procura) && t.nome.toLowerCase() !== procura)
-        .slice(0, 6)
-    : [];
-
   const vendido = estaVendido(item);
   const m = margem(pedido, item);
   const dias = diasParaVender(pedido, item);
@@ -224,33 +215,10 @@ function ItemCartao({
       <div className="item-campos">
         <span className="td-nome">
           <span className="dot" style={{ background: corCategoria(item.categoria) }} />
-          <span className="nome-wrap">
-            <input
-              className="item-nome" placeholder="ex: Brasil #10" value={item.nome}
-              onChange={(e) => { onEditar("nome", e.target.value); setAberto(true); }}
-              onFocus={() => setAberto(true)}
-              onBlur={() => setTimeout(() => setAberto(false), 150)}
-            />
-            {aberto && sugestoes.length > 0 && (
-              <div className="sugestoes">
-                {sugestoes.map((t) => (
-                  <button
-                    type="button" className="sugestao" key={t.origemId}
-                    onMouseDown={(e) => { e.preventDefault(); onTemplate(t.origemId); setAberto(false); }}
-                  >
-                    <span className="sugestao-foto" style={t.foto ? undefined : { background: corCategoria(t.categoria) }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {t.foto ? <img src={`/api/fotos/${t.foto}`} alt="" /> : (t.nome[0] || "?")}
-                    </span>
-                    <span className="sugestao-txt">
-                      <span className="sugestao-nome">{t.nome}</span>
-                      <span className="sugestao-sub">{t.categoria || "sem categoria"}{toNumber(t.precoCompra) > 0 ? ` · ${eur(toNumber(t.precoCompra))}` : ""}</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </span>
+          <SugestoesItem
+            value={item.nome} templates={templates} excluirId={item.id}
+            onChange={(v) => onEditar("nome", v)} onEscolher={onTemplate}
+          />
         </span>
         <div className="item-linha">
           <input className="item-cat" list="categorias" placeholder="categoria" value={item.categoria} onChange={(e) => onEditar("categoria", e.target.value)} />
