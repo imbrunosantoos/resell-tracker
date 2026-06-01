@@ -27,8 +27,9 @@ And at the business level:
 - **Partner per order** — choose who it was made with (or solo); profit splits in half automatically
 - Items with free-text category, **size** (Polo XS–XXL, football shirts S–XL), **photo** and **notes**. Photos are **downscaled in the browser** before upload (and iPhone **HEIC is converted to JPEG**, so it shows everywhere)
 - **Autofill from past items** — type an item's name and pick a previous one to copy its photo, purchase price and category (the photo is copied, not shared)
-- **Order builder** (tab **Novo Pedido**) — a draft you fill over time (each shirt with photo, name, size and **quantity**); "Criar pedido" then creates the real order (quantity N → **N separate items**), downloads a **catalog image** (grid of photos + name/size/qty) and opens the **supplier's WhatsApp** with the text ready
-- **Paste a photo** (⌘/Ctrl+V) inside an order — pastes into the selected item, or creates a new item with it
+- **Order builder** (tab **Novo Pedido**) — a draft you fill over time (each shirt with photo, name, size and **quantity** — they're all football shirts, so there's no category to pick); "Criar pedido" then creates the real order (quantity N → **N separate items**), downloads a **catalog image** (grid of photos + name/size/qty) and opens the **supplier's WhatsApp** with the text ready
+- **Patches per shirt** (optional) — some shirts have exclusive patches, so you can add a patch with a **name** and a **photo** (paste with ⌘/Ctrl+V too). They show small and discreet on the shirt, carry over to each created item, and appear on the catalog image and supplier text
+- **Paste a photo** (⌘/Ctrl+V) inside an order — pastes into the selected item, or creates a new item with it (and into a patch when its name field is focused)
 - **Order detail page** with items as cards, **large photos** (click to zoom in a lightbox), mark as sold, etc.
 - **Bulk select** — pick several items and change the category of all at once
 - **Search and filters** — by text, partner, status (in stock / sold) and category
@@ -99,7 +100,7 @@ The app is organized by tabs at the top, each on its own page:
 
 - **Home** (`/`) — overview: colored summary cards, "this month", monthly profit chart and a "not selling" list.
 - **Orders** (`/pedidos`) — filter/search (text, partner, status, category) and a compact list. Click an order → **detail** (`/pedidos/[id]`) with items as cards, **large photos** (paste or upload, click to zoom), mark as sold and bulk category.
-- **Novo Pedido** (`/novo-pedido`) — order builder: a persistent draft of shirts (photo, name, size, quantity). "Criar pedido" creates the order (quantity → N items), downloads a catalog image and opens the supplier's WhatsApp with the text.
+- **Novo Pedido** (`/novo-pedido`) — order builder: a persistent draft of shirts (photo, name, size, quantity, and optional patches with name + photo). "Criar pedido" creates the order (quantity → N items), downloads a catalog image and opens the supplier's WhatsApp with the text.
 - **Profit** (`/lucro`) — profit per partner, monthly chart (profit / received vs invested), profit per category, and recent sales (filterable by partner, showing each person's share).
 - **Expenses** (`/despesas`) — recurring or one-off expenses, solo or split with a partner.
 - **Accounts** (`/contas`) — logins and passwords per platform/partner (encrypted; loaded only on this page).
