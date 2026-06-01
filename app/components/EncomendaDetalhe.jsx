@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEstado } from "./contexto";
-import { eur, margem } from "@/lib/calculos";
+import { eur, margem, margemPct } from "@/lib/calculos";
 
 // Detalhe de uma ENCOMENDA (pré-pedido pago adiantado): vista simplificada, sem
 // grelha de itens. Opera sobre o único item sintético (pedido.itens[0]), que
@@ -30,6 +30,7 @@ export default function EncomendaDetalhe({ pedido }) {
   }
 
   const lucro = margem(pedido, item) ?? 0;
+  const pct = margemPct(pedido, item);
 
   return (
     <article className="detalhe">
@@ -62,6 +63,7 @@ export default function EncomendaDetalhe({ pedido }) {
           <div className="pill"><div className="pill-label">Custo</div><div className="pill-valor">{eur(Number(item.precoCompra) || 0)}</div></div>
           <div className="pill"><div className="pill-label">Preço final</div><div className="pill-valor">{eur(Number(item.precoVenda) || 0)}</div></div>
           <div className="pill azul"><div className="pill-label">Lucro</div><div className="pill-valor">{eur(lucro)}</div></div>
+          <div className="pill"><div className="pill-label">Margem</div><div className="pill-valor">{pct !== null ? `${pct}%` : "—"}</div></div>
         </div>
       </div>
     </article>

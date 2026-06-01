@@ -15,6 +15,9 @@ export default function PaginaPedidos() {
   const { estado, listaCategorias, novoPedido, novaEncomenda } = useEstado();
   const [filtros, setFiltros] = useState(FILTROS_VAZIO);
   const [aCriar, setACriar] = useState("pedido"); // "pedido" | "encomenda"
+  const clientesEncomenda = [...new Set(
+    estado.pedidos.filter((p) => p.tipo === "encomenda" && p.cliente?.trim()).map((p) => p.cliente.trim())
+  )].sort();
 
   const filtroAtivo = filtros.texto || filtros.estado !== "todos" || filtros.categoria || filtros.socio || filtros.tipo;
   const filtroItemAtivo = filtros.texto || filtros.estado !== "todos" || filtros.categoria;
@@ -61,7 +64,7 @@ export default function PaginaPedidos() {
         {aCriar === "pedido" ? (
           <NovoPedido socios={estado.socios} onCriar={novoPedido} />
         ) : (
-          <NovaEncomenda socios={estado.socios} onCriar={novaEncomenda} />
+          <NovaEncomenda socios={estado.socios} clientes={clientesEncomenda} onCriar={novaEncomenda} />
         )}
       </section>
 
