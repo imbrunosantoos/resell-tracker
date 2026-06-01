@@ -6,6 +6,7 @@ import { resumoGlobal, categoriasOrdenadas, dadosMensais, relatorioMensal, estaV
 import { EstadoContexto } from "./contexto";
 import { prepararImagem } from "./prepararImagem";
 import TopNav from "./TopNav";
+import ModalConfirmar from "./ModalConfirmar";
 
 /* O AppShell é o dono do estado do negócio. Vive no layout do grupo (app), por
    isso sobrevive à navegação entre páginas — o estado e o polling mantêm-se.
@@ -19,11 +20,50 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   const pendentes = useRef(0); // nº de escritas por confirmar
   const credsCarregadas = useRef(false);
 
+  // Toast de erro (aparece quando uma escrita falha) e modal de confirmação.
+  const [erro, setErro] = useState(null);
+  const erroTimer = useRef(null);
+  const [confirmacao, setConfirmacao] = useState(null);
+  const confirmarResolve = useRef(null);
+
+  function mostrarErro(msg) {
+    setErro(msg);
+    clearTimeout(erroTimer.current);
+    erroTimer.current = setTimeout(() => setErro(null), 4500);
+  }
+
+  // Pergunta "tens a certeza?" num modal centrado; devolve Promise<boolean>.
+  function confirmar(opcoes) {
+    return new Promise((resolve) => {
+      confirmarResolve.current = resolve;
+      setConfirmacao(opcoes);
+    });
+  }
+  function responderConfirmacao(ok) {
+    setConfirmacao(null);
+    const resolve = confirmarResolve.current;
+    confirmarResolve.current = null;
+    resolve?.(ok);
+  }
+
+  // Conta uma escrita como pendente enquanto corre (para o polling não recarregar
+  // por cima de uma alteração otimista que ainda não foi confirmada pelo servidor).
+  async function comEscrita(fn) {
+    pendentes.current++;
+    try { return await fn(); }
+    finally { pendentes.current--; }
+  }
+
   // ---------- Sincronização (apanha alterações do sócio) ----------
   async function recarregar() {
+    if (pendentes.current > 0) return; // há escritas por confirmar — não mexer
     const r = await fetch("/api/estado");
+    if (!r.ok) return;
+    const nova = await r.json();
+    // Se começou uma escrita durante o fetch, este snapshot já está velho: descarta.
+    if (pendentes.current > 0) return;
     // /api/estado já não traz as credenciais — preservar as que já carregámos.
-    if (r.ok) { const nova = await r.json(); setEstado((prev) => ({ ...nova, credenciais: prev.credenciais })); }
+    setEstado((prev) => ({ ...nova, credenciais: prev.credenciais }));
   }
 
   // Carrega as credenciais à parte (chamado pela aba Contas, uma vez).
@@ -59,7 +99,10 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     clearTimeout(timers.current[chave]);
     pendentes.current++;
     timers.current[chave] = setTimeout(async () => {
-      try { await persistir(`/api/${tabela}/${id}`, "PATCH", { [campo]: valor }); }
+      try {
+        const r = await persistir(`/api/${tabela}/${id}`, "PATCH", { [campo]: valor });
+        if (!r.ok) { mostrarErro("Não foi possível guardar a alteração."); recarregar(); }
+      } catch { mostrarErro("Sem ligação ao servidor."); }
       finally { pendentes.current--; }
     }, 450);
   }
@@ -70,173 +113,257 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     clearTimeout(timers.current[chave]);
     pendentes.current++;
     timers.current[chave] = setTimeout(async () => {
-      try { await persistir("/api/config", "PATCH", { [campo]: valor }); }
+      try {
+        const r = await persistir("/api/config", "PATCH", { [campo]: valor });
+        if (!r.ok) { mostrarErro("Não foi possível guardar a configuração."); recarregar(); }
+      } catch { mostrarErro("Sem ligação ao servidor."); }
       finally { pendentes.current--; }
     }, 450);
   }
 
   // ---------- Pedidos / itens ----------
   async function novoPedido(dados) {
-    const r = await persistir("/api/pedidos", "POST", dados);
-    const pedido = await r.json();
-    setEstado((prev) => ({ ...prev, pedidos: [pedido, ...prev.pedidos] }));
-    return pedido;
+    return comEscrita(async () => {
+      const r = await persistir("/api/pedidos", "POST", dados);
+      if (!r.ok) { mostrarErro("Não foi possível criar o pedido."); return null; }
+      const pedido = await r.json();
+      setEstado((prev) => ({ ...prev, pedidos: [pedido, ...prev.pedidos] }));
+      return pedido;
+    });
   }
   async function apagarPedido(id) {
-    if (!confirm("Apagar este pedido e todos os seus itens?")) return false;
-    await persistir(`/api/pedidos/${id}`, "DELETE");
-    setEstado((prev) => ({ ...prev, pedidos: prev.pedidos.filter((p) => p.id !== id) }));
-    return true;
+    const ok = await confirmar({
+      titulo: "Apagar pedido",
+      mensagem: "Isto apaga o pedido e todos os seus itens. Não dá para desfazer.",
+      textoConfirmar: "Apagar",
+      perigo: true,
+    });
+    if (!ok) return false;
+    return comEscrita(async () => {
+      const r = await persistir(`/api/pedidos/${id}`, "DELETE");
+      if (!r.ok) { mostrarErro("Não foi possível apagar o pedido."); recarregar(); return false; }
+      setEstado((prev) => ({ ...prev, pedidos: prev.pedidos.filter((p) => p.id !== id) }));
+      return true;
+    });
   }
   async function novoItem(pedidoId) {
-    const r = await persistir("/api/itens", "POST", { pedidoId });
-    const item = await r.json();
-    setEstado((prev) => ({
-      ...prev,
-      pedidos: prev.pedidos.map((p) => (p.id === pedidoId ? { ...p, itens: [...p.itens, item] } : p)),
-    }));
-    return item;
+    return comEscrita(async () => {
+      const r = await persistir("/api/itens", "POST", { pedidoId });
+      if (!r.ok) { mostrarErro("Não foi possível adicionar o item."); return null; }
+      const item = await r.json();
+      setEstado((prev) => ({
+        ...prev,
+        pedidos: prev.pedidos.map((p) => (p.id === pedidoId ? { ...p, itens: [...p.itens, item] } : p)),
+      }));
+      return item;
+    });
   }
   async function apagarItem(pedidoId, itemId) {
-    await persistir(`/api/itens/${itemId}`, "DELETE");
-    setEstado((prev) => ({
-      ...prev,
-      pedidos: prev.pedidos.map((p) => (p.id === pedidoId ? { ...p, itens: p.itens.filter((i) => i.id !== itemId) } : p)),
-    }));
+    return comEscrita(async () => {
+      const r = await persistir(`/api/itens/${itemId}`, "DELETE");
+      if (!r.ok) { mostrarErro("Não foi possível apagar o item."); recarregar(); return; }
+      setEstado((prev) => ({
+        ...prev,
+        pedidos: prev.pedidos.map((p) => (p.id === pedidoId ? { ...p, itens: p.itens.filter((i) => i.id !== itemId) } : p)),
+      }));
+    });
   }
   async function marcarVendido(pedidoId, itemId, precoVenda, dataVenda) {
-    setEstado((prev) => substituirItemCampos(prev, pedidoId, itemId, { precoVenda, dataVenda }));
-    await persistir(`/api/itens/${itemId}`, "PATCH", { precoVenda, dataVenda });
+    return comEscrita(async () => {
+      setEstado((prev) => substituirItemCampos(prev, pedidoId, itemId, { precoVenda, dataVenda }));
+      const r = await persistir(`/api/itens/${itemId}`, "PATCH", { precoVenda, dataVenda });
+      if (!r.ok) { mostrarErro("Não foi possível guardar a venda."); recarregar(); }
+    });
   }
   // Autofill: preenche um item a partir de outro (copia nome/categoria/preço + foto).
   async function aplicarTemplate(itemId, origemId) {
-    const r = await persistir(`/api/itens/${itemId}/template`, "POST", { origemId });
-    if (!r.ok) return;
-    const item = await r.json();
-    setEstado((prev) => substituirItem(prev, item));
+    return comEscrita(async () => {
+      const r = await persistir(`/api/itens/${itemId}/template`, "POST", { origemId });
+      if (!r.ok) { mostrarErro("Não foi possível copiar do item anterior."); return; }
+      const item = await r.json();
+      setEstado((prev) => substituirItem(prev, item));
+    });
   }
   async function bulkCategoria(ids, categoria) {
     if (ids.length === 0) return;
-    await persistir("/api/itens/categoria", "POST", { ids, categoria });
-    setEstado((prev) => ({
-      ...prev,
-      pedidos: prev.pedidos.map((p) => ({
-        ...p,
-        itens: p.itens.map((it) => (ids.includes(it.id) ? { ...it, categoria } : it)),
-      })),
-    }));
+    return comEscrita(async () => {
+      const r = await persistir("/api/itens/categoria", "POST", { ids, categoria });
+      if (!r.ok) { mostrarErro("Não foi possível mudar a categoria."); recarregar(); return; }
+      setEstado((prev) => ({
+        ...prev,
+        pedidos: prev.pedidos.map((p) => ({
+          ...p,
+          itens: p.itens.map((it) => (ids.includes(it.id) ? { ...it, categoria } : it)),
+        })),
+      }));
+    });
   }
 
   // ---------- Fotos ----------
   async function uploadFoto(itemId, ficheiro) {
-    const otimizada = await prepararImagem(ficheiro); // encolhe + converte HEIC→JPEG
-    const fd = new FormData();
-    fd.append("foto", otimizada);
-    const r = await fetch(`/api/itens/${itemId}/foto`, { method: "POST", body: fd });
-    if (!r.ok) return;
-    const item = await r.json();
-    setEstado((prev) => substituirItem(prev, item));
+    return comEscrita(async () => {
+      const otimizada = await prepararImagem(ficheiro); // encolhe + converte HEIC→JPEG
+      const fd = new FormData();
+      fd.append("foto", otimizada);
+      const r = await fetch(`/api/itens/${itemId}/foto`, { method: "POST", body: fd });
+      if (!r.ok) { mostrarErro("Não foi possível guardar a foto."); return; }
+      const item = await r.json();
+      setEstado((prev) => substituirItem(prev, item));
+    });
   }
   async function removerFoto(itemId) {
-    const r = await persistir(`/api/itens/${itemId}/foto`, "DELETE");
-    if (!r.ok) return;
-    const item = await r.json();
-    setEstado((prev) => substituirItem(prev, item));
+    const ok = await confirmar({
+      titulo: "Remover foto",
+      mensagem: "Remover a foto deste item?",
+      textoConfirmar: "Remover",
+      perigo: true,
+    });
+    if (!ok) return;
+    return comEscrita(async () => {
+      const r = await persistir(`/api/itens/${itemId}/foto`, "DELETE");
+      if (!r.ok) { mostrarErro("Não foi possível remover a foto."); recarregar(); return; }
+      const item = await r.json();
+      setEstado((prev) => substituirItem(prev, item));
+    });
   }
 
   // ---------- Rascunho de encomenda (aba Novo Pedido) ----------
   async function novaLinha(dados = {}) {
-    const r = await persistir("/api/rascunho", "POST", dados);
-    const linha = await r.json();
-    setEstado((prev) => ({ ...prev, rascunho: [...(prev.rascunho ?? []), linha] }));
-    return linha;
+    return comEscrita(async () => {
+      const r = await persistir("/api/rascunho", "POST", dados);
+      if (!r.ok) { mostrarErro("Não foi possível adicionar a camisa."); return null; }
+      const linha = await r.json();
+      setEstado((prev) => ({ ...prev, rascunho: [...(prev.rascunho ?? []), linha] }));
+      return linha;
+    });
   }
   async function apagarLinha(id) {
-    await persistir(`/api/rascunho/${id}`, "DELETE");
-    setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.filter((l) => l.id !== id) }));
+    return comEscrita(async () => {
+      const r = await persistir(`/api/rascunho/${id}`, "DELETE");
+      if (!r.ok) { mostrarErro("Não foi possível remover a camisa."); recarregar(); return; }
+      setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.filter((l) => l.id !== id) }));
+    });
   }
   async function uploadFotoLinha(linhaId, ficheiro) {
-    const otimizada = await prepararImagem(ficheiro);
-    const fd = new FormData();
-    fd.append("foto", otimizada);
-    const r = await fetch(`/api/rascunho/${linhaId}/foto`, { method: "POST", body: fd });
-    if (!r.ok) return;
-    const linha = await r.json();
-    setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.map((l) => (l.id === linha.id ? linha : l)) }));
+    return comEscrita(async () => {
+      const otimizada = await prepararImagem(ficheiro);
+      const fd = new FormData();
+      fd.append("foto", otimizada);
+      const r = await fetch(`/api/rascunho/${linhaId}/foto`, { method: "POST", body: fd });
+      if (!r.ok) { mostrarErro("Não foi possível guardar a foto."); return; }
+      const linha = await r.json();
+      setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.map((l) => (l.id === linha.id ? linha : l)) }));
+    });
   }
   async function aplicarTemplateLinha(linhaId, origemId) {
-    const r = await persistir(`/api/rascunho/${linhaId}/template`, "POST", { origemId });
-    if (!r.ok) return;
-    const linha = await r.json();
-    setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.map((l) => (l.id === linha.id ? linha : l)) }));
+    return comEscrita(async () => {
+      const r = await persistir(`/api/rascunho/${linhaId}/template`, "POST", { origemId });
+      if (!r.ok) { mostrarErro("Não foi possível copiar do item anterior."); return; }
+      const linha = await r.json();
+      setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.map((l) => (l.id === linha.id ? linha : l)) }));
+    });
   }
   // "Criar pedido": cria o pedido a partir do rascunho e devolve-o (já com itens).
   async function finalizarRascunho(dadosPedido) {
-    const r = await persistir("/api/rascunho/finalizar", "POST", dadosPedido);
-    const dados = await r.json();
-    if (!r.ok) throw new Error(dados.erro || "Não foi possível criar o pedido.");
-    setEstado((prev) => ({ ...prev, rascunho: [], pedidos: [dados, ...prev.pedidos] }));
-    return dados;
+    return comEscrita(async () => {
+      const r = await persistir("/api/rascunho/finalizar", "POST", dadosPedido);
+      const dados = await r.json();
+      if (!r.ok) throw new Error(dados.erro || "Não foi possível criar o pedido.");
+      setEstado((prev) => ({ ...prev, rascunho: [], pedidos: [dados, ...prev.pedidos] }));
+      return dados;
+    });
   }
 
   // ---------- Patches (de um item ou de uma linha do rascunho) ----------
   async function novoPatch(alvo) {
     // alvo: { itemId } ou { linhaId }
-    const r = await persistir("/api/patches", "POST", alvo);
-    const patch = await r.json();
-    setEstado((prev) => adicionarPatch(prev, patch));
+    return comEscrita(async () => {
+      const r = await persistir("/api/patches", "POST", alvo);
+      if (!r.ok) { mostrarErro("Não foi possível adicionar o patch."); return; }
+      const patch = await r.json();
+      setEstado((prev) => adicionarPatch(prev, patch));
+    });
   }
   async function apagarPatch(patch) {
-    await persistir(`/api/patches/${patch.id}`, "DELETE");
-    setEstado((prev) => removerPatch(prev, patch));
+    return comEscrita(async () => {
+      const r = await persistir(`/api/patches/${patch.id}`, "DELETE");
+      if (!r.ok) { mostrarErro("Não foi possível remover o patch."); recarregar(); return; }
+      setEstado((prev) => removerPatch(prev, patch));
+    });
   }
   async function uploadFotoPatch(patchId, ficheiro) {
-    const otimizada = await prepararImagem(ficheiro);
-    const fd = new FormData();
-    fd.append("foto", otimizada);
-    const r = await fetch(`/api/patches/${patchId}/foto`, { method: "POST", body: fd });
-    if (!r.ok) return;
-    const patch = await r.json();
-    setEstado((prev) => substituirPatch(prev, patch));
+    return comEscrita(async () => {
+      const otimizada = await prepararImagem(ficheiro);
+      const fd = new FormData();
+      fd.append("foto", otimizada);
+      const r = await fetch(`/api/patches/${patchId}/foto`, { method: "POST", body: fd });
+      if (!r.ok) { mostrarErro("Não foi possível guardar a foto do patch."); return; }
+      const patch = await r.json();
+      setEstado((prev) => substituirPatch(prev, patch));
+    });
   }
 
   // ---------- Sócios ----------
   async function novoSocio(dados) {
-    const r = await persistir("/api/socios", "POST", dados);
-    const socio = await r.json();
-    setEstado((prev) => ({ ...prev, socios: [...prev.socios, socio] }));
+    return comEscrita(async () => {
+      const r = await persistir("/api/socios", "POST", dados);
+      if (!r.ok) { mostrarErro("Não foi possível criar o sócio."); return; }
+      const socio = await r.json();
+      setEstado((prev) => ({ ...prev, socios: [...prev.socios, socio] }));
+    });
   }
   async function apagarSocio(id) {
-    if (!confirm("Apagar este sócio? Os pedidos dele passam a 'sozinho'.")) return;
-    await persistir(`/api/socios/${id}`, "DELETE");
-    setEstado((prev) => ({
-      ...prev,
-      socios: prev.socios.filter((s) => s.id !== id),
-      pedidos: prev.pedidos.map((p) => (p.socioId === id ? { ...p, socioId: null } : p)),
-      credenciais: prev.credenciais.map((c) => (c.socioId === id ? { ...c, socioId: null } : c)),
-    }));
+    const ok = await confirmar({
+      titulo: "Apagar sócio",
+      mensagem: "Os pedidos dele passam a 'sozinho'. Tens a certeza?",
+      textoConfirmar: "Apagar",
+      perigo: true,
+    });
+    if (!ok) return;
+    return comEscrita(async () => {
+      const r = await persistir(`/api/socios/${id}`, "DELETE");
+      if (!r.ok) { mostrarErro("Não foi possível apagar o sócio."); recarregar(); return; }
+      setEstado((prev) => ({
+        ...prev,
+        socios: prev.socios.filter((s) => s.id !== id),
+        pedidos: prev.pedidos.map((p) => (p.socioId === id ? { ...p, socioId: null } : p)),
+        credenciais: prev.credenciais.map((c) => (c.socioId === id ? { ...c, socioId: null } : c)),
+      }));
+    });
   }
 
   // ---------- Despesas ----------
   async function novaDespesa(dados) {
-    const r = await persistir("/api/despesas", "POST", dados);
-    const despesa = await r.json();
-    setEstado((prev) => ({ ...prev, despesas: [...prev.despesas, despesa] }));
+    return comEscrita(async () => {
+      const r = await persistir("/api/despesas", "POST", dados);
+      if (!r.ok) { mostrarErro("Não foi possível criar a despesa."); return; }
+      const despesa = await r.json();
+      setEstado((prev) => ({ ...prev, despesas: [...prev.despesas, despesa] }));
+    });
   }
   async function apagarDespesa(id) {
-    await persistir(`/api/despesas/${id}`, "DELETE");
-    setEstado((prev) => ({ ...prev, despesas: prev.despesas.filter((d) => d.id !== id) }));
+    return comEscrita(async () => {
+      const r = await persistir(`/api/despesas/${id}`, "DELETE");
+      if (!r.ok) { mostrarErro("Não foi possível apagar a despesa."); recarregar(); return; }
+      setEstado((prev) => ({ ...prev, despesas: prev.despesas.filter((d) => d.id !== id) }));
+    });
   }
 
   // ---------- Credenciais ----------
   async function novaCredencial(dados) {
-    const r = await persistir("/api/credenciais", "POST", dados);
-    const credencial = await r.json();
-    setEstado((prev) => ({ ...prev, credenciais: [...prev.credenciais, credencial] }));
+    return comEscrita(async () => {
+      const r = await persistir("/api/credenciais", "POST", dados);
+      if (!r.ok) { mostrarErro("Não foi possível guardar a conta."); return; }
+      const credencial = await r.json();
+      setEstado((prev) => ({ ...prev, credenciais: [...prev.credenciais, credencial] }));
+    });
   }
   async function apagarCredencial(id) {
-    await persistir(`/api/credenciais/${id}`, "DELETE");
-    setEstado((prev) => ({ ...prev, credenciais: prev.credenciais.filter((c) => c.id !== id) }));
+    return comEscrita(async () => {
+      const r = await persistir(`/api/credenciais/${id}`, "DELETE");
+      if (!r.ok) { mostrarErro("Não foi possível apagar a conta."); recarregar(); return; }
+      setEstado((prev) => ({ ...prev, credenciais: prev.credenciais.filter((c) => c.id !== id) }));
+    });
   }
 
   // ---------- Backup / sessão ----------
@@ -276,7 +403,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     novoPatch, apagarPatch, uploadFotoPatch,
     uploadFoto, removerFoto,
     novoSocio, apagarSocio, novaDespesa, apagarDespesa, novaCredencial, apagarCredencial,
-    carregarCredenciais, exportar, importar, sair,
+    carregarCredenciais, exportar, importar, sair, confirmar,
   };
 
   return (
@@ -295,6 +422,15 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
         <option value="Camisola" />
         <option value="Acessório" />
       </datalist>
+
+      {confirmacao && (
+        <ModalConfirmar
+          {...confirmacao}
+          onConfirmar={() => responderConfirmacao(true)}
+          onFechar={() => responderConfirmacao(false)}
+        />
+      )}
+      {erro && <div className="toast" role="alert">{erro}</div>}
     </EstadoContexto.Provider>
   );
 }
