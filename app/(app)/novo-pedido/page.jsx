@@ -27,7 +27,7 @@ export default function PaginaNovoPedido() {
   const router = useRouter();
   const {
     estado, novaLinha, apagarLinha, uploadFotoLinha, aplicarTemplateLinha, editarCampo,
-    finalizarRascunho, novoPatch, apagarPatch, uploadFotoPatch,
+    finalizarRascunho, novoPatch, apagarPatch, uploadFotoPatch, confirmar,
   } = useEstado();
   const rascunho = estado.rascunho ?? [];
   const [pedido, setPedido] = useState(PEDIDO_INICIAL);
@@ -55,7 +55,7 @@ export default function PaginaNovoPedido() {
   // colar imagem (⌘V): se o foco estiver no nome de um patch → foto desse patch;
   // senão cria uma camisa nova com a foto.
   const refColar = useRef(null);
-  refColar.current = { novaLinha, uploadFotoLinha, uploadFotoPatch };
+  refColar.current = { novaLinha, uploadFotoLinha, uploadFotoPatch, confirmar, rascunho };
   useEffect(() => {
     async function aoColar(e) {
       const itens = e.clipboardData?.items;
@@ -66,9 +66,16 @@ export default function PaginaNovoPedido() {
       }
       if (!ficheiro) return;
       e.preventDefault();
-      const { novaLinha, uploadFotoLinha, uploadFotoPatch } = refColar.current;
+      const { novaLinha, uploadFotoLinha, uploadFotoPatch, confirmar, rascunho } = refColar.current;
       const patchId = document.activeElement?.dataset?.patchId;
-      if (patchId) { await uploadFotoPatch(patchId, ficheiro); return; }
+      if (patchId) {
+        // se o patch já tem foto, confirmar antes de trocar
+        const patch = rascunho.flatMap((l) => l.patches || []).find((p) => p.id === patchId);
+        if (patch?.foto && !(await confirmar({ titulo: "Trocar foto", mensagem: "Este patch já tem uma foto. Queres substituí-la?", textoConfirmar: "Trocar" }))) return;
+        await uploadFotoPatch(patchId, ficheiro);
+        return;
+      }
+      // colar fora de um patch cria sempre uma camisa nova (sem foto prévia)
       const linha = await novaLinha({ categoria: "Camisa de futebol" });
       await uploadFotoLinha(linha.id, ficheiro);
     }

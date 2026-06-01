@@ -21,7 +21,7 @@ export default function PedidoDetalhe({ pedido }) {
   const {
     estado, editarCampo, marcarVendido, novoItem, apagarItem, apagarPedido,
     uploadFoto, removerFoto, bulkCategoria, aplicarTemplate,
-    novoPatch, apagarPatch, uploadFotoPatch,
+    novoPatch, apagarPatch, uploadFotoPatch, confirmar,
   } = useEstado();
   const socios = estado.socios;
   const config = estado.config;
@@ -78,7 +78,7 @@ export default function PedidoDetalhe({ pedido }) {
   // senão cria um item novo já com a foto. Um ref guarda os valores frescos para
   // o listener não precisar de ser re-registado a cada render.
   const colarRef = useRef(null);
-  colarRef.current = { selecionados, pedidoId: pedido.id, novoItem, uploadFoto, uploadFotoPatch };
+  colarRef.current = { selecionados, pedido, novoItem, uploadFoto, uploadFotoPatch, confirmar };
   useEffect(() => {
     async function aoColar(e) {
       const itens = e.clipboardData?.items;
@@ -89,13 +89,22 @@ export default function PedidoDetalhe({ pedido }) {
       }
       if (!ficheiro) return; // sem imagem na área de transferência → deixa o paste normal
       e.preventDefault();
-      const { selecionados, pedidoId, novoItem, uploadFoto, uploadFotoPatch } = colarRef.current;
+      const { selecionados, pedido, novoItem, uploadFoto, uploadFotoPatch, confirmar } = colarRef.current;
       const patchId = document.activeElement?.dataset?.patchId;
-      if (patchId) { await uploadFotoPatch(patchId, ficheiro); return; }
+      if (patchId) {
+        // se o patch já tem foto, confirmar antes de trocar
+        const patch = pedido.itens.flatMap((it) => it.patches || []).find((p) => p.id === patchId);
+        if (patch?.foto && !(await pedirTrocaFoto(confirmar))) return;
+        await uploadFotoPatch(patchId, ficheiro);
+        return;
+      }
       if (selecionados.size === 1) {
-        await uploadFoto([...selecionados][0], ficheiro);
+        const itemId = [...selecionados][0];
+        const item = pedido.itens.find((it) => it.id === itemId);
+        if (item?.foto && !(await pedirTrocaFoto(confirmar))) return; // já tem foto → perguntar
+        await uploadFoto(itemId, ficheiro);
       } else {
-        const novo = await novoItem(pedidoId);
+        const novo = await novoItem(pedido.id);
         await uploadFoto(novo.id, ficheiro);
       }
     }
@@ -269,6 +278,15 @@ function ItemCartao({
       </div>
     </div>
   );
+}
+
+// Pergunta antes de substituir uma foto que já existe (colar ⌘V).
+function pedirTrocaFoto(confirmar) {
+  return confirmar({
+    titulo: "Trocar foto",
+    mensagem: "Isto já tem uma foto. Queres substituí-la pela que colaste?",
+    textoConfirmar: "Trocar",
+  });
 }
 
 function Pill({ label, valor, azul }) {
