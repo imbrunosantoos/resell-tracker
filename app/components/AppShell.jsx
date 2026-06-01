@@ -13,7 +13,7 @@ import TopNav from "./TopNav";
 export default function AppShell({ utilizador, estadoInicial, children }) {
   const router = useRouter();
   // As credenciais não vêm no estado inicial (carregam-se só na aba Contas).
-  const [estado, setEstado] = useState(() => ({ ...estadoInicial, credenciais: [] }));
+  const [estado, setEstado] = useState(() => ({ ...estadoInicial, credenciais: [], rascunho: estadoInicial.rascunho ?? [] }));
 
   const timers = useRef({}); // debounce por campo
   const pendentes = useRef(0); // nº de escritas por confirmar
@@ -144,6 +144,41 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     setEstado((prev) => substituirItem(prev, item));
   }
 
+  // ---------- Rascunho de encomenda (aba Novo Pedido) ----------
+  async function novaLinha(dados = {}) {
+    const r = await persistir("/api/rascunho", "POST", dados);
+    const linha = await r.json();
+    setEstado((prev) => ({ ...prev, rascunho: [...(prev.rascunho ?? []), linha] }));
+    return linha;
+  }
+  async function apagarLinha(id) {
+    await persistir(`/api/rascunho/${id}`, "DELETE");
+    setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.filter((l) => l.id !== id) }));
+  }
+  async function uploadFotoLinha(linhaId, ficheiro) {
+    const otimizada = await prepararImagem(ficheiro);
+    const fd = new FormData();
+    fd.append("foto", otimizada);
+    const r = await fetch(`/api/rascunho/${linhaId}/foto`, { method: "POST", body: fd });
+    if (!r.ok) return;
+    const linha = await r.json();
+    setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.map((l) => (l.id === linha.id ? linha : l)) }));
+  }
+  async function aplicarTemplateLinha(linhaId, origemId) {
+    const r = await persistir(`/api/rascunho/${linhaId}/template`, "POST", { origemId });
+    if (!r.ok) return;
+    const linha = await r.json();
+    setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.map((l) => (l.id === linha.id ? linha : l)) }));
+  }
+  // "Criar pedido": cria o pedido a partir do rascunho e devolve-o (já com itens).
+  async function finalizarRascunho(dadosPedido) {
+    const r = await persistir("/api/rascunho/finalizar", "POST", dadosPedido);
+    const dados = await r.json();
+    if (!r.ok) throw new Error(dados.erro || "Não foi possível criar o pedido.");
+    setEstado((prev) => ({ ...prev, rascunho: [], pedidos: [dados, ...prev.pedidos] }));
+    return dados;
+  }
+
   // ---------- Sócios ----------
   async function novoSocio(dados) {
     const r = await persistir("/api/socios", "POST", dados);
@@ -216,6 +251,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     utilizador, estado, resumo, categorias, mensal, relatorio, listaCategorias, estaVendido,
     editarCampo, editarConfig,
     novoPedido, apagarPedido, novoItem, apagarItem, marcarVendido, bulkCategoria, aplicarTemplate,
+    novaLinha, apagarLinha, uploadFotoLinha, aplicarTemplateLinha, finalizarRascunho,
     uploadFoto, removerFoto,
     novoSocio, apagarSocio, novaDespesa, apagarDespesa, novaCredencial, apagarCredencial,
     carregarCredenciais, exportar, importar, sair,
@@ -254,6 +290,9 @@ function aplicarCampoLocal(estado, tabela, id, campo, valor) {
   }
   if (tabela === "credenciais") {
     return { ...estado, credenciais: estado.credenciais.map((c) => (c.id === id ? { ...c, [campo]: valor } : c)) };
+  }
+  if (tabela === "rascunho") {
+    return { ...estado, rascunho: estado.rascunho.map((l) => (l.id === id ? { ...l, [campo]: valor } : l)) };
   }
   // itens
   return {
