@@ -14,11 +14,12 @@ import ModalConfirmar from "./ModalConfirmar";
 export default function AppShell({ utilizador, estadoInicial, children }) {
   const router = useRouter();
   // As credenciais não vêm no estado inicial (carregam-se só na aba Contas).
-  const [estado, setEstado] = useState(() => ({ ...estadoInicial, credenciais: [], rascunho: estadoInicial.rascunho ?? [] }));
+  const [estado, setEstado] = useState(() => ({ ...estadoInicial, credenciais: [], rascunho: estadoInicial.rascunho ?? [], acertos: estadoInicial.acertos ?? [] }));
 
   const timers = useRef({}); // debounce por campo
   const pendentes = useRef(0); // nº de escritas por confirmar
   const credsCarregadas = useRef(false);
+  const backupTimer = useRef(null); // debounce do snapshot automático
 
   // Toast de erro (aparece quando uma escrita falha) e modal de confirmação.
   const [erro, setErro] = useState(null);
@@ -51,7 +52,34 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   async function comEscrita(fn) {
     pendentes.current++;
     try { return await fn(); }
-    finally { pendentes.current--; }
+    finally { pendentes.current--; agendarBackup(); }
+  }
+
+  // Cópia de segurança automática: após uma alteração, agenda (debounced) um
+  // snapshot no servidor. O servidor guarda em data/backups/ e poda os antigos.
+  function agendarBackup() {
+    clearTimeout(backupTimer.current);
+    backupTimer.current = setTimeout(() => { fetch("/api/backup", { method: "POST" }).catch(() => {}); }, 12_000);
+  }
+
+  // Restaura uma cópia (substitui os dados do negócio).
+  async function restaurarBackup(nome) {
+    const ok = await confirmar({
+      titulo: "Restaurar cópia",
+      mensagem: "Isto substitui os pedidos, sócios, despesas e acertos pelos da cópia escolhida.",
+      textoConfirmar: "Restaurar",
+      perigo: true,
+    });
+    if (!ok) return false;
+    const r = await persistir("/api/backup/restaurar", "POST", { nome });
+    if (!r.ok) { mostrarErro("Não foi possível restaurar a cópia."); return false; }
+    const dados = await r.json();
+    setEstado((prev) => ({ ...dados, credenciais: prev.credenciais }));
+    return true;
+  }
+  async function listarBackups() {
+    const r = await fetch("/api/backup");
+    return r.ok ? r.json() : [];
   }
 
   // ---------- Sincronização (apanha alterações do sócio) ----------
@@ -103,7 +131,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
         const r = await persistir(`/api/${tabela}/${id}`, "PATCH", { [campo]: valor });
         if (!r.ok) { mostrarErro("Não foi possível guardar a alteração."); recarregar(); }
       } catch { mostrarErro("Sem ligação ao servidor."); }
-      finally { pendentes.current--; }
+      finally { pendentes.current--; agendarBackup(); }
     }, 450);
   }
 
@@ -117,7 +145,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
         const r = await persistir("/api/config", "PATCH", { [campo]: valor });
         if (!r.ok) { mostrarErro("Não foi possível guardar a configuração."); recarregar(); }
       } catch { mostrarErro("Sem ligação ao servidor."); }
-      finally { pendentes.current--; }
+      finally { pendentes.current--; agendarBackup(); }
     }, 450);
   }
 
@@ -337,7 +365,25 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
         socios: prev.socios.filter((s) => s.id !== id),
         pedidos: prev.pedidos.map((p) => (p.socioId === id ? { ...p, socioId: null } : p)),
         credenciais: prev.credenciais.map((c) => (c.socioId === id ? { ...c, socioId: null } : c)),
+        acertos: (prev.acertos ?? []).filter((a) => a.socioId !== id), // caem por cascade no servidor
       }));
+    });
+  }
+
+  // ---------- Acertos de contas com sócios ----------
+  async function novoAcerto(dados) {
+    return comEscrita(async () => {
+      const r = await persistir("/api/acertos", "POST", dados);
+      if (!r.ok) { mostrarErro("Não foi possível registar o acerto."); return; }
+      const acerto = await r.json();
+      setEstado((prev) => ({ ...prev, acertos: [acerto, ...(prev.acertos ?? [])] }));
+    });
+  }
+  async function apagarAcerto(id) {
+    return comEscrita(async () => {
+      const r = await persistir(`/api/acertos/${id}`, "DELETE");
+      if (!r.ok) { mostrarErro("Não foi possível apagar o acerto."); recarregar(); return; }
+      setEstado((prev) => ({ ...prev, acertos: (prev.acertos ?? []).filter((a) => a.id !== id) }));
     });
   }
 
@@ -411,8 +457,9 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     novaLinha, apagarLinha, uploadFotoLinha, aplicarTemplateLinha, finalizarRascunho,
     novoPatch, apagarPatch, uploadFotoPatch,
     uploadFoto, removerFoto,
-    novoSocio, apagarSocio, novaDespesa, apagarDespesa, novaCredencial, apagarCredencial,
+    novoSocio, apagarSocio, novoAcerto, apagarAcerto, novaDespesa, apagarDespesa, novaCredencial, apagarCredencial,
     carregarCredenciais, exportar, importar, sair, confirmar,
+    restaurarBackup, listarBackups,
   };
 
   return (

@@ -1,10 +1,34 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import { useEstado } from "@/app/components/contexto";
 
-// Definições: margem mínima, alerta de dias, backup e sair.
+// "há X" a partir de uma data ISO (para a última cópia de segurança).
+function haQuanto(iso) {
+  const seg = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 1000));
+  if (seg < 60) return "há segundos";
+  if (seg < 3600) return `há ${Math.floor(seg / 60)} min`;
+  if (seg < 86400) return `há ${Math.floor(seg / 3600)} h`;
+  return `há ${Math.floor(seg / 86400)} dia(s)`;
+}
+const quando = (iso) => new Date(iso).toLocaleString("pt-PT");
+
+// Definições: margem mínima, alerta de dias, cópias de segurança e sair.
 export default function PaginaDefinicoes() {
-  const { estado, editarConfig, exportar, importar, sair } = useEstado();
+  const { estado, editarConfig, exportar, importar, sair, listarBackups, restaurarBackup } = useEstado();
+
+  const [backups, setBackups] = useState([]);
+  const refrescar = useCallback(async () => { setBackups(await listarBackups()); }, [listarBackups]);
+  useEffect(() => { refrescar(); }, [refrescar]);
+
+  async function criarAgora() {
+    await fetch("/api/backup", { method: "POST" });
+    refrescar();
+  }
+  async function restaurar(nome) {
+    const ok = await restaurarBackup(nome);
+    if (ok) refrescar();
+  }
 
   return (
     <div className="pagina">
@@ -37,8 +61,15 @@ export default function PaginaDefinicoes() {
       </section>
 
       <section className="bloco">
-        <h2>Backup</h2>
-        <div className="barra-acoes">
+        <h2>Cópias de segurança <span className="conta">
+          — {backups.length ? `última ${haQuanto(backups[0].data)}` : "automáticas"}</span></h2>
+        <p className="dim pequeno" style={{ marginBottom: 12 }}>
+          A app guarda uma cópia sozinha a cada alteração (em <code>data/backups/</code>, as últimas 40).
+          Podes restaurar qualquer uma aqui. Para guardar fora desta máquina, usa o “Exportar JSON”.
+        </p>
+
+        <div className="barra-acoes" style={{ marginBottom: 12 }}>
+          <button className="btn" onClick={criarAgora}>Criar cópia agora</button>
           <button className="btn" onClick={() => exportar("json")}>Exportar JSON</button>
           <button className="btn" onClick={() => exportar("csv")}>Exportar CSV</button>
           <label className="btn" style={{ cursor: "pointer" }}>
@@ -47,10 +78,19 @@ export default function PaginaDefinicoes() {
               onChange={(e) => { importar(e.target.files[0]); e.target.value = ""; }} />
           </label>
         </div>
-        <p className="dim pequeno" style={{ marginTop: 10 }}>
-          O JSON guarda pedidos, itens, sócios e despesas (não as passwords das contas).
-          Para backup completo, copia a pasta <code>data/</code>.
-        </p>
+
+        {backups.length === 0 ? (
+          <p className="dim pequeno">Ainda não há cópias. Faz uma alteração ou carrega em “Criar cópia agora”.</p>
+        ) : (
+          <div className="backups-lista">
+            {backups.slice(0, 10).map((b) => (
+              <div className="backup-linha" key={b.nome}>
+                <span className="backup-data">{quando(b.data)} <span className="dim">· {haQuanto(b.data)}</span></span>
+                <button className="btn mini" onClick={() => restaurar(b.nome)}>Restaurar</button>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="bloco">

@@ -10,18 +10,21 @@ import UltimasVendas from "@/app/components/UltimasVendas";
 export default function PaginaLucro() {
   const {
     estado, resumo, categorias, mensal,
-    editarCampo, novoSocio, apagarSocio,
+    editarCampo, novoSocio, apagarSocio, novoAcerto, apagarAcerto,
   } = useEstado();
 
   return (
     <div className="pagina">
       <section className="bloco">
-        <h2>Sócios <span className="conta">— Lucro por sócio</span></h2>
+        <h2>Sócios <span className="conta">— Lucro e acerto de contas</span></h2>
         <Socios
           socios={estado.socios} porSocio={resumo.porSocio} meuLucro={resumo.meuLucro}
+          acertos={estado.acertos ?? []}
           onCriar={novoSocio}
           onEditar={(id, campo, valor) => editarCampo("socios", id, campo, valor)}
           onApagar={apagarSocio}
+          onNovoAcerto={novoAcerto}
+          onApagarAcerto={apagarAcerto}
         />
       </section>
 

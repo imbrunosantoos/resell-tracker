@@ -135,6 +135,14 @@ body::before {
   display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px;
   margin-top: 18px;
 }
+
+/* lista de cópias de segurança (Definições) */
+.backups-lista { display: flex; flex-direction: column; gap: 6px; }
+.backup-linha {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-2);
+}
+.backup-data { font-size: 13px; font-family: var(--mono); }
 .barra-acoes .espaco { flex: 1; }
 
 /* ---------- Blocos ---------- */
@@ -477,6 +485,19 @@ td input.w-data { width: 144px; }
 .socio-nome-input:focus { background: var(--bg); border-color: var(--accent); }
 .socio-pedidos { font-size: 12px; color: var(--muted); font-family: var(--mono); text-align: right; }
 .socio-lucro { font-family: var(--mono); font-size: 15px; font-weight: 600; text-align: right; }
+
+/* acerto de contas por sócio */
+.socio-cartao { display: flex; flex-direction: column; gap: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--line-soft); }
+.socio-cartao:last-child { border-bottom: none; }
+.acerto-resumo { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 0 12px; font-size: 13px; font-family: var(--mono); }
+.acerto-resumo > .btn { margin-left: auto; }
+.acerto-form { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 12px; }
+.acerto-form input, .acerto-form select { min-width: 0; }
+.acerto-form input[type="date"], .acerto-form select { flex: 0 0 auto; }
+.acerto-form .num { width: 90px; }
+.acerto-lista { display: flex; flex-direction: column; gap: 3px; padding: 0 12px; }
+.acerto-linha { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.acerto-txt { font-size: 12.5px; font-family: var(--mono); }
 
 .form-inline { display: flex; gap: 10px; flex-wrap: wrap; }
 .form-inline input { min-width: 200px; }
