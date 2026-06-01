@@ -9,7 +9,8 @@ import { corCategoria } from "@/lib/cores";
 // porque participas em todas) ou por um sócio (só as dele). A coluna "Parte" é a
 // fatia do lucro de quem está selecionado (lucro÷2 nos pedidos com sócio; lucro
 // inteiro a solo, no caso "Eu").
-export default function UltimasVendas({ pedidos, socios = [], limite = 8 }) {
+// Com `mes` ('YYYY-MM') mostra só as vendas desse mês (e todas, sem "ver mais").
+export default function UltimasVendas({ pedidos, socios = [], limite = 8, mes = null }) {
   const [filtro, setFiltro] = useState("eu"); // "eu" | socioId
   const [mostrarTodas, setMostrarTodas] = useState(false);
   const idsValidos = new Set(socios.map((s) => s.id));
@@ -19,6 +20,7 @@ export default function UltimasVendas({ pedidos, socios = [], limite = 8 }) {
   for (const pedido of pedidos) {
     for (const item of pedido.itens) {
       if (!estaVendido(item)) continue;
+      if (mes && item.dataVenda.slice(0, 7) !== mes) continue; // só as vendas deste mês
       if (socioSel && pedido.socioId !== filtro) continue; // por sócio: só as dele
 
       const m = margem(pedido, item);
@@ -56,7 +58,7 @@ export default function UltimasVendas({ pedidos, socios = [], limite = 8 }) {
             <span>Lucro</span>
             <span>Parte</span>
           </div>
-          {(mostrarTodas ? vendas : vendas.slice(0, limite)).map(({ pedido, item, m, pct, parte }) => (
+          {(mes || mostrarTodas ? vendas : vendas.slice(0, limite)).map(({ pedido, item, m, pct, parte }) => (
             <Link key={item.id} href={`/pedidos/${pedido.id}`} className="venda-linha">
               <span className="venda-info">
                 <span className="venda-dot" style={{ background: corCategoria(item.categoria) }} />
@@ -72,7 +74,7 @@ export default function UltimasVendas({ pedidos, socios = [], limite = 8 }) {
               <span className="venda-parte">{eur(parte)}</span>
             </Link>
           ))}
-          {vendas.length > limite && (
+          {!mes && vendas.length > limite && (
             <button className="btn mini vendas-mais" onClick={() => setMostrarTodas((v) => !v)}>
               {mostrarTodas ? "Ver menos" : `Ver mais (${vendas.length - limite})`}
             </button>

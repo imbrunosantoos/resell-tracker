@@ -458,6 +458,10 @@ td input.w-data { width: 144px; }
 }
 .rel-cartao .cartao-valor { font-size: 22px; }
 .rel-extra { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+/* cartões de mês clicáveis (vão para as vendas do mês) */
+.rel-link { text-decoration: none; color: var(--text); cursor: pointer; transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s; }
+.rel-link:hover { border-color: #3a4452; transform: translateY(-2px); box-shadow: var(--sombra); }
+.mes-titulo { text-transform: capitalize; }
 
 /* ---------- Sócios ---------- */
 .socios-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
