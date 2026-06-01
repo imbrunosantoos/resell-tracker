@@ -77,6 +77,19 @@ On the phone you can also use "Add to Home Screen" to install it as an app (PWA)
 
 > When you move to a domain with HTTPS, set `COOKIE_INSEGURO=0` again — it's safer.
 
+### Desktop launcher (macOS)
+
+There are two helper apps on the Desktop: **ReSell** and **Parar ReSell**.
+
+- **ReSell** rebuilds the app, **restarts** the server (`pkill` any old `next start`, then `next start`
+  again) and opens `http://localhost:3000`. Restarting every time is deliberate: it guarantees the
+  running server is always the current build, so you never end up looking at a stale version.
+- **Parar ReSell** stops the server.
+
+After changing the code, just click **ReSell** — it rebuilds and serves the new version. The service
+worker is versioned (`resell-v3`), so installed PWAs pick up the new version automatically; it caches
+only static assets and never caches pages (a page navigation always hits the network).
+
 ## Where the data lives
 
 Everything inside the `data/` folder (created on first run, outside git):
