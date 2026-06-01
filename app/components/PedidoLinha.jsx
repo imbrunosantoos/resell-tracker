@@ -11,6 +11,7 @@ export default function PedidoLinha({ pedido, socios }) {
   const socio = socios.find((s) => s.id === pedido.socioId);
   const capa = pedido.itens.find((it) => it.foto)?.foto;
   const inicial = (pedido.nome || "?").trim().charAt(0).toUpperCase();
+  const encomenda = pedido.tipo === "encomenda";
 
   return (
     <Link href={`/pedidos/${pedido.id}`} className="pedido-linha">
@@ -22,8 +23,13 @@ export default function PedidoLinha({ pedido, socios }) {
       <span className="pl-info">
         <span className="pl-nome">{pedido.nome}</span>
         <span className="pl-meta">
+          {encomenda && <span className="chip encomenda">Encomenda</span>}
           {socio ? <span className="chip">{socio.nome}</span> : <span className="chip solo">Sozinho</span>}
-          <span className="pl-dim">{r.vendidos}/{r.total} vendidos</span>
+          {encomenda ? (
+            <span className="pl-dim">{pedido.cliente ? pedido.cliente : "cliente —"}{pedido.dataPagamento ? ` · ${pedido.dataPagamento}` : ""}</span>
+          ) : (
+            <span className="pl-dim">{r.vendidos}/{r.total} vendidos</span>
+          )}
         </span>
       </span>
 

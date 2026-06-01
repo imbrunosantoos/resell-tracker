@@ -4,20 +4,27 @@ import { useState } from "react";
 import { useEstado } from "@/app/components/contexto";
 import { estaVendido } from "@/lib/calculos";
 import NovoPedido from "@/app/components/NovoPedido";
+import NovaEncomenda from "@/app/components/NovaEncomenda";
 import Filtros from "@/app/components/Filtros";
 import PedidoLinha from "@/app/components/PedidoLinha";
 
-const FILTROS_VAZIO = { texto: "", estado: "todos", categoria: "", socio: "" };
+const FILTROS_VAZIO = { texto: "", estado: "todos", categoria: "", socio: "", tipo: "" };
 
 // Página de pedidos: criar + filtrar + lista compacta (clica para o detalhe).
 export default function PaginaPedidos() {
-  const { estado, listaCategorias, novoPedido } = useEstado();
+  const { estado, listaCategorias, novoPedido, novaEncomenda } = useEstado();
   const [filtros, setFiltros] = useState(FILTROS_VAZIO);
+  const [aCriar, setACriar] = useState("pedido"); // "pedido" | "encomenda"
 
-  const filtroAtivo = filtros.texto || filtros.estado !== "todos" || filtros.categoria || filtros.socio;
+  const filtroAtivo = filtros.texto || filtros.estado !== "todos" || filtros.categoria || filtros.socio || filtros.tipo;
   const filtroItemAtivo = filtros.texto || filtros.estado !== "todos" || filtros.categoria;
 
   function correspondePedido(p) {
+    // filtro de tipo (pedido normal vs encomenda) é ao nível do pedido
+    if (filtros.tipo) {
+      const tipo = p.tipo || "normal";
+      if (filtros.tipo === "encomenda" ? tipo !== "encomenda" : tipo === "encomenda") return false;
+    }
     // filtro de sócio é ao nível do pedido
     if (filtros.socio) {
       const ok = filtros.socio === "solo" ? !p.socioId : p.socioId === filtros.socio;
@@ -41,8 +48,21 @@ export default function PaginaPedidos() {
   return (
     <div className="pagina">
       <section className="bloco">
-        <h2>Novo pedido</h2>
-        <NovoPedido socios={estado.socios} onCriar={novoPedido} />
+        <div className="criar-toggle">
+          <button
+            className={"toggle-btn" + (aCriar === "pedido" ? " ativo" : "")}
+            onClick={() => setACriar("pedido")}
+          >Novo pedido</button>
+          <button
+            className={"toggle-btn" + (aCriar === "encomenda" ? " ativo" : "")}
+            onClick={() => setACriar("encomenda")}
+          >Nova encomenda</button>
+        </div>
+        {aCriar === "pedido" ? (
+          <NovoPedido socios={estado.socios} onCriar={novoPedido} />
+        ) : (
+          <NovaEncomenda socios={estado.socios} onCriar={novaEncomenda} />
+        )}
       </section>
 
       <section className="bloco">

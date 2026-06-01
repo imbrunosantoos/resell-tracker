@@ -131,6 +131,15 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
       return pedido;
     });
   }
+  async function novaEncomenda(dados) {
+    return comEscrita(async () => {
+      const r = await persistir("/api/encomendas", "POST", dados);
+      if (!r.ok) { mostrarErro("Não foi possível criar a encomenda."); return null; }
+      const pedido = await r.json();
+      setEstado((prev) => ({ ...prev, pedidos: [pedido, ...prev.pedidos] }));
+      return pedido;
+    });
+  }
   async function apagarPedido(id) {
     const ok = await confirmar({
       titulo: "Apagar pedido",
@@ -398,7 +407,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   const valor = {
     utilizador, estado, resumo, categorias, mensal, relatorio, listaCategorias, estaVendido,
     editarCampo, editarConfig,
-    novoPedido, apagarPedido, novoItem, apagarItem, marcarVendido, bulkCategoria, aplicarTemplate,
+    novoPedido, novaEncomenda, apagarPedido, novoItem, apagarItem, marcarVendido, bulkCategoria, aplicarTemplate,
     novaLinha, apagarLinha, uploadFotoLinha, aplicarTemplateLinha, finalizarRascunho,
     novoPatch, apagarPatch, uploadFotoPatch,
     uploadFoto, removerFoto,

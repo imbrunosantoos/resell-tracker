@@ -3,7 +3,7 @@
 // Barra de pesquisa + filtros por estado, sócio e categoria.
 export default function Filtros({ valor, onMudar, categorias, socios = [] }) {
   const set = (campo) => (e) => onMudar({ ...valor, [campo]: e.target.value });
-  const ativo = valor.texto || valor.estado !== "todos" || valor.categoria || valor.socio;
+  const ativo = valor.texto || valor.estado !== "todos" || valor.categoria || valor.socio || valor.tipo;
 
   return (
     <div className="filtros">
@@ -21,6 +21,11 @@ export default function Filtros({ valor, onMudar, categorias, socios = [] }) {
           <option key={s.id} value={s.id}>{s.nome}</option>
         ))}
       </select>
+      <select value={valor.tipo} onChange={set("tipo")}>
+        <option value="">Pedidos e encomendas</option>
+        <option value="normal">Só pedidos</option>
+        <option value="encomenda">Só encomendas</option>
+      </select>
       <select value={valor.estado} onChange={set("estado")}>
         <option value="todos">Todos</option>
         <option value="stock">Em stock</option>
@@ -33,7 +38,7 @@ export default function Filtros({ valor, onMudar, categorias, socios = [] }) {
         ))}
       </select>
       {ativo && (
-        <button className="btn mini" onClick={() => onMudar({ texto: "", estado: "todos", categoria: "", socio: "" })}>
+        <button className="btn mini" onClick={() => onMudar({ texto: "", estado: "todos", categoria: "", socio: "", tipo: "" })}>
           Limpar
         </button>
       )}
