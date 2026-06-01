@@ -138,7 +138,7 @@ context), kept alive while navigating between tabs — with optimistic editing a
 
 ## Notes
 
-- **Monthly expenses** are counted for each month the operation has been active (since the earliest date); **one-offs** count once.
+- Each expense has a **date**: **one-off** expenses count once, in their month; **monthly** expenses count for each month from their date up to the current month.
 - A partner only bears their **half** of expenses marked as split with them; solo expenses are fully yours.
 - Sync between devices is by *polling*: the app reloads the state every so often and whenever you save, so what your partner enters shows up to you shortly after.
 

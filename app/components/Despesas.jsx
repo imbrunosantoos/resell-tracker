@@ -6,16 +6,18 @@ import { useState } from "react";
 // foi só tua ou dividida com um sócio (aí só metade sai do teu lucro). O total a
 // nível de negócio sai do "lucro real" lá em cima. Edição inline com debounce.
 export default function Despesas({ despesas, socios, onEditar, onCriar, onApagar }) {
+  const hoje = new Date().toISOString().slice(0, 10);
   const [nome, setNome] = useState("");
   const [valor, setValor] = useState("");
   const [periodo, setPeriodo] = useState("mensal");
   const [socioId, setSocioId] = useState("");
+  const [data, setData] = useState(hoje);
 
   function criar(e) {
     e.preventDefault();
     if (!nome.trim() && !valor) return;
-    onCriar({ nome, valor, periodo, socioId });
-    setNome(""); setValor(""); setPeriodo("mensal"); setSocioId("");
+    onCriar({ nome, valor, periodo, socioId, data });
+    setNome(""); setValor(""); setPeriodo("mensal"); setSocioId(""); setData(hoje);
   }
 
   return (
@@ -32,6 +34,10 @@ export default function Despesas({ despesas, socios, onEditar, onCriar, onApagar
               className="num" type="number" step="0.01" placeholder="€"
               value={d.valor}
               onChange={(e) => onEditar(d.id, "valor", e.target.value)}
+            />
+            <input
+              type="date" className="desp-data" title="Data da despesa"
+              value={d.data || ""} onChange={(e) => onEditar(d.id, "data", e.target.value)}
             />
             <select value={d.periodo} onChange={(e) => onEditar(d.id, "periodo", e.target.value)}>
               <option value="mensal">por mês</option>
@@ -70,6 +76,10 @@ export default function Despesas({ despesas, socios, onEditar, onCriar, onApagar
             <option value="mensal">por mês</option>
             <option value="unico">uma vez</option>
           </select>
+        </label>
+        <label className="campo">
+          <span>Data</span>
+          <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
         </label>
         <label className="campo">
           <span>Com quem</span>
