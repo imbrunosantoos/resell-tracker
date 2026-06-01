@@ -179,6 +179,27 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     return dados;
   }
 
+  // ---------- Patches (de um item ou de uma linha do rascunho) ----------
+  async function novoPatch(alvo) {
+    // alvo: { itemId } ou { linhaId }
+    const r = await persistir("/api/patches", "POST", alvo);
+    const patch = await r.json();
+    setEstado((prev) => adicionarPatch(prev, patch));
+  }
+  async function apagarPatch(patch) {
+    await persistir(`/api/patches/${patch.id}`, "DELETE");
+    setEstado((prev) => removerPatch(prev, patch));
+  }
+  async function uploadFotoPatch(patchId, ficheiro) {
+    const otimizada = await prepararImagem(ficheiro);
+    const fd = new FormData();
+    fd.append("foto", otimizada);
+    const r = await fetch(`/api/patches/${patchId}/foto`, { method: "POST", body: fd });
+    if (!r.ok) return;
+    const patch = await r.json();
+    setEstado((prev) => substituirPatch(prev, patch));
+  }
+
   // ---------- Sócios ----------
   async function novoSocio(dados) {
     const r = await persistir("/api/socios", "POST", dados);
@@ -252,6 +273,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     editarCampo, editarConfig,
     novoPedido, apagarPedido, novoItem, apagarItem, marcarVendido, bulkCategoria, aplicarTemplate,
     novaLinha, apagarLinha, uploadFotoLinha, aplicarTemplateLinha, finalizarRascunho,
+    novoPatch, apagarPatch, uploadFotoPatch,
     uploadFoto, removerFoto,
     novoSocio, apagarSocio, novaDespesa, apagarDespesa, novaCredencial, apagarCredencial,
     carregarCredenciais, exportar, importar, sair,
@@ -294,6 +316,14 @@ function aplicarCampoLocal(estado, tabela, id, campo, valor) {
   if (tabela === "rascunho") {
     return { ...estado, rascunho: estado.rascunho.map((l) => (l.id === id ? { ...l, [campo]: valor } : l)) };
   }
+  if (tabela === "patches") {
+    const upd = (lista) => (lista || []).map((pt) => (pt.id === id ? { ...pt, [campo]: valor } : pt));
+    return {
+      ...estado,
+      pedidos: estado.pedidos.map((p) => ({ ...p, itens: p.itens.map((it) => ({ ...it, patches: upd(it.patches) })) })),
+      rascunho: estado.rascunho.map((l) => ({ ...l, patches: upd(l.patches) })),
+    };
+  }
   // itens
   return {
     ...estado,
@@ -321,6 +351,26 @@ function substituirItem(estado, item) {
     ),
   };
 }
+
+// ---------- Helpers de patches aninhados (no item ou na linha do rascunho) ----------
+function aplicarNosPatches(estado, patch, fn) {
+  if (patch.itemId) {
+    return {
+      ...estado,
+      pedidos: estado.pedidos.map((p) => ({
+        ...p,
+        itens: p.itens.map((it) => (it.id === patch.itemId ? { ...it, patches: fn(it.patches || []) } : it)),
+      })),
+    };
+  }
+  return {
+    ...estado,
+    rascunho: estado.rascunho.map((l) => (l.id === patch.linhaId ? { ...l, patches: fn(l.patches || []) } : l)),
+  };
+}
+const adicionarPatch = (estado, patch) => aplicarNosPatches(estado, patch, (lista) => [...lista, patch]);
+const substituirPatch = (estado, patch) => aplicarNosPatches(estado, patch, (lista) => lista.map((p) => (p.id === patch.id ? patch : p)));
+const removerPatch = (estado, patch) => aplicarNosPatches(estado, patch, (lista) => lista.filter((p) => p.id !== patch.id));
 
 function nomesDeCategorias(pedidos) {
   const set = new Set();

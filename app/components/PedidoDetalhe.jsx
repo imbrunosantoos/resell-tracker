@@ -12,6 +12,7 @@ import { tamanhosPara } from "@/lib/tamanhos";
 import ModalVenda from "./ModalVenda";
 import Lightbox from "./Lightbox";
 import SugestoesItem from "./SugestoesItem";
+import Patches from "./Patches";
 
 // Detalhe de um pedido: cabeçalho editável, resumo e os itens em cartões com
 // foto grande. Reusa os handlers do contexto.
@@ -20,6 +21,7 @@ export default function PedidoDetalhe({ pedido }) {
   const {
     estado, editarCampo, marcarVendido, novoItem, apagarItem, apagarPedido,
     uploadFoto, removerFoto, bulkCategoria, aplicarTemplate,
+    novoPatch, apagarPatch, uploadFotoPatch,
   } = useEstado();
   const socios = estado.socios;
   const config = estado.config;
@@ -76,7 +78,7 @@ export default function PedidoDetalhe({ pedido }) {
   // senão cria um item novo já com a foto. Um ref guarda os valores frescos para
   // o listener não precisar de ser re-registado a cada render.
   const colarRef = useRef(null);
-  colarRef.current = { selecionados, pedidoId: pedido.id, novoItem, uploadFoto };
+  colarRef.current = { selecionados, pedidoId: pedido.id, novoItem, uploadFoto, uploadFotoPatch };
   useEffect(() => {
     async function aoColar(e) {
       const itens = e.clipboardData?.items;
@@ -87,7 +89,9 @@ export default function PedidoDetalhe({ pedido }) {
       }
       if (!ficheiro) return; // sem imagem na área de transferência → deixa o paste normal
       e.preventDefault();
-      const { selecionados, pedidoId, novoItem, uploadFoto } = colarRef.current;
+      const { selecionados, pedidoId, novoItem, uploadFoto, uploadFotoPatch } = colarRef.current;
+      const patchId = document.activeElement?.dataset?.patchId;
+      if (patchId) { await uploadFotoPatch(patchId, ficheiro); return; }
       if (selecionados.size === 1) {
         await uploadFoto([...selecionados][0], ficheiro);
       } else {
@@ -159,6 +163,10 @@ export default function PedidoDetalhe({ pedido }) {
             onZoom={(src) => setZoom(src)}
             templates={templates}
             onTemplate={(origemId) => aplicarTemplate(item.id, origemId)}
+            onAddPatch={() => novoPatch({ itemId: item.id })}
+            onEditarPatch={(id, nome) => editarCampo("patches", id, "nome", nome)}
+            onApagarPatch={apagarPatch}
+            onUploadFotoPatch={uploadFotoPatch}
           />
         ))}
         <button className="item-add" onClick={() => novoItem(pedido.id)}>+ Adicionar item</button>
@@ -181,6 +189,7 @@ function ItemCartao({
   pedido, item, margemMin, diasAlerta, selecionado,
   onSelecionar, onEditar, onVender, onApagar, onUploadFoto, onRemoverFoto, onZoom,
   templates = [], onTemplate,
+  onAddPatch, onEditarPatch, onApagarPatch, onUploadFotoPatch,
 }) {
   const input = useRef(null);
   const vendido = estaVendido(item);
@@ -240,6 +249,11 @@ function ItemCartao({
         </div>
 
         <input className="item-notas" placeholder="+ nota" value={item.notas} onChange={(e) => onEditar("notas", e.target.value)} />
+
+        <Patches
+          patches={item.patches} onAdd={onAddPatch} onEditarNome={onEditarPatch}
+          onApagar={onApagarPatch} onUploadFoto={onUploadFotoPatch}
+        />
 
         <div className="item-calc">
           <span className="dim">Custo {eur(custoReal(pedido, item))}</span>
