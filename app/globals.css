@@ -283,11 +283,12 @@ select { color-scheme: dark; }
 /* ---------- Despesas ---------- */
 .despesas-lista { display: flex; flex-direction: column; gap: 8px; }
 .despesa-linha {
-  display: grid; grid-template-columns: 1fr 110px 110px 130px 40px; gap: 10px; align-items: center;
+  display: grid; grid-template-columns: 1fr 96px 140px 100px 120px 40px; gap: 10px; align-items: center;
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius-sm); padding: 8px 12px; box-shadow: var(--sombra);
 }
-.despesa-linha select { padding: 7px 9px; }
+.despesa-linha select, .despesa-linha .desp-data { padding: 7px 9px; }
+.despesa-linha .desp-data { font-size: 12.5px; }
 
 /* ---------- Cartão de pedido ---------- */
 .pedido {
@@ -603,6 +604,7 @@ tbody tr.selecionado { background: var(--accent-soft); }
 .venda-margem { font-family: var(--mono); font-size: 13.5px; text-align: right; white-space: nowrap; }
 .venda-margem small { color: var(--dim); font-size: 11px; }
 .venda-parte { font-family: var(--mono); font-size: 14.5px; font-weight: 700; color: var(--accent); text-align: right; }
+.vendas-mais { align-self: center; margin-top: 4px; }
 
 /* ---------- Construtor de pedido (aba Novo Pedido) ---------- */
 .linhas { display: flex; flex-direction: column; gap: 12px; }
@@ -797,8 +799,9 @@ tbody tr.selecionado { background: var(--accent-soft); }
   .marca h1 { font-size: 24px; }
   .pills { justify-content: flex-start; }
   .cat-linha { grid-template-columns: 120px 1fr 80px; }
-  .despesa-linha { grid-template-columns: 1fr 90px 40px; }
-  .despesa-linha select { grid-column: 1 / -1; }
+  .despesa-linha { grid-template-columns: 1fr 1fr 40px; }
+  .despesa-linha > :first-child { grid-column: 1 / -1; }
+  .despesa-linha select, .despesa-linha .desp-data { grid-column: auto; }
   .socio-linha { grid-template-columns: 1fr 90px 36px; }
   .socio-pedidos { display: none; }
   .nav-inner { gap: 10px; padding: 0 14px; }

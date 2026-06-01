@@ -11,6 +11,7 @@ import { corCategoria } from "@/lib/cores";
 // inteiro a solo, no caso "Eu").
 export default function UltimasVendas({ pedidos, socios = [], limite = 8 }) {
   const [filtro, setFiltro] = useState("eu"); // "eu" | socioId
+  const [mostrarTodas, setMostrarTodas] = useState(false);
   const idsValidos = new Set(socios.map((s) => s.id));
   const socioSel = socios.find((s) => s.id === filtro);
 
@@ -55,7 +56,7 @@ export default function UltimasVendas({ pedidos, socios = [], limite = 8 }) {
             <span>Lucro</span>
             <span>Parte</span>
           </div>
-          {vendas.slice(0, limite).map(({ pedido, item, m, pct, parte }) => (
+          {(mostrarTodas ? vendas : vendas.slice(0, limite)).map(({ pedido, item, m, pct, parte }) => (
             <Link key={item.id} href={`/pedidos/${pedido.id}`} className="venda-linha">
               <span className="venda-info">
                 <span className="venda-dot" style={{ background: corCategoria(item.categoria) }} />
@@ -71,6 +72,11 @@ export default function UltimasVendas({ pedidos, socios = [], limite = 8 }) {
               <span className="venda-parte">{eur(parte)}</span>
             </Link>
           ))}
+          {vendas.length > limite && (
+            <button className="btn mini vendas-mais" onClick={() => setMostrarTodas((v) => !v)}>
+              {mostrarTodas ? "Ver menos" : `Ver mais (${vendas.length - limite})`}
+            </button>
+          )}
         </div>
       )}
     </div>
