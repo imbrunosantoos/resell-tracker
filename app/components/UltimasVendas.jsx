@@ -63,7 +63,10 @@ export default function UltimasVendas({ pedidos, socios = [], limite = 8, mes = 
               <span className="venda-info">
                 <span className="venda-dot" style={{ background: corCategoria(item.categoria) }} />
                 <span className="venda-textos">
-                  <span className="venda-nome">{item.nome || "Item sem nome"}</span>
+                  <span className="venda-nome">
+                    {item.nome || "Item sem nome"}
+                    {pedido.tipo === "encomenda" && <span className="chip encomenda venda-tag">Encomenda</span>}
+                  </span>
                   <span className="venda-sub">{pedido.nome} · {item.dataVenda}</span>
                 </span>
               </span>
