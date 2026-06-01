@@ -9,6 +9,7 @@ const ABAS = [
   { href: "/pedidos", label: "Pedidos", icone: "▦" },
   { href: "/novo-pedido", label: "Novo Pedido", icone: "🧵" },
   { href: "/lucro", label: "Lucro", icone: "📈" },
+  { href: "/socios", label: "Sócios", icone: "🤝" },
   { href: "/despesas", label: "Despesas", icone: "🧾" },
   { href: "/contas", label: "Contas", icone: "🔑" },
   { href: "/definicoes", label: "Definições", icone: "⚙️" },

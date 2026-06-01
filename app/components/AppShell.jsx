@@ -14,7 +14,7 @@ import ModalConfirmar from "./ModalConfirmar";
 export default function AppShell({ utilizador, estadoInicial, children }) {
   const router = useRouter();
   // As credenciais não vêm no estado inicial (carregam-se só na aba Contas).
-  const [estado, setEstado] = useState(() => ({ ...estadoInicial, credenciais: [], rascunho: estadoInicial.rascunho ?? [], acertos: estadoInicial.acertos ?? [] }));
+  const [estado, setEstado] = useState(() => ({ ...estadoInicial, credenciais: [], rascunho: estadoInicial.rascunho ?? [] }));
 
   const timers = useRef({}); // debounce por campo
   const pendentes = useRef(0); // nº de escritas por confirmar
@@ -365,25 +365,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
         socios: prev.socios.filter((s) => s.id !== id),
         pedidos: prev.pedidos.map((p) => (p.socioId === id ? { ...p, socioId: null } : p)),
         credenciais: prev.credenciais.map((c) => (c.socioId === id ? { ...c, socioId: null } : c)),
-        acertos: (prev.acertos ?? []).filter((a) => a.socioId !== id), // caem por cascade no servidor
       }));
-    });
-  }
-
-  // ---------- Acertos de contas com sócios ----------
-  async function novoAcerto(dados) {
-    return comEscrita(async () => {
-      const r = await persistir("/api/acertos", "POST", dados);
-      if (!r.ok) { mostrarErro("Não foi possível registar o acerto."); return; }
-      const acerto = await r.json();
-      setEstado((prev) => ({ ...prev, acertos: [acerto, ...(prev.acertos ?? [])] }));
-    });
-  }
-  async function apagarAcerto(id) {
-    return comEscrita(async () => {
-      const r = await persistir(`/api/acertos/${id}`, "DELETE");
-      if (!r.ok) { mostrarErro("Não foi possível apagar o acerto."); recarregar(); return; }
-      setEstado((prev) => ({ ...prev, acertos: (prev.acertos ?? []).filter((a) => a.id !== id) }));
     });
   }
 
@@ -457,7 +439,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     novaLinha, apagarLinha, uploadFotoLinha, aplicarTemplateLinha, finalizarRascunho,
     novoPatch, apagarPatch, uploadFotoPatch,
     uploadFoto, removerFoto,
-    novoSocio, apagarSocio, novoAcerto, apagarAcerto, novaDespesa, apagarDespesa, novaCredencial, apagarCredencial,
+    novoSocio, apagarSocio, novaDespesa, apagarDespesa, novaCredencial, apagarCredencial,
     carregarCredenciais, exportar, importar, sair, confirmar,
     restaurarBackup, listarBackups,
   };

@@ -1,16 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { eur, toNumber, pagoAoSocio } from "@/lib/calculos";
+import { eur } from "@/lib/calculos";
 
-const hoje = () => new Date().toISOString().slice(0, 10);
-
-// Gestão de sócios + acerto de contas. O lucro de cada pedido feito com um sócio
-// divide-se a meias; aqui mostra-se a parte dele, quanto já foi acertado (pago) e
-// quanto falta, e dá para registar pagamentos.
-export default function Socios({ socios, porSocio, meuLucro, acertos = [], onCriar, onEditar, onApagar, onNovoAcerto, onApagarAcerto }) {
+// Gestão de sócios + acerto de contas POR VENDA. Cada item vendido de um pedido
+// com sócio vale metade do lucro para ele; marcas a venda como "acertada" quando
+// já lhe pagaste e o saldo atualiza-se.
+export default function Socios({ socios, acerto, meuLucro, onCriar, onEditar, onApagar, onAcertar }) {
   const [nome, setNome] = useState("");
-  const lucroDe = (id) => porSocio.find((s) => s.id === id);
+  const dadosDe = (id) => acerto.find((a) => a.id === id);
 
   function criar(e) {
     e.preventDefault();
@@ -21,27 +19,20 @@ export default function Socios({ socios, porSocio, meuLucro, acertos = [], onCri
 
   return (
     <>
-      <div className="socios-lista">
-        <div className="socio-linha eu">
-          <span className="socio-nome">Bubu</span>
-          <span className="socio-pedidos" />
-          <span className={"socio-lucro " + (meuLucro < 0 ? "neg" : "pos")}>{eur(meuLucro)}</span>
-          <span />
-        </div>
-
-        {socios.map((s) => (
-          <SocioCartao
-            key={s.id} socio={s} info={lucroDe(s.id)}
-            acertos={acertos.filter((a) => a.socioId === s.id)}
-            onEditar={onEditar} onApagar={onApagar}
-            onNovoAcerto={onNovoAcerto} onApagarAcerto={onApagarAcerto}
-          />
-        ))}
-
-        {socios.length === 0 && (
-          <p className="dim pequeno">Sem sócios. Adiciona um abaixo para poderes atribuir pedidos.</p>
-        )}
+      <div className="socio-linha eu">
+        <span className="socio-nome">Bubu</span>
+        <span />
+        <span className={"socio-lucro " + (meuLucro < 0 ? "neg" : "pos")}>{eur(meuLucro)}</span>
+        <span />
       </div>
+
+      {socios.map((s) => (
+        <SocioCartao key={s.id} socio={s} dados={dadosDe(s.id)} onEditar={onEditar} onApagar={onApagar} onAcertar={onAcertar} />
+      ))}
+
+      {socios.length === 0 && (
+        <p className="dim pequeno">Sem sócios. Adiciona um abaixo para poderes atribuir pedidos.</p>
+      )}
 
       <form className="form-inline" onSubmit={criar}>
         <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome do sócio" />
@@ -51,65 +42,53 @@ export default function Socios({ socios, porSocio, meuLucro, acertos = [], onCri
   );
 }
 
-function SocioCartao({ socio, info, acertos, onEditar, onApagar, onNovoAcerto, onApagarAcerto }) {
-  const devido = info?.lucro ?? 0;
-  const pago = pagoAoSocio(acertos, socio.id);
-  const falta = devido - pago;
-
-  const [aberto, setAberto] = useState(false);
-  const [form, setForm] = useState(() => ({ valor: "", sentido: "para_socio", data: hoje(), nota: "" }));
-  const set = (campo) => (e) => setForm((f) => ({ ...f, [campo]: e.target.value }));
-
-  function abrir() {
-    setForm({ valor: falta > 0 ? falta.toFixed(2) : "", sentido: "para_socio", data: hoje(), nota: "" });
-    setAberto(true);
-  }
-  function registar(e) {
-    e.preventDefault();
-    if (toNumber(form.valor) <= 0) return;
-    onNovoAcerto({ socioId: socio.id, ...form });
-    setAberto(false);
-  }
+function SocioCartao({ socio, dados, onEditar, onApagar, onAcertar }) {
+  const [verAcertadas, setVerAcertadas] = useState(false);
+  const d = dados ?? { devido: 0, acertado: 0, falta: 0, porAcertar: [], jaAcertadas: [] };
 
   return (
     <div className="socio-cartao">
       <div className="socio-linha">
         <input className="socio-nome-input" value={socio.nome} onChange={(e) => onEditar(socio.id, "nome", e.target.value)} />
-        <span className="socio-pedidos">{info ? `${info.pedidos} pedido(s)` : "—"}</span>
-        <span className={"socio-lucro " + (devido < 0 ? "neg" : "pos")}>{eur(devido)}</span>
+        <span className="socio-pedidos">{d.porAcertar.length} por acertar</span>
+        <span className={"socio-lucro " + (d.devido < 0 ? "neg" : "pos")}>{eur(d.devido)}</span>
         <button className="btn fantasma" title="Apagar sócio" onClick={() => onApagar(socio.id)}>✕</button>
       </div>
 
       <div className="acerto-resumo">
-        <span className="dim">Já acertado: <b>{eur(pago)}</b></span>
-        <span>Falta: <b className={falta > 0.005 ? "neg" : "pos"}>{eur(falta)}</b></span>
-        <button className="btn mini" onClick={() => (aberto ? setAberto(false) : abrir())}>
-          {aberto ? "Cancelar" : "Registar acerto"}
-        </button>
+        <span className="dim">Já acertado: <b>{eur(d.acertado)}</b></span>
+        <span>Falta pagar: <b className={d.falta > 0.005 ? "neg" : "pos"}>{eur(d.falta)}</b></span>
       </div>
 
-      {aberto && (
-        <form className="acerto-form" onSubmit={registar}>
-          <select value={form.sentido} onChange={set("sentido")}>
-            <option value="para_socio">Eu paguei-lhe</option>
-            <option value="do_socio">Recebi dele</option>
-          </select>
-          <input className="num" type="number" step="0.01" value={form.valor} onChange={set("valor")} placeholder="€" />
-          <input type="date" value={form.data} onChange={set("data")} />
-          <input value={form.nota} onChange={set("nota")} placeholder="nota (opcional)" />
-          <button className="btn mini primario" type="submit">Guardar</button>
-        </form>
+      {d.porAcertar.length > 0 && (
+        <div className="acerto-lista">
+          {d.porAcertar.map(({ pedido, item, metade }) => (
+            <div className="venda-acerto" key={item.id}>
+              <span className="venda-acerto-txt">
+                {item.nome || "Item"} <span className="dim">· {pedido.nome} · {item.dataVenda}</span>
+              </span>
+              <span className="venda-acerto-meia pos">{eur(metade)}</span>
+              <button className="btn mini" onClick={() => onAcertar(item.id, true)}>Acertar</button>
+            </div>
+          ))}
+        </div>
+      )}
+      {d.porAcertar.length === 0 && d.devido > 0 && (
+        <p className="dim pequeno" style={{ padding: "0 12px" }}>Tudo acertado com este sócio 👌</p>
       )}
 
-      {acertos.length > 0 && (
+      {d.jaAcertadas.length > 0 && (
         <div className="acerto-lista">
-          {acertos.map((a) => (
-            <div className="acerto-linha" key={a.id}>
-              <span className="acerto-txt">
-                <b>{a.sentido === "do_socio" ? "Recebido" : "Pago"}</b> {eur(toNumber(a.valor))}
-                <span className="dim"> · {a.data}{a.nota ? ` · ${a.nota}` : ""}</span>
+          <button className="acerto-toggle" onClick={() => setVerAcertadas((v) => !v)}>
+            {verAcertadas ? "Esconder" : `Ver ${d.jaAcertadas.length} já acertada(s)`}
+          </button>
+          {verAcertadas && d.jaAcertadas.map(({ pedido, item, metade }) => (
+            <div className="venda-acerto feita" key={item.id}>
+              <span className="venda-acerto-txt">
+                ✓ {item.nome || "Item"} <span className="dim">· {pedido.nome} · {item.dataVenda}</span>
               </span>
-              <button className="btn fantasma" title="Apagar acerto" onClick={() => onApagarAcerto(a.id)}>✕</button>
+              <span className="venda-acerto-meia dim">{eur(metade)}</span>
+              <button className="btn mini fantasma" onClick={() => onAcertar(item.id, false)}>Desfazer</button>
             </div>
           ))}
         </div>

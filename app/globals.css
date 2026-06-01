@@ -486,18 +486,23 @@ td input.w-data { width: 144px; }
 .socio-pedidos { font-size: 12px; color: var(--muted); font-family: var(--mono); text-align: right; }
 .socio-lucro { font-family: var(--mono); font-size: 15px; font-weight: 600; text-align: right; }
 
-/* acerto de contas por sócio */
-.socio-cartao { display: flex; flex-direction: column; gap: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--line-soft); }
+/* acerto de contas por sócio (por venda) */
+.socio-cartao { display: flex; flex-direction: column; gap: 6px; padding-bottom: 8px; margin-bottom: 4px; border-bottom: 1px solid var(--line-soft); }
 .socio-cartao:last-child { border-bottom: none; }
-.acerto-resumo { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 0 12px; font-size: 13px; font-family: var(--mono); }
-.acerto-resumo > .btn { margin-left: auto; }
-.acerto-form { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 12px; }
-.acerto-form input, .acerto-form select { min-width: 0; }
-.acerto-form input[type="date"], .acerto-form select { flex: 0 0 auto; }
-.acerto-form .num { width: 90px; }
-.acerto-lista { display: flex; flex-direction: column; gap: 3px; padding: 0 12px; }
-.acerto-linha { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.acerto-txt { font-size: 12.5px; font-family: var(--mono); }
+.acerto-resumo { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 0 12px; font-size: 13px; font-family: var(--mono); }
+.acerto-lista { display: flex; flex-direction: column; gap: 4px; padding: 2px 12px; }
+.venda-acerto { display: flex; align-items: center; gap: 10px; font-size: 12.5px; }
+.venda-acerto-txt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.venda-acerto-meia { font-family: var(--mono); font-weight: 600; flex-shrink: 0; }
+.venda-acerto.feita .venda-acerto-txt { color: var(--muted); }
+.acerto-toggle { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 12px; font-weight: 600; text-align: left; padding: 2px 0; }
+
+/* resumo só-leitura de lucro por sócio (na aba Lucro) */
+.resumo-socio {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 12px;
+}
+.resumo-socio.eu { border-color: rgba(52, 211, 153, 0.4); background: var(--accent-soft); }
 
 .form-inline { display: flex; gap: 10px; flex-wrap: wrap; }
 .form-inline input { min-width: 200px; }
