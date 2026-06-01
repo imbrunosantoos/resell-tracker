@@ -6,9 +6,9 @@ import { useEstado } from "@/app/components/contexto";
 import { toNumber } from "@/lib/calculos";
 import Link from "next/link";
 import { tamanhosPara } from "@/lib/tamanhos";
-import { corCategoria } from "@/lib/cores";
 import { gerarCatalogo, textoEncomenda } from "@/lib/catalogo";
 import SugestoesItem from "@/app/components/SugestoesItem";
+import Patches from "@/app/components/Patches";
 
 function descarregar(blob, nome) {
   const url = URL.createObjectURL(blob);
@@ -27,7 +27,7 @@ export default function PaginaNovoPedido() {
   const router = useRouter();
   const {
     estado, novaLinha, apagarLinha, uploadFotoLinha, aplicarTemplateLinha, editarCampo,
-    finalizarRascunho,
+    finalizarRascunho, novoPatch, apagarPatch, uploadFotoPatch,
   } = useEstado();
   const rascunho = estado.rascunho ?? [];
   const [pedido, setPedido] = useState(PEDIDO_INICIAL);
@@ -52,9 +52,10 @@ export default function PaginaNovoPedido() {
     return [...porNome.values()];
   }, [estado.pedidos]);
 
-  // colar imagem (⌘V) → cria uma linha nova com essa foto
+  // colar imagem (⌘V): se o foco estiver no nome de um patch → foto desse patch;
+  // senão cria uma camisa nova com a foto.
   const refColar = useRef(null);
-  refColar.current = { novaLinha, uploadFotoLinha };
+  refColar.current = { novaLinha, uploadFotoLinha, uploadFotoPatch };
   useEffect(() => {
     async function aoColar(e) {
       const itens = e.clipboardData?.items;
@@ -65,8 +66,10 @@ export default function PaginaNovoPedido() {
       }
       if (!ficheiro) return;
       e.preventDefault();
-      const { novaLinha, uploadFotoLinha } = refColar.current;
-      const linha = await novaLinha({});
+      const { novaLinha, uploadFotoLinha, uploadFotoPatch } = refColar.current;
+      const patchId = document.activeElement?.dataset?.patchId;
+      if (patchId) { await uploadFotoPatch(patchId, ficheiro); return; }
+      const linha = await novaLinha({ categoria: "Camisa de futebol" });
       await uploadFotoLinha(linha.id, ficheiro);
     }
     window.addEventListener("paste", aoColar);
@@ -136,9 +139,13 @@ export default function PaginaNovoPedido() {
               onTemplate={(origemId) => aplicarTemplateLinha(linha.id, origemId)}
               onUploadFoto={(f) => uploadFotoLinha(linha.id, f)}
               onApagar={() => apagarLinha(linha.id)}
+              onAddPatch={() => novoPatch({ linhaId: linha.id })}
+              onEditarPatch={(id, nome) => editarCampo("patches", id, "nome", nome)}
+              onApagarPatch={apagarPatch}
+              onUploadFotoPatch={uploadFotoPatch}
             />
           ))}
-          <button className="item-add" onClick={() => novaLinha({})}>+ Adicionar camisa</button>
+          <button className="item-add" onClick={() => novaLinha({ categoria: "Camisa de futebol" })}>+ Adicionar camisa</button>
         </div>
       </section>
 
@@ -183,9 +190,12 @@ export default function PaginaNovoPedido() {
   );
 }
 
-function LinhaCamisa({ linha, templates, onEditar, onTemplate, onUploadFoto, onApagar }) {
+function LinhaCamisa({
+  linha, templates, onEditar, onTemplate, onUploadFoto, onApagar,
+  onAddPatch, onEditarPatch, onApagarPatch, onUploadFotoPatch,
+}) {
   const input = useRef(null);
-  const tamanhos = tamanhosPara(linha.categoria);
+  const tamanhos = tamanhosPara(linha.categoria || "Camisa de futebol");
   const fotoUrl = linha.foto ? `/api/fotos/${linha.foto}` : null;
 
   return (
@@ -203,21 +213,16 @@ function LinhaCamisa({ linha, templates, onEditar, onTemplate, onUploadFoto, onA
 
       <div className="linha-campos">
         <span className="td-nome">
-          <span className="dot" style={{ background: corCategoria(linha.categoria) }} />
+          <span className="dot" style={{ background: "var(--accent)" }} />
           <SugestoesItem
             value={linha.nome} templates={templates} excluirId={linha.id}
-            onChange={(v) => onEditar("nome", v)} onEscolher={onTemplate} placeholder="legenda / nome"
+            onChange={(v) => onEditar("nome", v)} onEscolher={onTemplate} placeholder="Nome"
           />
+          <select className="item-tam" value={linha.tamanho} onChange={(e) => onEditar("tamanho", e.target.value)}>
+            <option value="">Tam.</option>
+            {tamanhos.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
         </span>
-        <div className="item-linha">
-          <input className="item-cat" list="categorias" placeholder="categoria" value={linha.categoria} onChange={(e) => onEditar("categoria", e.target.value)} />
-          {tamanhos.length > 0 && (
-            <select className="item-tam" value={linha.tamanho} onChange={(e) => onEditar("tamanho", e.target.value)}>
-              <option value="">Tam.</option>
-              {tamanhos.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-          )}
-        </div>
         <div className="linha-grid">
           <label><span>Quantidade</span>
             <input className="num" type="number" min="1" step="1" value={linha.quantidade}
@@ -226,6 +231,10 @@ function LinhaCamisa({ linha, templates, onEditar, onTemplate, onUploadFoto, onA
             <input className="num" type="number" step="0.01" value={linha.precoCompra}
               onChange={(e) => onEditar("precoCompra", e.target.value)} /></label>
         </div>
+        <Patches
+          patches={linha.patches} onAdd={onAddPatch} onEditarNome={onEditarPatch}
+          onApagar={onApagarPatch} onUploadFoto={onUploadFotoPatch}
+        />
       </div>
 
       <button className="btn fantasma linha-x" title="Remover camisa" onClick={onApagar}>✕</button>
