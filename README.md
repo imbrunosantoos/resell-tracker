@@ -4,6 +4,24 @@ Web app to run a reselling operation. It organizes everything by **order** and, 
 
 It started as a static page in plain JavaScript and is now built on **Next.js + SQLite**, with a personal login per person, data shared and synced across devices, and installable on the phone ("Add to Home Screen").
 
+## Screenshots
+
+> Captured with **demo data** — not real figures.
+
+![Home](docs/screenshots/home.png)
+
+| Order detail | Partner settle-up (Sócios) |
+| :---: | :---: |
+| ![Order detail](docs/screenshots/order-detail.png) | ![Sócios](docs/screenshots/socios.png) |
+
+| Order builder (Novo Pedido) | Profit & analytics (Lucro) |
+| :---: | :---: |
+| ![Novo Pedido](docs/screenshots/novo-pedido.png) | ![Lucro](docs/screenshots/profit.png) |
+
+| Orders list | On the phone |
+| :---: | :---: |
+| ![Orders](docs/screenshots/orders.png) | <img src="docs/screenshots/home-mobile.png" width="240" alt="Home on mobile" /> |
+
 ## What it calculates
 
 For each item:
