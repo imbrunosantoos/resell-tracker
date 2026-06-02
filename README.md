@@ -2,7 +2,7 @@
 
 Web app to run a reselling operation. It organizes everything by **order** and, inside each one, by the **items** you bought, and automatically works out what matters: real cost, margin, profit and how long it took to sell.
 
-It started as a static page in plain JavaScript and is now built on **Next.js + SQLite**, with a personal login per person, data shared and synced across devices, and installable on the phone as an app (PWA).
+It started as a static page in plain JavaScript and is now built on **Next.js + SQLite**, with a personal login per person, data shared and synced across devices, and installable on the phone ("Add to Home Screen").
 
 ## What it calculates
 
@@ -18,7 +18,7 @@ And at the business level:
 - Global summary: invested, unsold stock, revenue, sales profit, expenses and **real profit** (after everything)
 - **Profit per category**, with bars, **sell-through** (% already sold) and average days per category
 - **Monthly chart** — profit per month, or received vs invested per month (toggle)
-- **Monthly report** — your profit and number of sales this month vs. the previous one
+- **Monthly report** — your profit and number of sales this month vs. the previous one (click a month card to see that month's sales)
 - **Profit per partner** — each order made with a partner splits the profit in half; solo orders are 100% yours
 
 ## Features
@@ -29,22 +29,24 @@ And at the business level:
 - **Autofill from past items** — type an item's name and pick a previous one to copy its photo, purchase price and category (the photo is copied, not shared)
 - **Order builder** (tab **Novo Pedido**) — a draft you fill over time (each shirt with photo, name, size and **quantity** — they're all football shirts, so there's no category to pick); "Criar pedido" then creates the real order (quantity N → **N separate items**), downloads a **catalog image** (grid of photos + name/size/qty) and opens the **supplier's WhatsApp** with the text ready
 - **Patches per shirt** (optional) — some shirts have exclusive patches, so you can add a patch with a **name** and a **photo** (paste with ⌘/Ctrl+V too). They show small and discreet on the shirt, carry over to each created item, and appear on the catalog image and supplier text
-- **Paste a photo** (⌘/Ctrl+V) inside an order — pastes into the selected item, or creates a new item with it (and into a patch when its name field is focused)
+- **Pre-orders (Encomendas)** — for shirts a client orders and **pays upfront**: you store the client, the payment date, the total cost and the final price (profit is locked in). They're auto-named `<Client> NN` (a per-client counter), count as sold right away and feed every report. Tagged and filterable in the list, with their own simplified detail view.
+- **Paste a photo** (⌘/Ctrl+V) inside an order — pastes into the selected item, or creates a new item with it (and into a patch when its name field is focused); pasting over an item that already has a photo asks before replacing
 - **Order detail page** with items as cards, **large photos** (click to zoom in a lightbox), mark as sold, etc.
 - **Bulk select** — pick several items and change the category of all at once
-- **Search and filters** — by text, partner, status (in stock / sold) and category
+- **Search and filters** — by text, partner, type (orders / pre-orders), status (in stock / sold) and category
 - **Recent sales** — filterable by partner, showing each person's **profit share**
+- **Partners tab + settle-up per sale** — each sold item of a partner order shows the profit and the **amount to send = sale price ÷ 2** (the partner fronted half the cost, so half the revenue returns their cost + profit share). Mark a sale as **settled** and the partner's "left to send" updates live.
 - **Mark as sold** in one click — small modal with price + date (suggests the minimum price and today's date)
 - **Stale-stock alert** — items unsold for more than X days (configurable) are highlighted with a badge, and a "Not selling" list on the home page
 - **Expenses** (chip, domain, packaging…) in their own tab, coming out of the real profit — monthly ones count for each active month, one-offs count once; each can be solo or split with a partner
 - **Accounts vault** — stores logins/passwords per platform and per partner; passwords are **encrypted (AES-256)** on the server
-- **Export** a backup as **JSON** or **CSV** (one row per item, with the calculated columns — opens straight in Excel/Sheets) and import it back
+- **Automatic backups** — the server saves a snapshot of the business data to `data/backups/` on every change (keeps the last ~40); restore any of them from **Settings**. Plus manual **Export** as **JSON** or **CSV** (one row per item, with the calculated columns — opens straight in Excel/Sheets) and import back
 - **Multiple users**, each with their own login, sharing the same business data
-- **PWA** — installable on the phone without any app store
+- **Installable on the phone** — "Add to Home Screen" via the web manifest (no app store). Note: it always loads from the network — there's no offline mode
 
 ## Running it
 
-You need Node.js 22 or newer (the app uses the native `node:sqlite` module).
+You need **Node.js 24 or newer** — the app uses the built-in `node:sqlite` module (stable without flags on 24+; on Node 22 you'd have to pass `--experimental-sqlite`).
 
 ```bash
 npm install
@@ -86,9 +88,11 @@ There are two helper apps on the Desktop: **ReSell** and **Parar ReSell**.
   running server is always the current build, so you never end up looking at a stale version.
 - **Parar ReSell** stops the server.
 
-After changing the code, just click **ReSell** — it rebuilds and serves the new version. The service
-worker is versioned (`resell-v3`), so installed PWAs pick up the new version automatically; it caches
-only static assets and never caches pages (a page navigation always hits the network).
+After changing the code, just click **ReSell** — it rebuilds and serves the new version.
+
+> There is **no service worker / offline cache**. An earlier version cached pages and kept showing
+> stale versions, so it was removed — the app always loads fresh from the network. It stays installable
+> through the web manifest ("Add to Home Screen"), it just needs a connection to the server.
 
 ## Where the data lives
 
@@ -96,6 +100,7 @@ Everything inside the `data/` folder (created on first run, outside git):
 
 - `data/resell.db` — the SQLite database (orders, items, partners, expenses, accounts)
 - `data/uploads/` — the item photos
+- `data/backups/` — automatic JSON snapshots of the business data (the last ~40)
 - `data/.chave` — the key that encrypts the account passwords (**don't lose it or share it**)
 
 Copy the `data/` folder for a full backup. The **Export JSON** button saves the business data (orders, items, partners, expenses), but **not** the account passwords — those only with a copy of the DB + key.
@@ -111,13 +116,14 @@ Copy the `data/` folder for a full backup. The **Export JSON** button saves the 
 
 The app is organized by tabs at the top, each on its own page:
 
-- **Home** (`/`) — overview: colored summary cards, "this month", monthly profit chart and a "not selling" list.
-- **Orders** (`/pedidos`) — filter/search (text, partner, status, category) and a compact list. Click an order → **detail** (`/pedidos/[id]`) with items as cards, **large photos** (paste or upload, click to zoom), mark as sold and bulk category.
+- **Home** (`/`) — overview: colored summary cards, "this month" vs last month (the month cards link to that month's sales at `/vendas/[mes]`), monthly profit chart and a "not selling" list.
+- **Orders** (`/pedidos`) — create a normal order **or** a pre-order (toggle), filter/search (text, partner, type, status, category) and a compact list (pre-orders are tagged). Click an order → **detail** (`/pedidos/[id]`) with items as cards, **large photos** (paste or upload, click to zoom), mark as sold and bulk category. Pre-orders open a simplified detail view.
 - **Novo Pedido** (`/novo-pedido`) — order builder: a persistent draft of shirts (photo, name, size, quantity, and optional patches with name + photo). "Criar pedido" creates the order (quantity → N items), downloads a catalog image and opens the supplier's WhatsApp with the text.
-- **Profit** (`/lucro`) — profit per partner, monthly chart (profit / received vs invested), profit per category, and recent sales (filterable by partner, showing each person's share).
+- **Profit** (`/lucro`) — read-only profit-per-partner summary (settle up in the Sócios tab), monthly chart (profit / received vs invested), profit per category, and recent sales (filterable by partner, showing each person's share).
+- **Sócios** (`/socios`) — manage partners and **settle up per sale**: each sold item of a partner order shows the profit and the amount to send (price ÷ 2); tick it as settled and the "left to send" updates.
 - **Expenses** (`/despesas`) — recurring or one-off expenses, solo or split with a partner.
 - **Accounts** (`/contas`) — logins and passwords per platform/partner (encrypted; loaded only on this page).
-- **Settings** (`/definicoes`) — minimum margin, day alert, export/import backup and sign out.
+- **Settings** (`/definicoes`) — minimum margin, stale-stock day alert, supplier WhatsApp number, **automatic backups** (list + restore), manual export/import and sign out.
 
 ## Structure
 
@@ -129,15 +135,16 @@ resell-tracker/
 │   ├── (app)/                authenticated pages (share the AppShell)
 │   │   ├── layout.jsx        guards the session + hands the state to AppShell
 │   │   ├── page.jsx          Home
-│   │   ├── pedidos/          list + [id] (detail)
-│   │   ├── lucro/  despesas/  contas/  definicoes/
-│   ├── api/                  endpoints (state, orders, items, expenses, config, export…)
+│   │   ├── pedidos/          list + [id] (detail; pre-orders use a simpler view)
+│   │   ├── novo-pedido/  lucro/  socios/  vendas/[mes]/  despesas/  contas/  definicoes/
+│   ├── api/                  endpoints (state, orders, pre-orders, items, expenses, socios, backup, export…)
 │   ├── components/           AppShell (state), TopNav, pages and UI blocks
 │   └── globals.css           dark premium theme + emerald accent
 ├── lib/
 │   ├── db.js                 SQLite connection + migrations
 │   ├── repo.js               reads/writes (snake_case ↔ camelCase)
-│   ├── calculos.js           real cost, margin, days, summaries, profit per partner, monthly data
+│   ├── calculos.js           real cost, margin, days, summaries, profit/settle-up per partner, monthly data
+│   ├── backups.js            on-disk snapshots: save / list / restore
 │   ├── auth.js               sessions and login passwords
 │   ├── cripto.js             encryption of account passwords (AES-256)
 │   ├── fotos.js              store/serve the item photos
@@ -158,6 +165,7 @@ context), kept alive while navigating between tabs — with optimistic editing a
 
 ## Ideas for the future
 
+- A **hosted, multi-user version** (Postgres/Supabase + cloud storage) so partners can use it from anywhere without keeping a machine on
 - Sales platform per item (Vinted, OLX…) with their own fees
 - Monthly goals with a progress bar
 - Real-time sync (websockets) instead of polling
