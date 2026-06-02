@@ -6,7 +6,7 @@ import Socios from "@/app/components/Socios";
 
 // Aba Sócios: gestão dos sócios + acerto de contas por venda.
 export default function PaginaSocios() {
-  const { estado, resumo, novoSocio, apagarSocio, editarCampo } = useEstado();
+  const { estado, novoSocio, apagarSocio, editarCampo } = useEstado();
   const acerto = acertoPorSocio(estado);
 
   return (
@@ -19,7 +19,7 @@ export default function PaginaSocios() {
         </p>
         <div className="socios-lista">
           <Socios
-            socios={estado.socios} acerto={acerto} meuLucro={resumo.meuLucro}
+            socios={estado.socios} acerto={acerto}
             onCriar={novoSocio}
             onEditar={(id, campo, valor) => editarCampo("socios", id, campo, valor)}
             onApagar={apagarSocio}

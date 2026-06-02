@@ -6,7 +6,7 @@ import { eur } from "@/lib/calculos";
 // Gestão de sócios + acerto de contas POR VENDA. Cada item vendido de um pedido
 // com sócio vale metade do lucro para ele; marcas a venda como "acertada" quando
 // já lhe pagaste e o saldo atualiza-se.
-export default function Socios({ socios, acerto, meuLucro, onCriar, onEditar, onApagar, onAcertar }) {
+export default function Socios({ socios, acerto, onCriar, onEditar, onApagar, onAcertar }) {
   const [nome, setNome] = useState("");
   const dadosDe = (id) => acerto.find((a) => a.id === id);
 
@@ -19,13 +19,6 @@ export default function Socios({ socios, acerto, meuLucro, onCriar, onEditar, on
 
   return (
     <>
-      <div className="socio-linha eu">
-        <span className="socio-nome">Bubu</span>
-        <span />
-        <span className={"socio-lucro " + (meuLucro < 0 ? "neg" : "pos")}>{eur(meuLucro)}</span>
-        <span />
-      </div>
-
       {socios.map((s) => (
         <SocioCartao key={s.id} socio={s} dados={dadosDe(s.id)} onEditar={onEditar} onApagar={onApagar} onAcertar={onAcertar} />
       ))}
@@ -51,23 +44,26 @@ function SocioCartao({ socio, dados, onEditar, onApagar, onAcertar }) {
       <div className="socio-linha">
         <input className="socio-nome-input" value={socio.nome} onChange={(e) => onEditar(socio.id, "nome", e.target.value)} />
         <span className="socio-pedidos">{d.porAcertar.length} por acertar</span>
-        <span className={"socio-lucro " + (d.devido < 0 ? "neg" : "pos")}>{eur(d.devido)}</span>
+        <span className={"socio-lucro " + (d.falta > 0.005 ? "neg" : "pos")}>{eur(d.falta)}</span>
         <button className="btn fantasma" title="Apagar sócio" onClick={() => onApagar(socio.id)}>✕</button>
       </div>
 
       <div className="acerto-resumo">
         <span className="dim">Já acertado: <b>{eur(d.acertado)}</b></span>
-        <span>Falta pagar: <b className={d.falta > 0.005 ? "neg" : "pos"}>{eur(d.falta)}</b></span>
+        <span>Falta enviar: <b className={d.falta > 0.005 ? "neg" : "pos"}>{eur(d.falta)}</b></span>
       </div>
 
       {d.porAcertar.length > 0 && (
         <div className="acerto-lista">
-          {d.porAcertar.map(({ pedido, item, metade }) => (
+          {d.porAcertar.map(({ pedido, item, lucro, enviar }) => (
             <div className="venda-acerto" key={item.id}>
               <span className="venda-acerto-txt">
                 {item.nome || "Item"} <span className="dim">· {pedido.nome} · {item.dataVenda}</span>
               </span>
-              <span className="venda-acerto-meia pos">{eur(metade)}</span>
+              <span className="venda-acerto-vals">
+                <span className="dim">lucro {eur(lucro)}</span>
+                <span className="venda-acerto-meia pos">enviar {eur(enviar)}</span>
+              </span>
               <button className="btn mini" onClick={() => onAcertar(item.id, true)}>Acertar</button>
             </div>
           ))}
@@ -82,12 +78,15 @@ function SocioCartao({ socio, dados, onEditar, onApagar, onAcertar }) {
           <button className="acerto-toggle" onClick={() => setVerAcertadas((v) => !v)}>
             {verAcertadas ? "Esconder" : `Ver ${d.jaAcertadas.length} já acertada(s)`}
           </button>
-          {verAcertadas && d.jaAcertadas.map(({ pedido, item, metade }) => (
+          {verAcertadas && d.jaAcertadas.map(({ pedido, item, lucro, enviar }) => (
             <div className="venda-acerto feita" key={item.id}>
               <span className="venda-acerto-txt">
                 ✓ {item.nome || "Item"} <span className="dim">· {pedido.nome} · {item.dataVenda}</span>
               </span>
-              <span className="venda-acerto-meia dim">{eur(metade)}</span>
+              <span className="venda-acerto-vals">
+                <span className="dim">lucro {eur(lucro)}</span>
+                <span className="venda-acerto-meia dim">enviado {eur(enviar)}</span>
+              </span>
               <button className="btn mini fantasma" onClick={() => onAcertar(item.id, false)}>Desfazer</button>
             </div>
           ))}
