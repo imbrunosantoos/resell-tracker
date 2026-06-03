@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useIdioma } from "@/app/components/Idioma";
 
 export default function FormularioLogin({ modoInicial }) {
   const router = useRouter();
+  const { t } = useIdioma();
   const [modo, setModo] = useState(modoInicial); // "entrar" | "registar"
   const [nome, setNome] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +26,7 @@ export default function FormularioLogin({ modoInicial }) {
         body: JSON.stringify({ nome, password, modo }),
       });
       const dados = await r.json();
-      if (!r.ok) throw new Error(dados.erro || "Não foi possível entrar.");
+      if (!r.ok) throw new Error(dados.erro || t("login.erroGenerico"));
       router.replace("/");
       router.refresh();
     } catch (err) {
@@ -37,11 +39,11 @@ export default function FormularioLogin({ modoInicial }) {
     <div className="login-wrap">
       <div className="login-cartao">
         <h1>ReSell<span className="ponto">.</span></h1>
-        <span className="tagline">tracker de revenda</span>
+        <span className="tagline">{t("login.tagline")}</span>
 
         <form className="campos" onSubmit={submeter}>
           <label className="campo">
-            <span>Utilizador</span>
+            <span>{t("login.utilizador")}</span>
             <input
               value={nome}
               onChange={(e) => setNome(e.target.value)}
@@ -51,7 +53,7 @@ export default function FormularioLogin({ modoInicial }) {
             />
           </label>
           <label className="campo">
-            <span>Password</span>
+            <span>{t("login.password")}</span>
             <input
               type="password"
               value={password}
@@ -62,19 +64,19 @@ export default function FormularioLogin({ modoInicial }) {
           </label>
 
           <button className="btn primario" type="submit" disabled={aEnviar}>
-            {aEnviar ? "A entrar…" : registar ? "Criar conta" : "Entrar"}
+            {aEnviar ? t("login.aEntrar") : registar ? t("login.criarConta") : t("login.entrar")}
           </button>
         </form>
 
         {erro && <p className="login-erro">{erro}</p>}
 
         <p className="login-troca">
-          {registar ? "Já tens conta?" : "Ainda não tens conta?"}{" "}
+          {registar ? t("login.jaTens") : t("login.aindaNao")}{" "}
           <button
             type="button"
             onClick={() => { setModo(registar ? "entrar" : "registar"); setErro(""); }}
           >
-            {registar ? "Entrar" : "Criar conta"}
+            {registar ? t("login.entrar") : t("login.criarConta")}
           </button>
         </p>
       </div>

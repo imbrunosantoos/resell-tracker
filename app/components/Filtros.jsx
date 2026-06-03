@@ -1,7 +1,10 @@
 "use client";
 
+import { useIdioma } from "./Idioma";
+
 // Barra de pesquisa + filtros por estado, sócio e categoria.
 export default function Filtros({ valor, onMudar, categorias, socios = [] }) {
+  const { t } = useIdioma();
   const set = (campo) => (e) => onMudar({ ...valor, [campo]: e.target.value });
   const ativo = valor.texto || valor.estado !== "todos" || valor.categoria || valor.socio || valor.tipo;
 
@@ -10,36 +13,36 @@ export default function Filtros({ valor, onMudar, categorias, socios = [] }) {
       <input
         className="filtro-pesquisa"
         type="search"
-        placeholder="Pesquisar item, categoria ou pedido…"
+        placeholder={t("filtros.pesquisar")}
         value={valor.texto}
         onChange={set("texto")}
       />
       <select value={valor.socio} onChange={set("socio")}>
-        <option value="">Todos os sócios</option>
-        <option value="solo">Sozinho</option>
+        <option value="">{t("filtros.todosSocios")}</option>
+        <option value="solo">{t("filtros.sozinho")}</option>
         {socios.map((s) => (
           <option key={s.id} value={s.id}>{s.nome}</option>
         ))}
       </select>
       <select value={valor.tipo} onChange={set("tipo")}>
-        <option value="">Pedidos e encomendas</option>
-        <option value="normal">Só pedidos</option>
-        <option value="encomenda">Só encomendas</option>
+        <option value="">{t("filtros.tipoTodos")}</option>
+        <option value="normal">{t("filtros.soPedidos")}</option>
+        <option value="encomenda">{t("filtros.soEncomendas")}</option>
       </select>
       <select value={valor.estado} onChange={set("estado")}>
-        <option value="todos">Todos</option>
-        <option value="stock">Em stock</option>
-        <option value="vendido">Vendidos</option>
+        <option value="todos">{t("filtros.estadoTodos")}</option>
+        <option value="stock">{t("filtros.emStock")}</option>
+        <option value="vendido">{t("filtros.vendidos")}</option>
       </select>
       <select value={valor.categoria} onChange={set("categoria")}>
-        <option value="">Todas as categorias</option>
+        <option value="">{t("filtros.todasCategorias")}</option>
         {categorias.map((c) => (
           <option key={c} value={c}>{c}</option>
         ))}
       </select>
       {ativo && (
         <button className="btn mini" onClick={() => onMudar({ texto: "", estado: "todos", categoria: "", socio: "", tipo: "" })}>
-          Limpar
+          {t("filtros.limpar")}
         </button>
       )}
     </div>

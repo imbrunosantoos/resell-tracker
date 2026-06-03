@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { eur, custoReal, diasEmStock, estaVendido } from "@/lib/calculos";
 import { corCategoria } from "@/lib/cores";
+import { useIdioma } from "./Idioma";
 
 // Itens parados há mais de `diasAlerta` dias (não vendem). Acionável: link ao
 // pedido para baixares o preço ou rever. Mostra os mais parados primeiro.
 export default function ListaParado({ pedidos, diasAlerta, limite = 6 }) {
+  const { t } = useIdioma();
   const parados = [];
   for (const pedido of pedidos) {
     for (const item of pedido.itens) {
@@ -20,7 +22,7 @@ export default function ListaParado({ pedidos, diasAlerta, limite = 6 }) {
   parados.sort((a, b) => b.dias - a.dias);
 
   if (parados.length === 0) {
-    return <p className="dim pequeno">Nada parado há muito tempo. Tudo a rodar 👌</p>;
+    return <p className="dim pequeno">{t("parado.vazio")}</p>;
   }
 
   const mostrar = parados.slice(0, limite);
@@ -34,7 +36,7 @@ export default function ListaParado({ pedidos, diasAlerta, limite = 6 }) {
             {item.foto ? <img src={`/api/fotos/${item.foto}`} alt="" /> : (item.nome || "?").charAt(0).toUpperCase()}
           </span>
           <span className="parado-info">
-            <span className="parado-nome">{item.nome || "Item sem nome"}</span>
+            <span className="parado-nome">{item.nome || t("comum.semNome")}</span>
             <span className="parado-sub">{pedido.nome}{item.categoria ? ` · ${item.categoria}` : ""}</span>
           </span>
           <span className="parado-nums">
@@ -44,7 +46,7 @@ export default function ListaParado({ pedidos, diasAlerta, limite = 6 }) {
         </Link>
       ))}
       {parados.length > limite && (
-        <Link href="/pedidos" className="parado-todos">+ {parados.length - limite} — ver em Pedidos</Link>
+        <Link href="/pedidos" className="parado-todos">{t("parado.verMais", { n: parados.length - limite })}</Link>
       )}
     </div>
   );

@@ -2,53 +2,56 @@
 
 import { useState } from "react";
 import { eur } from "@/lib/calculos";
+import { useIdioma } from "./Idioma";
 
 // Gráfico compacto mês a mês, com toggle entre duas vistas:
 //   "lucro" — uma barra por mês com o teu lucro (verde ≥0 / vermelho <0)
 //   "fluxo" — duas barras por mês: recebido (verde) vs investido (vermelho)
 // Barras em CSS (alturas em %), sem libs. Estilos em globals.css.
-const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-const rotulo = (mes) => {
+const fazRotulo = (locale) => (mes) => {
   const [a, m] = mes.split("-");
-  return `${MESES[Number(m) - 1]}/${a.slice(2)}`;
+  const curto = new Date(Number(a), Number(m) - 1, 1).toLocaleDateString(locale, { month: "short" }).replace(".", "");
+  return `${curto}/${a.slice(2)}`;
 };
 
 export default function GraficoMensal({ dados }) {
+  const { t, locale } = useIdioma();
   const [vista, setVista] = useState("lucro");
+  const rotulo = fazRotulo(locale);
 
   const semDados = dados.length === 0 || dados.every((d) => !d.recebido && !d.investido && !d.meuLucro);
   if (semDados) {
     return (
       <div className="grafico">
-        <Toggle vista={vista} setVista={setVista} />
-        <p className="grafico-vazio">Ainda sem dados que cheguem. Assim que registares compras e vendas, aparece aqui.</p>
+        <Toggle vista={vista} setVista={setVista} t={t} />
+        <p className="grafico-vazio">{t("grafico.vazio")}</p>
       </div>
     );
   }
 
   return (
     <div className="grafico">
-      <Toggle vista={vista} setVista={setVista} />
-      {vista === "lucro" ? <VistaLucro dados={dados} /> : <VistaFluxo dados={dados} />}
+      <Toggle vista={vista} setVista={setVista} t={t} />
+      {vista === "lucro" ? <VistaLucro dados={dados} rotulo={rotulo} /> : <VistaFluxo dados={dados} rotulo={rotulo} t={t} />}
     </div>
   );
 }
 
-function Toggle({ vista, setVista }) {
+function Toggle({ vista, setVista, t }) {
   return (
     <div className="grafico-toggle">
       <button className={vista === "lucro" ? "ativo" : ""} onClick={() => setVista("lucro")}>
-        Lucro por mês
+        {t("home.lucroPorMes")}
       </button>
       <button className={vista === "fluxo" ? "ativo" : ""} onClick={() => setVista("fluxo")}>
-        Recebido vs investido
+        {t("grafico.fluxo")}
       </button>
     </div>
   );
 }
 
 // ---------- Vista 1: o teu lucro por mês ----------
-function VistaLucro({ dados }) {
+function VistaLucro({ dados, rotulo }) {
   const maxAbs = Math.max(...dados.map((d) => Math.abs(d.meuLucro)), 1);
   const temNegativos = dados.some((d) => d.meuLucro < 0);
 
@@ -85,18 +88,18 @@ function VistaLucro({ dados }) {
 }
 
 // ---------- Vista 2: recebido vs investido por mês ----------
-function VistaFluxo({ dados }) {
+function VistaFluxo({ dados, rotulo, t }) {
   const max = Math.max(...dados.map((d) => Math.max(d.recebido, d.investido)), 1);
 
   return (
     <>
       <div className="legenda">
-        <span><i className="ponto-leg pos" /> Recebido</span>
-        <span><i className="ponto-leg neg" /> Investido</span>
+        <span><i className="ponto-leg pos" /> {t("grafico.recebido")}</span>
+        <span><i className="ponto-leg neg" /> {t("grafico.investido")}</span>
       </div>
       <div className="barras fluxo">
         {dados.map((d) => (
-          <div className="col" key={d.mes} title={`${rotulo(d.mes)} · recebido ${eur(d.recebido)} · investido ${eur(d.investido)}`}>
+          <div className="col" key={d.mes} title={`${rotulo(d.mes)} · ${t("grafico.recebido").toLowerCase()} ${eur(d.recebido)} · ${t("grafico.investido").toLowerCase()} ${eur(d.investido)}`}>
             <div className="pista par">
               <span className="fluxo-bar">
                 <span className="col-valor pos">{eur(d.recebido)}</span>

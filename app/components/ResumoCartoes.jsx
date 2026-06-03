@@ -1,15 +1,17 @@
 import { eur } from "@/lib/calculos";
+import { useIdioma } from "./Idioma";
 
 // Os cartões de resumo no topo. "Lucro real" = lucro das vendas menos as
 // despesas; o destaque "O teu lucro" é a tua parte (já líquida das despesas).
 export default function ResumoCartoes({ resumo }) {
+  const { t } = useIdioma();
   const cartoes = [
-    { label: "Investido", valor: eur(resumo.investido), cor: "ambar" },
-    { label: "Em stock", valor: eur(resumo.stock), cor: "azul" },
-    { label: "Receita", valor: eur(resumo.receita), cor: "teal" },
-    { label: "Lucro vendas", valor: eur(resumo.lucro), sinal: resumo.lucro },
-    { label: "Despesas", valor: eur(resumo.despesasTotal), cor: "coral" },
-    { label: "Lucro real", valor: eur(resumo.lucroReal), sinal: resumo.lucroReal },
+    { label: t("resumo.investido"), valor: eur(resumo.investido), cor: "ambar" },
+    { label: t("resumo.emStock"), valor: eur(resumo.stock), cor: "azul" },
+    { label: t("resumo.receita"), valor: eur(resumo.receita), cor: "teal" },
+    { label: t("resumo.lucroVendas"), valor: eur(resumo.lucro), sinal: resumo.lucro },
+    { label: t("resumo.despesas"), valor: eur(resumo.despesasTotal), cor: "coral" },
+    { label: t("resumo.lucroReal"), valor: eur(resumo.lucroReal), sinal: resumo.lucroReal },
   ];
 
   return (
@@ -21,7 +23,7 @@ export default function ResumoCartoes({ resumo }) {
         </div>
       ))}
       <div className="cartao destaque">
-        <span className="cartao-label">O teu lucro</span>
+        <span className="cartao-label">{t("resumo.teuLucro")}</span>
         <span className="cartao-valor">{eur(resumo.meuLucro)}</span>
       </div>
     </div>

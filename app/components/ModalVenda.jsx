@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { eur } from "@/lib/calculos";
+import { useIdioma } from "./Idioma";
 
 // Modal pequeno para marcar um item como vendido de uma vez: preço + data.
 // Sugere já o preço mínimo (para a margem desejada) e a data de hoje.
 export default function ModalVenda({ item, sugestao, onConfirmar, onFechar }) {
+  const { t } = useIdioma();
   const hoje = new Date().toISOString().slice(0, 10);
   const [preco, setPreco] = useState(
     item.precoVenda ? String(item.precoVenda) : sugestao ? sugestao.toFixed(2) : ""
@@ -30,29 +32,29 @@ export default function ModalVenda({ item, sugestao, onConfirmar, onFechar }) {
   return (
     <div className="modal-fundo" onMouseDown={(e) => e.target === e.currentTarget && onFechar()}>
       <form className="modal" onSubmit={confirmar}>
-        <h3>Marcar como vendido</h3>
-        <p className="sub">{item.nome || "Item sem nome"}</p>
+        <h3>{t("venda.titulo")}</h3>
+        <p className="sub">{item.nome || t("comum.semNome")}</p>
 
         <div className="campos">
           <label className="campo">
-            <span>Preço de venda (€)</span>
+            <span>{t("venda.preco")}</span>
             <input
               ref={refPreco} className="num" type="number" step="0.01"
               value={preco} onChange={(e) => setPreco(e.target.value)}
             />
           </label>
           <label className="campo">
-            <span>Data da venda</span>
+            <span>{t("venda.data")}</span>
             <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
           </label>
           {sugestao !== null && (
-            <span className="dica">preço mínimo sugerido: {eur(sugestao)}</span>
+            <span className="dica">{t("venda.sugestao")}: {eur(sugestao)}</span>
           )}
         </div>
 
         <div className="acoes">
-          <button type="button" className="btn" onClick={onFechar}>Cancelar</button>
-          <button type="submit" className="btn primario">Confirmar venda</button>
+          <button type="button" className="btn" onClick={onFechar}>{t("comum.cancelar")}</button>
+          <button type="submit" className="btn primario">{t("venda.confirmar")}</button>
         </div>
       </form>
     </div>

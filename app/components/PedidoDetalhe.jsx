@@ -9,6 +9,7 @@ import {
 } from "@/lib/calculos";
 import { corCategoria } from "@/lib/cores";
 import { tamanhosPara } from "@/lib/tamanhos";
+import { useIdioma } from "./Idioma";
 import ModalVenda from "./ModalVenda";
 import Lightbox from "./Lightbox";
 import SugestoesItem from "./SugestoesItem";
@@ -18,6 +19,7 @@ import Patches from "./Patches";
 // foto grande. Reusa os handlers do contexto.
 export default function PedidoDetalhe({ pedido }) {
   const router = useRouter();
+  const { t } = useIdioma();
   const {
     estado, editarCampo, marcarVendido, novoItem, apagarItem, apagarPedido,
     uploadFoto, removerFoto, bulkCategoria, aplicarTemplate,
@@ -78,7 +80,7 @@ export default function PedidoDetalhe({ pedido }) {
   // senão cria um item novo já com a foto. Um ref guarda os valores frescos para
   // o listener não precisar de ser re-registado a cada render.
   const colarRef = useRef(null);
-  colarRef.current = { selecionados, pedido, novoItem, uploadFoto, uploadFotoPatch, confirmar };
+  colarRef.current = { selecionados, pedido, novoItem, uploadFoto, uploadFotoPatch, confirmar, t };
   useEffect(() => {
     async function aoColar(e) {
       const itens = e.clipboardData?.items;
@@ -89,19 +91,19 @@ export default function PedidoDetalhe({ pedido }) {
       }
       if (!ficheiro) return; // sem imagem na área de transferência → deixa o paste normal
       e.preventDefault();
-      const { selecionados, pedido, novoItem, uploadFoto, uploadFotoPatch, confirmar } = colarRef.current;
+      const { selecionados, pedido, novoItem, uploadFoto, uploadFotoPatch, confirmar, t } = colarRef.current;
       const patchId = document.activeElement?.dataset?.patchId;
       if (patchId) {
         // se o patch já tem foto, confirmar antes de trocar
         const patch = pedido.itens.flatMap((it) => it.patches || []).find((p) => p.id === patchId);
-        if (patch?.foto && !(await pedirTrocaFoto(confirmar))) return;
+        if (patch?.foto && !(await pedirTrocaFoto(confirmar, t))) return;
         await uploadFotoPatch(patchId, ficheiro);
         return;
       }
       if (selecionados.size === 1) {
         const itemId = [...selecionados][0];
         const item = pedido.itens.find((it) => it.id === itemId);
-        if (item?.foto && !(await pedirTrocaFoto(confirmar))) return; // já tem foto → perguntar
+        if (item?.foto && !(await pedirTrocaFoto(confirmar, t))) return; // já tem foto → perguntar
         await uploadFoto(itemId, ficheiro);
       } else {
         const novo = await novoItem(pedido.id);
@@ -117,45 +119,45 @@ export default function PedidoDetalhe({ pedido }) {
       <div className="detalhe-topo">
         <div className="detalhe-cab">
           <input className="detalhe-titulo" value={pedido.nome} onChange={(e) => editP("nome", e.target.value)} />
-          <button className="btn fantasma" title="Apagar pedido" onClick={aoApagarPedido}>✕ Apagar</button>
+          <button className="btn fantasma" title={t("det.apagarPedido")} onClick={aoApagarPedido}>{t("det.apagar")}</button>
         </div>
 
         <div className="pedido-meta">
-          <label className="campo"><span>Sócio</span>
+          <label className="campo"><span>{t("contas.socio")}</span>
             <select value={pedido.socioId ?? ""} onChange={(e) => editP("socioId", e.target.value)}>
-              <option value="">Sozinho</option>
+              <option value="">{t("filtros.sozinho")}</option>
               {socios.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}
             </select></label>
-          <label className="campo"><span>Compra</span>
+          <label className="campo"><span>{t("det.compra")}</span>
             <input type="date" value={pedido.dataCompra} onChange={(e) => editP("dataCompra", e.target.value)} /></label>
-          <label className="campo"><span>Chegada</span>
+          <label className="campo"><span>{t("det.chegada")}</span>
             <input type="date" value={pedido.dataChegada} onChange={(e) => editP("dataChegada", e.target.value)} /></label>
-          <label className="campo"><span>Taxa PayPal €</span>
+          <label className="campo"><span>{t("det.taxaPaypal")}</span>
             <input className="num pequeno" type="number" step="0.01" value={pedido.taxaPaypal} onChange={(e) => editP("taxaPaypal", e.target.value)} /></label>
-          <label className="campo"><span>Saco €</span>
+          <label className="campo"><span>{t("det.saco")}</span>
             <input className="num pequeno" type="number" step="0.01" value={pedido.saco} onChange={(e) => editP("saco", e.target.value)} /></label>
         </div>
 
         <div className="pills">
-          <Pill label="Investido" valor={eur(r.investido)} />
-          <Pill label="Vendidos" valor={`${r.vendidos}/${r.total}`} />
-          <Pill label="Receita" valor={eur(r.receita)} />
-          <Pill label="Lucro" valor={eur(r.lucro)} azul />
-          <Pill label="Margem" valor={r.margemPct !== null ? `${r.margemPct}%` : "—"} />
-          <Pill label="Dias médios" valor={r.diasMedios !== null ? `${r.diasMedios} dias` : "—"} />
+          <Pill label={t("resumo.investido")} valor={eur(r.investido)} />
+          <Pill label={t("det.vendidos")} valor={`${r.vendidos}/${r.total}`} />
+          <Pill label={t("resumo.receita")} valor={eur(r.receita)} />
+          <Pill label={t("vendas.lucro")} valor={eur(r.lucro)} azul />
+          <Pill label={t("enc.margem")} valor={r.margemPct !== null ? `${r.margemPct}%` : "—"} />
+          <Pill label={t("det.diasMedios")} valor={r.diasMedios !== null ? t("det.diasUnidade", { n: r.diasMedios }) : "—"} />
         </div>
       </div>
 
       {selecionados.size > 0 && (
         <div className="bulk-bar">
-          <strong>{selecionados.size}</strong> selecionado(s) — mudar categoria para:
-          <input list="categorias" value={catBulk} onChange={(e) => setCatBulk(e.target.value)} placeholder="categoria" />
-          <button className="btn mini primario" onClick={aplicarCategoria}>Aplicar</button>
-          <button className="btn mini" onClick={() => setSelecionados(new Set())}>Limpar</button>
+          <strong>{selecionados.size}</strong> {t("det.bulkResto")}
+          <input list="categorias" value={catBulk} onChange={(e) => setCatBulk(e.target.value)} placeholder={t("det.phCategoria")} />
+          <button className="btn mini primario" onClick={aplicarCategoria}>{t("det.aplicar")}</button>
+          <button className="btn mini" onClick={() => setSelecionados(new Set())}>{t("filtros.limpar")}</button>
         </div>
       )}
 
-      <p className="colar-dica">📋 Cola uma imagem (⌘V) para criar um item com a foto — ou seleciona 1 item para colar nesse.</p>
+      <p className="colar-dica">{t("det.colarDica")}</p>
 
       <div className="itens-grelha">
         {pedido.itens.map((item) => (
@@ -178,7 +180,7 @@ export default function PedidoDetalhe({ pedido }) {
             onUploadFotoPatch={uploadFotoPatch}
           />
         ))}
-        <button className="item-add" onClick={() => novoItem(pedido.id)}>+ Adicionar item</button>
+        <button className="item-add" onClick={() => novoItem(pedido.id)}>{t("det.adicionarItem")}</button>
       </div>
 
       {vendaItem && (
@@ -200,6 +202,7 @@ function ItemCartao({
   templates = [], onTemplate,
   onAddPatch, onEditarPatch, onApagarPatch, onUploadFotoPatch,
 }) {
+  const { t } = useIdioma();
   const input = useRef(null);
   const vendido = estaVendido(item);
   const m = margem(pedido, item);
@@ -218,14 +221,14 @@ function ItemCartao({
         {fotoUrl ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={fotoUrl} alt={item.nome || "foto"} onClick={() => onZoom(fotoUrl)} title="Ver maior" />
-            <button className="foto-troca" onClick={() => input.current?.click()} title="Trocar">↻</button>
-            <button className="foto-rem" onClick={onRemoverFoto} title="Remover">✕</button>
+            <img src={fotoUrl} alt={item.nome || t("comum.foto")} onClick={() => onZoom(fotoUrl)} title={t("det.verMaior")} />
+            <button className="foto-troca" onClick={() => input.current?.click()} title={t("det.trocar")}>↻</button>
+            <button className="foto-rem" onClick={onRemoverFoto} title={t("comum.remover")}>✕</button>
           </>
         ) : (
-          <button className="foto-vazia" onClick={() => input.current?.click()}>📷<span>Adicionar foto</span></button>
+          <button className="foto-vazia" onClick={() => input.current?.click()}>📷<span>{t("det.adicionarFoto")}</span></button>
         )}
-        {parado && <span className="badge item-badge" title={`Parado há ${emStock} dias`}>⏳ {emStock}d</span>}
+        {parado && <span className="badge item-badge" title={t("det.paradoTitulo", { n: emStock })}>⏳ {emStock}d</span>}
         <input ref={input} type="file" accept="image/*" hidden
           onChange={(e) => { if (e.target.files[0]) onUploadFoto(e.target.files[0]); e.target.value = ""; }} />
       </div>
@@ -239,25 +242,25 @@ function ItemCartao({
           />
         </span>
         <div className="item-linha">
-          <input className="item-cat" list="categorias" placeholder="categoria" value={item.categoria} onChange={(e) => onEditar("categoria", e.target.value)} />
+          <input className="item-cat" list="categorias" placeholder={t("det.phCategoria")} value={item.categoria} onChange={(e) => onEditar("categoria", e.target.value)} />
           {tamanhos.length > 0 && (
             <select className="item-tam" value={item.tamanho} onChange={(e) => onEditar("tamanho", e.target.value)}>
-              <option value="">Tam.</option>
-              {tamanhos.map((t) => <option key={t} value={t}>{t}</option>)}
+              <option value="">{t("det.tam")}</option>
+              {tamanhos.map((tam) => <option key={tam} value={tam}>{tam}</option>)}
             </select>
           )}
         </div>
 
         <div className="item-grid">
-          <label><span>Compra €</span>
+          <label><span>{t("det.compraItem")}</span>
             <input className="num" type="number" step="0.01" value={item.precoCompra} onChange={(e) => onEditar("precoCompra", e.target.value)} /></label>
-          <label><span>Venda €</span>
+          <label><span>{t("det.vendaItem")}</span>
             <input className="num" type="number" step="0.01" value={item.precoVenda} onChange={(e) => onEditar("precoVenda", e.target.value)} /></label>
-          <label><span>Data venda</span>
+          <label><span>{t("det.dataVenda")}</span>
             <input type="date" value={item.dataVenda} onChange={(e) => onEditar("dataVenda", e.target.value)} /></label>
         </div>
 
-        <input className="item-notas" placeholder="+ nota" value={item.notas} onChange={(e) => onEditar("notas", e.target.value)} />
+        <input className="item-notas" placeholder={t("det.phNotaItem")} value={item.notas} onChange={(e) => onEditar("notas", e.target.value)} />
 
         <Patches
           patches={item.patches} onAdd={onAddPatch} onEditarNome={onEditarPatch}
@@ -265,15 +268,15 @@ function ItemCartao({
         />
 
         <div className="item-calc">
-          <span className="dim">Custo {eur(custoReal(pedido, item))}</span>
+          <span className="dim">{t("enc.custo")} {eur(custoReal(pedido, item))}</span>
           {m !== null
             ? <span className={m >= 0 ? "pos" : "neg"}>{eur(m)} · {margemPct(pedido, item)}%{dias !== null ? ` · ${dias}d` : ""}</span>
-            : minimo !== null && <span className="dim">mín. {eur(minimo)}</span>}
+            : minimo !== null && <span className="dim">{t("det.min")} {eur(minimo)}</span>}
         </div>
 
         <div className="item-acoes">
-          {!vendido && <button className="btn mini vender" onClick={onVender}>€ Marcar vendido</button>}
-          <button className="btn fantasma" title="Apagar item" onClick={onApagar}>✕</button>
+          {!vendido && <button className="btn mini vender" onClick={onVender}>{t("det.marcarVendido")}</button>}
+          <button className="btn fantasma" title={t("det.apagarItem")} onClick={onApagar}>✕</button>
         </div>
       </div>
     </div>
@@ -281,11 +284,11 @@ function ItemCartao({
 }
 
 // Pergunta antes de substituir uma foto que já existe (colar ⌘V).
-function pedirTrocaFoto(confirmar) {
+function pedirTrocaFoto(confirmar, t) {
   return confirmar({
-    titulo: "Trocar foto",
-    mensagem: "Isto já tem uma foto. Queres substituí-la pela que colaste?",
-    textoConfirmar: "Trocar",
+    titulo: t("conf.trocarFotoTitulo"),
+    mensagem: t("conf.trocarFotoMsgItem"),
+    textoConfirmar: t("conf.trocarFotoBtn"),
   });
 }
 

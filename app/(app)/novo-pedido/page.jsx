@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useEstado } from "@/app/components/contexto";
+import { useIdioma } from "@/app/components/Idioma";
 import { toNumber } from "@/lib/calculos";
 import Link from "next/link";
 import { tamanhosPara } from "@/lib/tamanhos";
@@ -25,6 +26,7 @@ const PEDIDO_INICIAL = { nome: "", socioId: "", dataCompra: "", dataChegada: "",
 // carregas em "Criar pedido" — cria o pedido com a quantidade expandida em itens.
 export default function PaginaNovoPedido() {
   const router = useRouter();
+  const { t } = useIdioma();
   const {
     estado, novaLinha, apagarLinha, uploadFotoLinha, aplicarTemplateLinha, editarCampo,
     finalizarRascunho, novoPatch, apagarPatch, uploadFotoPatch, confirmar,
@@ -55,7 +57,7 @@ export default function PaginaNovoPedido() {
   // colar imagem (⌘V): se o foco estiver no nome de um patch → foto desse patch;
   // senão cria uma camisa nova com a foto.
   const refColar = useRef(null);
-  refColar.current = { novaLinha, uploadFotoLinha, uploadFotoPatch, confirmar, rascunho };
+  refColar.current = { novaLinha, uploadFotoLinha, uploadFotoPatch, confirmar, rascunho, t };
   useEffect(() => {
     async function aoColar(e) {
       const itens = e.clipboardData?.items;
@@ -66,12 +68,12 @@ export default function PaginaNovoPedido() {
       }
       if (!ficheiro) return;
       e.preventDefault();
-      const { novaLinha, uploadFotoLinha, uploadFotoPatch, confirmar, rascunho } = refColar.current;
+      const { novaLinha, uploadFotoLinha, uploadFotoPatch, confirmar, rascunho, t } = refColar.current;
       const patchId = document.activeElement?.dataset?.patchId;
       if (patchId) {
         // se o patch já tem foto, confirmar antes de trocar
         const patch = rascunho.flatMap((l) => l.patches || []).find((p) => p.id === patchId);
-        if (patch?.foto && !(await confirmar({ titulo: "Trocar foto", mensagem: "Este patch já tem uma foto. Queres substituí-la?", textoConfirmar: "Trocar" }))) return;
+        if (patch?.foto && !(await confirmar({ titulo: t("conf.trocarFotoTitulo"), mensagem: t("conf.trocarFotoMsgPatch"), textoConfirmar: t("conf.trocarFotoBtn") }))) return;
         await uploadFotoPatch(patchId, ficheiro);
         return;
       }
@@ -86,7 +88,7 @@ export default function PaginaNovoPedido() {
   const totalPecas = rascunho.reduce((n, l) => n + Math.max(1, l.quantidade || 1), 0);
   const setP = (campo) => (e) => setPedido((f) => ({ ...f, [campo]: e.target.value }));
 
-  const titulo = pedido.nome.trim() || "Encomenda";
+  const titulo = pedido.nome.trim() || t("comum.encomenda");
 
   async function preverImagem() {
     if (rascunho.length === 0) return;
@@ -108,7 +110,7 @@ export default function PaginaNovoPedido() {
       window.open(waUrl, "_blank");
       setCriado({ pedidoId: novo.id, waUrl });
     } catch (err) {
-      alert("Não foi possível criar o pedido: " + err.message);
+      alert(t("erro.criarPedido") + " " + err.message);
       setACriar(false);
     }
   }
@@ -118,12 +120,12 @@ export default function PaginaNovoPedido() {
       <div className="pagina">
         <section className="bloco">
           <div className="sucesso">
-            <h2>Pedido criado ✓</h2>
-            <p className="dim">A imagem-catálogo foi descarregada. Anexa-a no WhatsApp e envia o texto ao fornecedor.</p>
+            <h2>{t("novo.criado")}</h2>
+            <p className="dim">{t("novo.criadoMsg")}</p>
             <div className="criar-acoes">
-              <a className="btn primario grande" href={criado.waUrl} target="_blank" rel="noreferrer">📲 Abrir WhatsApp do fornecedor</a>
-              <Link className="btn" href={`/pedidos/${criado.pedidoId}`}>Ver o pedido criado</Link>
-              <Link className="btn fantasma" href="/novo-pedido" onClick={() => setCriado(null)}>Novo pedido</Link>
+              <a className="btn primario grande" href={criado.waUrl} target="_blank" rel="noreferrer">{t("novo.abrirWhats")}</a>
+              <Link className="btn" href={`/pedidos/${criado.pedidoId}`}>{t("novo.verPedido")}</Link>
+              <Link className="btn fantasma" href="/novo-pedido" onClick={() => setCriado(null)}>{t("pedidos.novoToggle")}</Link>
             </div>
           </div>
         </section>
@@ -134,9 +136,9 @@ export default function PaginaNovoPedido() {
   return (
     <div className="pagina">
       <section className="bloco">
-        <h2>Novo pedido <span className="conta">— junta as camisas e cria tudo de uma vez</span></h2>
+        <h2>{t("pedidos.novoToggle")} <span className="conta">{t("novo.sub")}</span></h2>
 
-        <p className="colar-dica">📋 Cola uma imagem (⌘V) para criar uma camisa com a foto, ou usa o botão abaixo. Escreve o nome para reaproveitar fotos/preços de camisas que já tens.</p>
+        <p className="colar-dica">{t("novo.colarDica")}</p>
 
         <div className="linhas">
           {rascunho.map((linha) => (
@@ -152,36 +154,36 @@ export default function PaginaNovoPedido() {
               onUploadFotoPatch={uploadFotoPatch}
             />
           ))}
-          <button className="item-add" onClick={() => novaLinha({ categoria: "Camisa de futebol" })}>+ Adicionar camisa</button>
+          <button className="item-add" onClick={() => novaLinha({ categoria: "Camisa de futebol" })}>{t("novo.adicionarCamisa")}</button>
         </div>
       </section>
 
       {rascunho.length > 0 && (
         <section className="bloco">
-          <h2>Finalizar <span className="conta">— {rascunho.length} modelo(s) · {totalPecas} peça(s)</span></h2>
+          <h2>{t("novo.finalizar")} <span className="conta">{t("novo.finalizarSub", { n: rascunho.length, p: totalPecas })}</span></h2>
           <div className="form-novo">
-            <label className="campo"><span>Nome do pedido</span>
-              <input value={pedido.nome} onChange={setP("nome")} placeholder="ex: Lote 03 — futebol" /></label>
-            <label className="campo"><span>Sócio</span>
+            <label className="campo"><span>{t("novo.nomePedido")}</span>
+              <input value={pedido.nome} onChange={setP("nome")} placeholder={t("novo.phNome")} /></label>
+            <label className="campo"><span>{t("contas.socio")}</span>
               <select value={pedido.socioId} onChange={setP("socioId")}>
-                <option value="">Sozinho</option>
+                <option value="">{t("filtros.sozinho")}</option>
                 {estado.socios.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}
               </select></label>
-            <label className="campo"><span>Data compra</span>
+            <label className="campo"><span>{t("novo.dataCompra")}</span>
               <input type="date" value={pedido.dataCompra} onChange={setP("dataCompra")} /></label>
-            <label className="campo"><span>Data chegada</span>
+            <label className="campo"><span>{t("novo.dataChegada")}</span>
               <input type="date" value={pedido.dataChegada} onChange={setP("dataChegada")} /></label>
-            <label className="campo"><span>Taxa PayPal (€)</span>
+            <label className="campo"><span>{t("novo.taxaPaypal")}</span>
               <input className="num" type="number" step="0.01" value={pedido.taxaPaypal} onChange={setP("taxaPaypal")} /></label>
-            <label className="campo"><span>Saco / peça (€)</span>
+            <label className="campo"><span>{t("novo.saco")}</span>
               <input className="num" type="number" step="0.01" value={pedido.saco} onChange={setP("saco")} /></label>
           </div>
           <div className="criar-acoes">
             <button className="btn primario grande" onClick={criarPedido} disabled={aCriar}>
-              {aCriar ? "A criar…" : `Criar pedido (${totalPecas} peças)`}
+              {aCriar ? t("novo.aCriar") : t("novo.criarPedidoN", { n: totalPecas })}
             </button>
-            <button className="btn" onClick={preverImagem}>Pré-ver imagem-catálogo</button>
-            <button className="btn" onClick={() => { navigator.clipboard?.writeText(textoEncomenda(rascunho, { titulo })); }}>Copiar texto</button>
+            <button className="btn" onClick={preverImagem}>{t("novo.prever")}</button>
+            <button className="btn" onClick={() => { navigator.clipboard?.writeText(textoEncomenda(rascunho, { titulo })); }}>{t("novo.copiarTexto")}</button>
           </div>
         </section>
       )}
@@ -201,6 +203,7 @@ function LinhaCamisa({
   linha, templates, onEditar, onTemplate, onUploadFoto, onApagar,
   onAddPatch, onEditarPatch, onApagarPatch, onUploadFotoPatch,
 }) {
+  const { t } = useIdioma();
   const input = useRef(null);
   const tamanhos = tamanhosPara(linha.categoria || "Camisa de futebol");
   const fotoUrl = linha.foto ? `/api/fotos/${linha.foto}` : null;
@@ -210,9 +213,9 @@ function LinhaCamisa({
       <div className="linha-foto">
         {fotoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={fotoUrl} alt={linha.nome || "foto"} onClick={() => input.current?.click()} title="Trocar foto" />
+          <img src={fotoUrl} alt={linha.nome || t("comum.foto")} onClick={() => input.current?.click()} title={t("novo.trocarFotoLinha")} />
         ) : (
-          <button className="foto-vazia" onClick={() => input.current?.click()}>📷<span>Foto</span></button>
+          <button className="foto-vazia" onClick={() => input.current?.click()}>📷<span>{t("novo.fotoBtn")}</span></button>
         )}
         <input ref={input} type="file" accept="image/*" hidden
           onChange={(e) => { if (e.target.files[0]) onUploadFoto(e.target.files[0]); e.target.value = ""; }} />
@@ -223,18 +226,18 @@ function LinhaCamisa({
           <span className="dot" style={{ background: "var(--accent)" }} />
           <SugestoesItem
             value={linha.nome} templates={templates} excluirId={linha.id}
-            onChange={(v) => onEditar("nome", v)} onEscolher={onTemplate} placeholder="Nome"
+            onChange={(v) => onEditar("nome", v)} onEscolher={onTemplate} placeholder={t("comum.nome")}
           />
           <select className="item-tam" value={linha.tamanho} onChange={(e) => onEditar("tamanho", e.target.value)}>
-            <option value="">Tam.</option>
-            {tamanhos.map((t) => <option key={t} value={t}>{t}</option>)}
+            <option value="">{t("det.tam")}</option>
+            {tamanhos.map((tam) => <option key={tam} value={tam}>{tam}</option>)}
           </select>
         </span>
         <div className="linha-grid">
-          <label><span>Quantidade</span>
+          <label><span>{t("novo.quantidade")}</span>
             <input className="num" type="number" min="1" step="1" value={linha.quantidade}
               onChange={(e) => onEditar("quantidade", e.target.value)} /></label>
-          <label><span>Compra € (opc.)</span>
+          <label><span>{t("novo.compraOpc")}</span>
             <input className="num" type="number" step="0.01" value={linha.precoCompra}
               onChange={(e) => onEditar("precoCompra", e.target.value)} /></label>
         </div>
@@ -244,7 +247,7 @@ function LinhaCamisa({
         />
       </div>
 
-      <button className="btn fantasma linha-x" title="Remover camisa" onClick={onApagar}>✕</button>
+      <button className="btn fantasma linha-x" title={t("novo.removerCamisa")} onClick={onApagar}>✕</button>
     </div>
   );
 }

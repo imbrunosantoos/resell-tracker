@@ -1,6 +1,9 @@
 import "./globals.css";
 import { Archivo, JetBrains_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import RegistarSW from "./components/RegistarSW";
+import { IdiomaProvider } from "./components/Idioma";
+import { ehIdioma, IDIOMA_PADRAO } from "@/lib/i18n";
 
 // Fontes self-hosted (servidas pela própria app — rápidas e funcionam offline).
 const archivo = Archivo({
@@ -31,13 +34,16 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }) {
+  const cookieIdioma = cookies().get("idioma")?.value;
+  const idioma = ehIdioma(cookieIdioma) ? cookieIdioma : IDIOMA_PADRAO;
+
   return (
-    <html lang="pt" className={`${archivo.variable} ${jetbrains.variable}`}>
+    <html lang={idioma} className={`${archivo.variable} ${jetbrains.variable}`}>
       <head>
         <link rel="apple-touch-icon" href="/icon.svg" />
       </head>
       <body>
-        {children}
+        <IdiomaProvider inicial={idioma}>{children}</IdiomaProvider>
         <RegistarSW />
       </body>
     </html>

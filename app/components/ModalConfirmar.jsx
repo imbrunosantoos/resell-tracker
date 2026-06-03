@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useIdioma } from "./Idioma";
 
 // Modal centrado de "tens a certeza?". Fecha no Escape e ao clicar no fundo.
 // `perigo` pinta o botão de confirmar a vermelho (apagar/remover).
 export default function ModalConfirmar({
   titulo,
   mensagem,
-  textoConfirmar = "Confirmar",
+  textoConfirmar,
   perigo = false,
   onConfirmar,
   onFechar,
 }) {
+  const { t } = useIdioma();
   const refConfirmar = useRef(null);
 
   useEffect(() => {
@@ -27,14 +29,14 @@ export default function ModalConfirmar({
         <h3>{titulo}</h3>
         {mensagem && <p className="sub">{mensagem}</p>}
         <div className="acoes">
-          <button type="button" className="btn" onClick={onFechar}>Cancelar</button>
+          <button type="button" className="btn" onClick={onFechar}>{t("comum.cancelar")}</button>
           <button
             ref={refConfirmar}
             type="button"
             className={"btn " + (perigo ? "perigo" : "primario")}
             onClick={onConfirmar}
           >
-            {textoConfirmar}
+            {textoConfirmar || t("comum.confirmar")}
           </button>
         </div>
       </div>

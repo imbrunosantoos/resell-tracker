@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEstado } from "@/app/components/contexto";
+import { useIdioma } from "@/app/components/Idioma";
 import { nomeMes } from "@/lib/calculos";
 import UltimasVendas from "@/app/components/UltimasVendas";
 
@@ -10,12 +11,13 @@ import UltimasVendas from "@/app/components/UltimasVendas";
 export default function PaginaVendasMes() {
   const { mes } = useParams();
   const { estado } = useEstado();
+  const { t, locale } = useIdioma();
 
   return (
     <div className="pagina">
-      <Link href="/" className="voltar">← Início</Link>
+      <Link href="/" className="voltar">{t("comum.voltarInicio")}</Link>
       <section className="bloco">
-        <h2>Vendas de <span className="mes-titulo">{nomeMes(mes)}</span></h2>
+        <h2>{t("vendasMes.titulo")} <span className="mes-titulo">{nomeMes(mes, locale)}</span></h2>
         <UltimasVendas pedidos={estado.pedidos} socios={estado.socios} mes={mes} />
       </section>
     </div>

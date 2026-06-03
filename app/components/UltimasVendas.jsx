@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { eur, margem, margemPct, estaVendido } from "@/lib/calculos";
 import { corCategoria } from "@/lib/cores";
+import { useIdioma } from "./Idioma";
 
 // As vendas mais recentes (por data de venda). Filtra por "Eu" (todas as vendas,
 // porque participas em todas) ou por um sócio (só as dele). A coluna "Parte" é a
@@ -11,6 +12,7 @@ import { corCategoria } from "@/lib/cores";
 // inteiro a solo, no caso "Eu").
 // Com `mes` ('YYYY-MM') mostra só as vendas desse mês (e todas, sem "ver mais").
 export default function UltimasVendas({ pedidos, socios = [], limite = 8, mes = null }) {
+  const { t } = useIdioma();
   const [filtro, setFiltro] = useState("eu"); // "eu" | socioId
   const [mostrarTodas, setMostrarTodas] = useState(false);
   const idsValidos = new Set(socios.map((s) => s.id));
@@ -32,31 +34,31 @@ export default function UltimasVendas({ pedidos, socios = [], limite = 8, mes = 
   vendas.sort((a, b) => (a.item.dataVenda < b.item.dataVenda ? 1 : -1));
 
   const legenda = socioSel
-    ? `Vendas com ${socioSel.nome} · "Parte" = metade do lucro dele`
-    : `Todas as vendas · "Parte" = a tua fatia do lucro`;
+    ? t("vendas.legendaSocio", { nome: socioSel.nome })
+    : t("vendas.legendaEu");
 
   return (
     <div className="vendas">
       <div className="vendas-topo">
         <select value={filtro} onChange={(e) => setFiltro(e.target.value)}>
-          <option value="eu">Eu</option>
+          <option value="eu">{t("vendas.eu")}</option>
           {socios.map((s) => (
             <option key={s.id} value={s.id}>{s.nome}</option>
           ))}
         </select>
-        <span className="dim pequeno">{vendas.length} venda(s)</span>
+        <span className="dim pequeno">{t("rel.vendas", { n: vendas.length })}</span>
       </div>
       <p className="vendas-legenda">{legenda}</p>
 
       {vendas.length === 0 ? (
-        <p className="dim pequeno">Sem vendas {socioSel ? "com este sócio" : "ainda"}.</p>
+        <p className="dim pequeno">{socioSel ? t("vendas.semVendasSocio") : t("vendas.semVendasAinda")}</p>
       ) : (
         <div className="vendas-lista">
           <div className="vendas-cabecalho">
-            <span>Venda</span>
-            <span>Preço</span>
-            <span>Lucro</span>
-            <span>Parte</span>
+            <span>{t("vendas.venda")}</span>
+            <span>{t("vendas.preco")}</span>
+            <span>{t("vendas.lucro")}</span>
+            <span>{t("vendas.parte")}</span>
           </div>
           {(mes || mostrarTodas ? vendas : vendas.slice(0, limite)).map(({ pedido, item, m, pct, parte }) => (
             <Link key={item.id} href={`/pedidos/${pedido.id}`} className="venda-linha">
@@ -64,8 +66,8 @@ export default function UltimasVendas({ pedidos, socios = [], limite = 8, mes = 
                 <span className="venda-dot" style={{ background: corCategoria(item.categoria) }} />
                 <span className="venda-textos">
                   <span className="venda-nome">
-                    {item.nome || "Item sem nome"}
-                    {pedido.tipo === "encomenda" && <span className="chip encomenda venda-tag">Encomenda</span>}
+                    {item.nome || t("comum.semNome")}
+                    {pedido.tipo === "encomenda" && <span className="chip encomenda venda-tag">{t("comum.encomenda")}</span>}
                   </span>
                   <span className="venda-sub">{pedido.nome} · {item.dataVenda}</span>
                 </span>
@@ -79,7 +81,7 @@ export default function UltimasVendas({ pedidos, socios = [], limite = 8, mes = 
           ))}
           {!mes && vendas.length > limite && (
             <button className="btn mini vendas-mais" onClick={() => setMostrarTodas((v) => !v)}>
-              {mostrarTodas ? "Ver menos" : `Ver mais (${vendas.length - limite})`}
+              {mostrarTodas ? t("vendas.verMenos") : t("vendas.verMais", { n: vendas.length - limite })}
             </button>
           )}
         </div>

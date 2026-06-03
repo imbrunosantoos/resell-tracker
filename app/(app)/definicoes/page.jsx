@@ -2,20 +2,23 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useEstado } from "@/app/components/contexto";
+import { useIdioma } from "@/app/components/Idioma";
+import { IDIOMAS } from "@/lib/i18n";
 
-// "há X" a partir de uma data ISO (para a última cópia de segurança).
-function haQuanto(iso) {
-  const seg = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 1000));
-  if (seg < 60) return "há segundos";
-  if (seg < 3600) return `há ${Math.floor(seg / 60)} min`;
-  if (seg < 86400) return `há ${Math.floor(seg / 3600)} h`;
-  return `há ${Math.floor(seg / 86400)} dia(s)`;
-}
-const quando = (iso) => new Date(iso).toLocaleString("pt-PT");
-
-// Definições: margem mínima, alerta de dias, cópias de segurança e sair.
+// Definições: margem mínima, alerta de dias, idioma, cópias de segurança e sair.
 export default function PaginaDefinicoes() {
   const { estado, editarConfig, exportar, importar, sair, listarBackups, restaurarBackup } = useEstado();
+  const { t, idioma, setIdioma, locale } = useIdioma();
+
+  // "há X" a partir de uma data ISO (para a última cópia de segurança).
+  const haQuanto = useCallback((iso) => {
+    const seg = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 1000));
+    if (seg < 60) return t("tempo.haSegundos");
+    if (seg < 3600) return t("tempo.haMin", { n: Math.floor(seg / 60) });
+    if (seg < 86400) return t("tempo.haH", { n: Math.floor(seg / 3600) });
+    return t("tempo.haDias", { n: Math.floor(seg / 86400) });
+  }, [t]);
+  const quando = (iso) => new Date(iso).toLocaleString(locale);
 
   const [backups, setBackups] = useState([]);
   const refrescar = useCallback(async () => { setBackups(await listarBackups()); }, [listarBackups]);
@@ -33,60 +36,62 @@ export default function PaginaDefinicoes() {
   return (
     <div className="pagina">
       <section className="bloco">
-        <h2>Preferências</h2>
+        <h2>{t("defin.preferencias")}</h2>
         <div className="form-novo">
           <label className="campo">
-            <span>Margem mínima (%)</span>
+            <span>{t("defin.margemMinima")}</span>
             <input type="number" className="num" min="0" max="99" step="1"
               value={estado.config.margemMinima ?? 20}
               onChange={(e) => editarConfig("margemMinima", e.target.value)} />
           </label>
           <label className="campo">
-            <span>Alerta de stock parado (dias)</span>
+            <span>{t("defin.alertaStock")}</span>
             <input type="number" className="num" min="1" step="1"
               value={estado.config.diasAlerta ?? 30}
               onChange={(e) => editarConfig("diasAlerta", e.target.value)} />
           </label>
           <label className="campo">
-            <span>WhatsApp do fornecedor</span>
-            <input type="tel" inputMode="tel" placeholder="ex: 351912345678"
+            <span>{t("defin.whatsFornecedor")}</span>
+            <input type="tel" inputMode="tel" placeholder={t("defin.whatsPlaceholder")}
               value={estado.config.fornecedorWhats ?? ""}
               onChange={(e) => editarConfig("fornecedorWhats", e.target.value)} />
           </label>
+          <label className="campo">
+            <span>{t("defin.idioma")}</span>
+            <select className="num" value={idioma} onChange={(e) => setIdioma(e.target.value)}>
+              {IDIOMAS.map((i) => (
+                <option key={i.codigo} value={i.codigo}>{i.bandeira} {i.nome}</option>
+              ))}
+            </select>
+          </label>
         </div>
-        <p className="dim pequeno" style={{ marginTop: 8 }}>
-          Número com indicativo do país, só dígitos (ex.: <code>351912345678</code>). Usado no botão
-          “Criar pedido” para abrir a conversa do fornecedor com a lista.
-        </p>
+        <p className="dim pequeno" style={{ marginTop: 8 }}>{t("defin.whatsHint")}</p>
       </section>
 
       <section className="bloco">
-        <h2>Cópias de segurança <span className="conta">
-          — {backups.length ? `última ${haQuanto(backups[0].data)}` : "automáticas"}</span></h2>
-        <p className="dim pequeno" style={{ marginBottom: 12 }}>
-          A app guarda uma cópia sozinha a cada alteração (em <code>data/backups/</code>, as últimas 40).
-          Podes restaurar qualquer uma aqui. Para guardar fora desta máquina, usa o “Exportar JSON”.
-        </p>
+        <h2>{t("defin.backups")} <span className="conta">
+          — {backups.length ? t("defin.ultima", { quando: haQuanto(backups[0].data) }) : t("defin.automaticas")}</span></h2>
+        <p className="dim pequeno" style={{ marginBottom: 12 }}>{t("defin.backupsHint")}</p>
 
         <div className="barra-acoes" style={{ marginBottom: 12 }}>
-          <button className="btn" onClick={criarAgora}>Criar cópia agora</button>
-          <button className="btn" onClick={() => exportar("json")}>Exportar JSON</button>
-          <button className="btn" onClick={() => exportar("csv")}>Exportar CSV</button>
+          <button className="btn" onClick={criarAgora}>{t("defin.criarCopia")}</button>
+          <button className="btn" onClick={() => exportar("json")}>{t("defin.exportarJson")}</button>
+          <button className="btn" onClick={() => exportar("csv")}>{t("defin.exportarCsv")}</button>
           <label className="btn" style={{ cursor: "pointer" }}>
-            Importar
+            {t("comum.importar")}
             <input type="file" accept="application/json" hidden
               onChange={(e) => { importar(e.target.files[0]); e.target.value = ""; }} />
           </label>
         </div>
 
         {backups.length === 0 ? (
-          <p className="dim pequeno">Ainda não há cópias. Faz uma alteração ou carrega em “Criar cópia agora”.</p>
+          <p className="dim pequeno">{t("defin.semCopias")}</p>
         ) : (
           <div className="backups-lista">
             {backups.slice(0, 10).map((b) => (
               <div className="backup-linha" key={b.nome}>
                 <span className="backup-data">{quando(b.data)} <span className="dim">· {haQuanto(b.data)}</span></span>
-                <button className="btn mini" onClick={() => restaurar(b.nome)}>Restaurar</button>
+                <button className="btn mini" onClick={() => restaurar(b.nome)}>{t("comum.restaurar")}</button>
               </div>
             ))}
           </div>
@@ -94,8 +99,8 @@ export default function PaginaDefinicoes() {
       </section>
 
       <section className="bloco">
-        <h2>Sessão</h2>
-        <button className="btn" onClick={sair}>Terminar sessão</button>
+        <h2>{t("defin.sessao")}</h2>
+        <button className="btn" onClick={sair}>{t("defin.terminarSessao")}</button>
       </section>
     </div>
   );

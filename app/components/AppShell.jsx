@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { resumoGlobal, categoriasOrdenadas, dadosMensais, relatorioMensal, estaVendido } from "@/lib/calculos";
 import { EstadoContexto } from "./contexto";
+import { useIdioma } from "./Idioma";
 import { prepararImagem } from "./prepararImagem";
 import TopNav from "./TopNav";
 import ModalConfirmar from "./ModalConfirmar";
@@ -13,6 +14,7 @@ import ModalConfirmar from "./ModalConfirmar";
    Toda a lógica que antes estava no Dashboard está aqui, exposta por contexto. */
 export default function AppShell({ utilizador, estadoInicial, children }) {
   const router = useRouter();
+  const { t } = useIdioma();
   // As credenciais não vêm no estado inicial (carregam-se só na aba Contas).
   const [estado, setEstado] = useState(() => ({ ...estadoInicial, credenciais: [], rascunho: estadoInicial.rascunho ?? [] }));
 
@@ -65,14 +67,14 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   // Restaura uma cópia (substitui os dados do negócio).
   async function restaurarBackup(nome) {
     const ok = await confirmar({
-      titulo: "Restaurar cópia",
-      mensagem: "Isto substitui os pedidos, sócios, despesas e acertos pelos da cópia escolhida.",
-      textoConfirmar: "Restaurar",
+      titulo: t("conf.restaurarTitulo"),
+      mensagem: t("conf.restaurarMsg"),
+      textoConfirmar: t("comum.restaurar"),
       perigo: true,
     });
     if (!ok) return false;
     const r = await persistir("/api/backup/restaurar", "POST", { nome });
-    if (!r.ok) { mostrarErro("Não foi possível restaurar a cópia."); return false; }
+    if (!r.ok) { mostrarErro(t("erro.restaurarCopia")); return false; }
     const dados = await r.json();
     setEstado((prev) => ({ ...dados, credenciais: prev.credenciais }));
     return true;
@@ -129,8 +131,8 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     timers.current[chave] = setTimeout(async () => {
       try {
         const r = await persistir(`/api/${tabela}/${id}`, "PATCH", { [campo]: valor });
-        if (!r.ok) { mostrarErro("Não foi possível guardar a alteração."); recarregar(); }
-      } catch { mostrarErro("Sem ligação ao servidor."); }
+        if (!r.ok) { mostrarErro(t("erro.guardarAlteracao")); recarregar(); }
+      } catch { mostrarErro(t("erro.semLigacao")); }
       finally { pendentes.current--; agendarBackup(); }
     }, 450);
   }
@@ -143,8 +145,8 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     timers.current[chave] = setTimeout(async () => {
       try {
         const r = await persistir("/api/config", "PATCH", { [campo]: valor });
-        if (!r.ok) { mostrarErro("Não foi possível guardar a configuração."); recarregar(); }
-      } catch { mostrarErro("Sem ligação ao servidor."); }
+        if (!r.ok) { mostrarErro(t("erro.guardarConfig")); recarregar(); }
+      } catch { mostrarErro(t("erro.semLigacao")); }
       finally { pendentes.current--; agendarBackup(); }
     }, 450);
   }
@@ -153,7 +155,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   async function novoPedido(dados) {
     return comEscrita(async () => {
       const r = await persistir("/api/pedidos", "POST", dados);
-      if (!r.ok) { mostrarErro("Não foi possível criar o pedido."); return null; }
+      if (!r.ok) { mostrarErro(t("erro.criarPedido")); return null; }
       const pedido = await r.json();
       setEstado((prev) => ({ ...prev, pedidos: [pedido, ...prev.pedidos] }));
       return pedido;
@@ -162,7 +164,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   async function novaEncomenda(dados) {
     return comEscrita(async () => {
       const r = await persistir("/api/encomendas", "POST", dados);
-      if (!r.ok) { mostrarErro("Não foi possível criar a encomenda."); return null; }
+      if (!r.ok) { mostrarErro(t("erro.criarEncomenda")); return null; }
       const pedido = await r.json();
       setEstado((prev) => ({ ...prev, pedidos: [pedido, ...prev.pedidos] }));
       return pedido;
@@ -170,15 +172,15 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   }
   async function apagarPedido(id) {
     const ok = await confirmar({
-      titulo: "Apagar pedido",
-      mensagem: "Isto apaga o pedido e todos os seus itens. Não dá para desfazer.",
-      textoConfirmar: "Apagar",
+      titulo: t("conf.apagarPedidoTitulo"),
+      mensagem: t("conf.apagarPedidoMsg"),
+      textoConfirmar: t("comum.apagar"),
       perigo: true,
     });
     if (!ok) return false;
     return comEscrita(async () => {
       const r = await persistir(`/api/pedidos/${id}`, "DELETE");
-      if (!r.ok) { mostrarErro("Não foi possível apagar o pedido."); recarregar(); return false; }
+      if (!r.ok) { mostrarErro(t("erro.apagarPedido")); recarregar(); return false; }
       setEstado((prev) => ({ ...prev, pedidos: prev.pedidos.filter((p) => p.id !== id) }));
       return true;
     });
@@ -186,7 +188,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   async function novoItem(pedidoId) {
     return comEscrita(async () => {
       const r = await persistir("/api/itens", "POST", { pedidoId });
-      if (!r.ok) { mostrarErro("Não foi possível adicionar o item."); return null; }
+      if (!r.ok) { mostrarErro(t("erro.adicionarItem")); return null; }
       const item = await r.json();
       setEstado((prev) => ({
         ...prev,
@@ -198,7 +200,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   async function apagarItem(pedidoId, itemId) {
     return comEscrita(async () => {
       const r = await persistir(`/api/itens/${itemId}`, "DELETE");
-      if (!r.ok) { mostrarErro("Não foi possível apagar o item."); recarregar(); return; }
+      if (!r.ok) { mostrarErro(t("erro.apagarItem")); recarregar(); return; }
       setEstado((prev) => ({
         ...prev,
         pedidos: prev.pedidos.map((p) => (p.id === pedidoId ? { ...p, itens: p.itens.filter((i) => i.id !== itemId) } : p)),
@@ -209,14 +211,14 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     return comEscrita(async () => {
       setEstado((prev) => substituirItemCampos(prev, pedidoId, itemId, { precoVenda, dataVenda }));
       const r = await persistir(`/api/itens/${itemId}`, "PATCH", { precoVenda, dataVenda });
-      if (!r.ok) { mostrarErro("Não foi possível guardar a venda."); recarregar(); }
+      if (!r.ok) { mostrarErro(t("erro.guardarVenda")); recarregar(); }
     });
   }
   // Autofill: preenche um item a partir de outro (copia nome/categoria/preço + foto).
   async function aplicarTemplate(itemId, origemId) {
     return comEscrita(async () => {
       const r = await persistir(`/api/itens/${itemId}/template`, "POST", { origemId });
-      if (!r.ok) { mostrarErro("Não foi possível copiar do item anterior."); return; }
+      if (!r.ok) { mostrarErro(t("erro.copiarAnterior")); return; }
       const item = await r.json();
       setEstado((prev) => substituirItem(prev, item));
     });
@@ -225,7 +227,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     if (ids.length === 0) return;
     return comEscrita(async () => {
       const r = await persistir("/api/itens/categoria", "POST", { ids, categoria });
-      if (!r.ok) { mostrarErro("Não foi possível mudar a categoria."); recarregar(); return; }
+      if (!r.ok) { mostrarErro(t("erro.mudarCategoria")); recarregar(); return; }
       setEstado((prev) => ({
         ...prev,
         pedidos: prev.pedidos.map((p) => ({
@@ -243,22 +245,22 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
       const fd = new FormData();
       fd.append("foto", otimizada);
       const r = await fetch(`/api/itens/${itemId}/foto`, { method: "POST", body: fd });
-      if (!r.ok) { mostrarErro("Não foi possível guardar a foto."); return; }
+      if (!r.ok) { mostrarErro(t("erro.guardarFoto")); return; }
       const item = await r.json();
       setEstado((prev) => substituirItem(prev, item));
     });
   }
   async function removerFoto(itemId) {
     const ok = await confirmar({
-      titulo: "Remover foto",
-      mensagem: "Remover a foto deste item?",
-      textoConfirmar: "Remover",
+      titulo: t("conf.removerFotoTitulo"),
+      mensagem: t("conf.removerFotoMsg"),
+      textoConfirmar: t("comum.remover"),
       perigo: true,
     });
     if (!ok) return;
     return comEscrita(async () => {
       const r = await persistir(`/api/itens/${itemId}/foto`, "DELETE");
-      if (!r.ok) { mostrarErro("Não foi possível remover a foto."); recarregar(); return; }
+      if (!r.ok) { mostrarErro(t("erro.removerFoto")); recarregar(); return; }
       const item = await r.json();
       setEstado((prev) => substituirItem(prev, item));
     });
@@ -268,7 +270,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   async function novaLinha(dados = {}) {
     return comEscrita(async () => {
       const r = await persistir("/api/rascunho", "POST", dados);
-      if (!r.ok) { mostrarErro("Não foi possível adicionar a camisa."); return null; }
+      if (!r.ok) { mostrarErro(t("erro.adicionarCamisa")); return null; }
       const linha = await r.json();
       setEstado((prev) => ({ ...prev, rascunho: [...(prev.rascunho ?? []), linha] }));
       return linha;
@@ -277,7 +279,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   async function apagarLinha(id) {
     return comEscrita(async () => {
       const r = await persistir(`/api/rascunho/${id}`, "DELETE");
-      if (!r.ok) { mostrarErro("Não foi possível remover a camisa."); recarregar(); return; }
+      if (!r.ok) { mostrarErro(t("erro.removerCamisa")); recarregar(); return; }
       setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.filter((l) => l.id !== id) }));
     });
   }
@@ -287,7 +289,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
       const fd = new FormData();
       fd.append("foto", otimizada);
       const r = await fetch(`/api/rascunho/${linhaId}/foto`, { method: "POST", body: fd });
-      if (!r.ok) { mostrarErro("Não foi possível guardar a foto."); return; }
+      if (!r.ok) { mostrarErro(t("erro.guardarFoto")); return; }
       const linha = await r.json();
       setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.map((l) => (l.id === linha.id ? linha : l)) }));
     });
@@ -295,7 +297,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   async function aplicarTemplateLinha(linhaId, origemId) {
     return comEscrita(async () => {
       const r = await persistir(`/api/rascunho/${linhaId}/template`, "POST", { origemId });
-      if (!r.ok) { mostrarErro("Não foi possível copiar do item anterior."); return; }
+      if (!r.ok) { mostrarErro(t("erro.copiarAnterior")); return; }
       const linha = await r.json();
       setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.map((l) => (l.id === linha.id ? linha : l)) }));
     });
@@ -305,7 +307,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     return comEscrita(async () => {
       const r = await persistir("/api/rascunho/finalizar", "POST", dadosPedido);
       const dados = await r.json();
-      if (!r.ok) throw new Error(dados.erro || "Não foi possível criar o pedido.");
+      if (!r.ok) throw new Error(dados.erro || t("erro.criarPedido"));
       setEstado((prev) => ({ ...prev, rascunho: [], pedidos: [dados, ...prev.pedidos] }));
       return dados;
     });
@@ -316,7 +318,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     // alvo: { itemId } ou { linhaId }
     return comEscrita(async () => {
       const r = await persistir("/api/patches", "POST", alvo);
-      if (!r.ok) { mostrarErro("Não foi possível adicionar o patch."); return; }
+      if (!r.ok) { mostrarErro(t("erro.adicionarPatch")); return; }
       const patch = await r.json();
       setEstado((prev) => adicionarPatch(prev, patch));
     });
@@ -324,7 +326,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   async function apagarPatch(patch) {
     return comEscrita(async () => {
       const r = await persistir(`/api/patches/${patch.id}`, "DELETE");
-      if (!r.ok) { mostrarErro("Não foi possível remover o patch."); recarregar(); return; }
+      if (!r.ok) { mostrarErro(t("erro.removerPatch")); recarregar(); return; }
       setEstado((prev) => removerPatch(prev, patch));
     });
   }
@@ -334,7 +336,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
       const fd = new FormData();
       fd.append("foto", otimizada);
       const r = await fetch(`/api/patches/${patchId}/foto`, { method: "POST", body: fd });
-      if (!r.ok) { mostrarErro("Não foi possível guardar a foto do patch."); return; }
+      if (!r.ok) { mostrarErro(t("erro.guardarFotoPatch")); return; }
       const patch = await r.json();
       setEstado((prev) => substituirPatch(prev, patch));
     });
@@ -344,22 +346,22 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   async function novoSocio(dados) {
     return comEscrita(async () => {
       const r = await persistir("/api/socios", "POST", dados);
-      if (!r.ok) { mostrarErro("Não foi possível criar o sócio."); return; }
+      if (!r.ok) { mostrarErro(t("erro.criarSocio")); return; }
       const socio = await r.json();
       setEstado((prev) => ({ ...prev, socios: [...prev.socios, socio] }));
     });
   }
   async function apagarSocio(id) {
     const ok = await confirmar({
-      titulo: "Apagar sócio",
-      mensagem: "Os pedidos dele passam a 'sozinho'. Tens a certeza?",
-      textoConfirmar: "Apagar",
+      titulo: t("conf.apagarSocioTitulo"),
+      mensagem: t("conf.apagarSocioMsg"),
+      textoConfirmar: t("comum.apagar"),
       perigo: true,
     });
     if (!ok) return;
     return comEscrita(async () => {
       const r = await persistir(`/api/socios/${id}`, "DELETE");
-      if (!r.ok) { mostrarErro("Não foi possível apagar o sócio."); recarregar(); return; }
+      if (!r.ok) { mostrarErro(t("erro.apagarSocio")); recarregar(); return; }
       setEstado((prev) => ({
         ...prev,
         socios: prev.socios.filter((s) => s.id !== id),
@@ -373,7 +375,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   async function novaDespesa(dados) {
     return comEscrita(async () => {
       const r = await persistir("/api/despesas", "POST", dados);
-      if (!r.ok) { mostrarErro("Não foi possível criar a despesa."); return; }
+      if (!r.ok) { mostrarErro(t("erro.criarDespesa")); return; }
       const despesa = await r.json();
       setEstado((prev) => ({ ...prev, despesas: [...prev.despesas, despesa] }));
     });
@@ -381,7 +383,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   async function apagarDespesa(id) {
     return comEscrita(async () => {
       const r = await persistir(`/api/despesas/${id}`, "DELETE");
-      if (!r.ok) { mostrarErro("Não foi possível apagar a despesa."); recarregar(); return; }
+      if (!r.ok) { mostrarErro(t("erro.apagarDespesa")); recarregar(); return; }
       setEstado((prev) => ({ ...prev, despesas: prev.despesas.filter((d) => d.id !== id) }));
     });
   }
@@ -390,7 +392,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   async function novaCredencial(dados) {
     return comEscrita(async () => {
       const r = await persistir("/api/credenciais", "POST", dados);
-      if (!r.ok) { mostrarErro("Não foi possível guardar a conta."); return; }
+      if (!r.ok) { mostrarErro(t("erro.guardarConta")); return; }
       const credencial = await r.json();
       setEstado((prev) => ({ ...prev, credenciais: [...prev.credenciais, credencial] }));
     });
@@ -398,7 +400,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   async function apagarCredencial(id) {
     return comEscrita(async () => {
       const r = await persistir(`/api/credenciais/${id}`, "DELETE");
-      if (!r.ok) { mostrarErro("Não foi possível apagar a conta."); recarregar(); return; }
+      if (!r.ok) { mostrarErro(t("erro.apagarConta")); recarregar(); return; }
       setEstado((prev) => ({ ...prev, credenciais: prev.credenciais.filter((c) => c.id !== id) }));
     });
   }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useEstado } from "@/app/components/contexto";
+import { useIdioma } from "@/app/components/Idioma";
 import { estaVendido } from "@/lib/calculos";
 import NovoPedido from "@/app/components/NovoPedido";
 import NovaEncomenda from "@/app/components/NovaEncomenda";
@@ -13,6 +14,7 @@ const FILTROS_VAZIO = { texto: "", estado: "todos", categoria: "", socio: "", ti
 // Página de pedidos: criar + filtrar + lista compacta (clica para o detalhe).
 export default function PaginaPedidos() {
   const { estado, listaCategorias, novoPedido, novaEncomenda } = useEstado();
+  const { t } = useIdioma();
   const [filtros, setFiltros] = useState(FILTROS_VAZIO);
   const [aCriar, setACriar] = useState("pedido"); // "pedido" | "encomenda"
   const clientesEncomenda = [...new Set(
@@ -55,11 +57,11 @@ export default function PaginaPedidos() {
           <button
             className={"toggle-btn" + (aCriar === "pedido" ? " ativo" : "")}
             onClick={() => setACriar("pedido")}
-          >Novo pedido</button>
+          >{t("pedidos.novoToggle")}</button>
           <button
             className={"toggle-btn" + (aCriar === "encomenda" ? " ativo" : "")}
             onClick={() => setACriar("encomenda")}
-          >Nova encomenda</button>
+          >{t("pedidos.novaEncomenda")}</button>
         </div>
         {aCriar === "pedido" ? (
           <NovoPedido socios={estado.socios} onCriar={novoPedido} />
@@ -69,12 +71,12 @@ export default function PaginaPedidos() {
       </section>
 
       <section className="bloco">
-        <h2>Pedidos <span className="conta">— {visiveis.length}{filtroAtivo ? ` de ${estado.pedidos.length}` : ""}</span></h2>
+        <h2>{t("nav.pedidos")} <span className="conta">— {visiveis.length}{filtroAtivo ? ` ${t("pedidos.de")} ${estado.pedidos.length}` : ""}</span></h2>
         <Filtros valor={filtros} onMudar={setFiltros} categorias={listaCategorias} socios={estado.socios} />
         {estado.pedidos.length === 0 ? (
-          <div className="vazio">Ainda não há pedidos. Cria o primeiro acima.</div>
+          <div className="vazio">{t("pedidos.vazio")}</div>
         ) : visiveis.length === 0 ? (
-          <div className="vazio">Nenhum pedido corresponde aos filtros.</div>
+          <div className="vazio">{t("pedidos.semFiltro")}</div>
         ) : (
           <div className="pedidos-lista">
             {visiveis.map((p) => <PedidoLinha key={p.id} pedido={p} socios={estado.socios} />)}

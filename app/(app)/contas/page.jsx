@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useEstado } from "@/app/components/contexto";
+import { useIdioma } from "@/app/components/Idioma";
 import Credenciais from "@/app/components/Credenciais";
 
 // Página das contas (logins e passwords por plataforma/sócio, cifradas).
 // As credenciais carregam-se só aqui (não viajam nas outras páginas).
 export default function PaginaContas() {
   const { estado, carregarCredenciais, editarCampo, novaCredencial, apagarCredencial } = useEstado();
+  const { t } = useIdioma();
   const [aCarregar, setACarregar] = useState(true);
 
   useEffect(() => {
@@ -19,9 +21,9 @@ export default function PaginaContas() {
   return (
     <div className="pagina">
       <section className="bloco">
-        <h2>Contas e passwords <span className="conta">— cifradas no servidor</span></h2>
+        <h2>{t("contas.titulo")} <span className="conta">— {t("contas.sub")}</span></h2>
         {aCarregar ? (
-          <p className="dim pequeno">A carregar contas…</p>
+          <p className="dim pequeno">{t("contas.aCarregar")}</p>
         ) : (
           <Credenciais
             credenciais={estado.credenciais} socios={estado.socios}

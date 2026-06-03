@@ -594,6 +594,13 @@ tbody tr.selecionado { background: var(--accent-soft); }
 .nav-icone { font-size: 14px; }
 .nav-sessao { display: flex; align-items: center; gap: 10px; }
 .nav-user { font-size: 13px; color: var(--muted); font-weight: 600; }
+.nav-idioma { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; }
+.nav-idioma select {
+  background: transparent; color: var(--muted); border: 1px solid var(--linha);
+  border-radius: 8px; padding: 3px 6px; font: inherit; font-size: 12px; font-weight: 700;
+  cursor: pointer; appearance: none; -webkit-appearance: none;
+}
+.nav-idioma select:hover { color: var(--texto); }
 
 .pagina { padding-top: 26px; }
 .voltar {
