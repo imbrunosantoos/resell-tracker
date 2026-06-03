@@ -53,7 +53,8 @@ And at the business level:
 - **Bulk select** — pick several items and change the category of all at once
 - **Search and filters** — by text, partner, type (orders / pre-orders), status (in stock / sold) and category
 - **Recent sales** — filterable by partner, showing each person's **profit share**
-- **Partners tab + settle-up per sale** — each sold item of a partner order shows the profit and the **amount to send = sale price ÷ 2** (the partner fronted half the cost, so half the revenue returns their cost + profit share). Mark a sale as **settled** and the partner's "left to send" updates live.
+- **Partners tab + settle-up per sale** — each sold item of a partner order shows the profit and the **amount to send = sale price ÷ 2** (the partner fronted half the cost, so half the revenue returns their cost + profit share). Mark a sale as **settled** and the partner's "left to send" updates live. Each partner card also shows **how much they invested** (half the real cost of their orders' items; pre-orders count as zero).
+- **Languages** — the whole interface is available in **Portuguese, English and Spanish**; switch from the 🌐 button in the top bar or in Settings (the choice is remembered per device).
 - **Mark as sold** in one click — small modal with price + date (suggests the minimum price and today's date)
 - **Stale-stock alert** — items unsold for more than X days (configurable) are highlighted with a badge, and a "Not selling" list on the home page
 - **Expenses** (chip, domain, packaging…) in their own tab, coming out of the real profit — monthly ones count for each active month, one-offs count once; each can be solo or split with a partner
