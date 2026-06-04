@@ -452,7 +452,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
       <main className="container">{children}</main>
 
       <footer className="rodape">
-        Next.js + SQLite · dados sincronizados entre dispositivos · sessão de {utilizador.nome}
+        {t("rodape.info", { nome: utilizador.nome })}
       </footer>
 
       <datalist id="categorias">
