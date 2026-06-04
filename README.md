@@ -10,13 +10,13 @@ It started as a static page in plain JavaScript and is now built on **Next.js + 
 
 ![Home](docs/screenshots/home.png)
 
-| Order detail | Partner settle-up (Sócios) |
+| Order detail | Partner settle-up |
 | :---: | :---: |
-| ![Order detail](docs/screenshots/order-detail.png) | ![Sócios](docs/screenshots/socios.png) |
+| ![Order detail](docs/screenshots/order-detail.png) | ![Partners](docs/screenshots/socios.png) |
 
-| Order builder (Novo Pedido) | Profit & analytics (Lucro) |
+| Order builder | Profit & analytics |
 | :---: | :---: |
-| ![Novo Pedido](docs/screenshots/novo-pedido.png) | ![Lucro](docs/screenshots/profit.png) |
+| ![New Order](docs/screenshots/novo-pedido.png) | ![Profit](docs/screenshots/profit.png) |
 
 | Orders list | On the phone |
 | :---: | :---: |
@@ -35,7 +35,7 @@ And at the business level:
 
 - Global summary: invested, unsold stock, revenue, sales profit, expenses and **real profit** (after everything)
 - **Profit per category**, with bars, **sell-through** (% already sold) and average days per category
-- **Monthly chart** — profit per month, or received vs invested per month (toggle)
+- **Monthly chart** — your profit per month, or **what you** received vs invested per month (toggle); on partner orders it counts your half, solo orders count in full
 - **Monthly report** — your profit and number of sales this month vs. the previous one (click a month card to see that month's sales)
 - **Profit per partner** — each order made with a partner splits the profit in half; solo orders are 100% yours
 
@@ -45,7 +45,7 @@ And at the business level:
 - **Partner per order** — choose who it was made with (or solo); profit splits in half automatically
 - Items with free-text category, **size** (Polo XS–XXL, football shirts S–XL), **photo** and **notes**. Photos are **downscaled in the browser** before upload (and iPhone **HEIC is converted to JPEG**, so it shows everywhere)
 - **Autofill from past items** — type an item's name and pick a previous one to copy its photo, purchase price and category (the photo is copied, not shared)
-- **Order builder** (tab **Novo Pedido**) — a draft you fill over time (each shirt with photo, name, size and **quantity** — they're all football shirts, so there's no category to pick); "Criar pedido" then creates the real order (quantity N → **N separate items**), downloads a **catalog image** (grid of photos + name/size/qty) and opens the **supplier's WhatsApp** with the text ready
+- **Order builder** (tab **New Order**) — a draft you fill over time (each shirt with photo, name, size and **quantity** — they're all football shirts, so there's no category to pick); "Create order" then creates the real order (quantity N → **N separate items**), downloads a **catalog image** (grid of photos + name/size/qty) and opens the **supplier's WhatsApp** with the text ready
 - **Patches per shirt** (optional) — some shirts have exclusive patches, so you can add a patch with a **name** and a **photo** (paste with ⌘/Ctrl+V too). They show small and discreet on the shirt, carry over to each created item, and appear on the catalog image and supplier text
 - **Pre-orders (Encomendas)** — for shirts a client orders and **pays upfront**: you store the client, the payment date, the total cost and the final price (profit is locked in). They're auto-named `<Client> NN` (a per-client counter), count as sold right away and feed every report. Tagged and filterable in the list, with their own simplified detail view.
 - **Paste a photo** (⌘/Ctrl+V) inside an order — pastes into the selected item, or creates a new item with it (and into a patch when its name field is focused); pasting over an item that already has a photo asks before replacing
@@ -137,12 +137,12 @@ The app is organized by tabs at the top, each on its own page:
 
 - **Home** (`/`) — overview: colored summary cards, "this month" vs last month (the month cards link to that month's sales at `/vendas/[mes]`), monthly profit chart and a "not selling" list.
 - **Orders** (`/pedidos`) — create a normal order **or** a pre-order (toggle), filter/search (text, partner, type, status, category) and a compact list (pre-orders are tagged). Click an order → **detail** (`/pedidos/[id]`) with items as cards, **large photos** (paste or upload, click to zoom), mark as sold and bulk category. Pre-orders open a simplified detail view.
-- **Novo Pedido** (`/novo-pedido`) — order builder: a persistent draft of shirts (photo, name, size, quantity, and optional patches with name + photo). "Criar pedido" creates the order (quantity → N items), downloads a catalog image and opens the supplier's WhatsApp with the text.
-- **Profit** (`/lucro`) — read-only profit-per-partner summary (settle up in the Sócios tab), monthly chart (profit / received vs invested), profit per category, and recent sales (filterable by partner, showing each person's share).
-- **Sócios** (`/socios`) — manage partners and **settle up per sale**: each sold item of a partner order shows the profit and the amount to send (price ÷ 2); tick it as settled and the "left to send" updates.
+- **New Order** (`/novo-pedido`) — order builder: a persistent draft of shirts (photo, name, size, quantity, and optional patches with name + photo). "Create order" makes the order (quantity → N items), downloads a catalog image and opens the supplier's WhatsApp with the text.
+- **Profit** (`/lucro`) — read-only profit-per-partner summary (settle up in the Partners tab), monthly chart (profit / received vs invested, your share), profit per category, and recent sales (filterable by partner, showing each person's share).
+- **Partners** (`/socios`) — manage partners and **settle up per sale**: each sold item of a partner order shows the profit and the amount to send (price ÷ 2); tick it as settled and the "left to send" updates. Each partner card also shows how much they invested.
 - **Expenses** (`/despesas`) — recurring or one-off expenses, solo or split with a partner.
 - **Accounts** (`/contas`) — logins and passwords per platform/partner (encrypted; loaded only on this page).
-- **Settings** (`/definicoes`) — minimum margin, stale-stock day alert, supplier WhatsApp number, **automatic backups** (list + restore), manual export/import and sign out.
+- **Settings** (`/definicoes`) — minimum margin, stale-stock day alert, supplier WhatsApp number, **language** (PT/EN/ES), **automatic backups** (list + restore), manual export/import and sign out.
 
 ## Structure
 
