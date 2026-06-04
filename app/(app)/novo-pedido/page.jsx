@@ -7,7 +7,7 @@ import { useIdioma } from "@/app/components/Idioma";
 import { toNumber } from "@/lib/calculos";
 import Link from "next/link";
 import { tamanhosPara } from "@/lib/tamanhos";
-import { gerarCatalogo, textoEncomenda } from "@/lib/catalogo";
+import { gerarPdf, textoEncomenda } from "@/lib/catalogo";
 import SugestoesItem from "@/app/components/SugestoesItem";
 import Patches from "@/app/components/Patches";
 
@@ -21,6 +21,17 @@ const urlWhats = (num, texto) =>
   num ? `https://wa.me/${num}?text=${encodeURIComponent(texto)}` : `https://wa.me/?text=${encodeURIComponent(texto)}`;
 
 const PEDIDO_INICIAL = { nome: "", socioId: "", dataCompra: "", dataChegada: "", taxaPaypal: "3.99", saco: "0.17" };
+
+// Nova camisa: são sempre camisas de futebol; arranca com 1 unidade tamanho M.
+const CAMISA_NOVA = { categoria: "Camisa de futebol", tamanhos: { M: 1 } };
+
+// Total de peças de uma linha: soma da repartição por tamanho (S/M/L/XL) ou, em
+// categorias sem tamanhos, a quantidade simples.
+function totalDaLinha(l) {
+  const sizes = tamanhosPara(l.categoria || "Camisa de futebol");
+  if (sizes.length) return sizes.reduce((s, tam) => s + (Number(l.tamanhos?.[tam]) || 0), 0);
+  return Math.max(1, Number(l.quantidade) || 1);
+}
 
 // Construtor de encomenda: vais juntando camisas (rascunho guardado) e no fim
 // carregas em "Criar pedido" — cria o pedido com a quantidade expandida em itens.
@@ -78,29 +89,31 @@ export default function PaginaNovoPedido() {
         return;
       }
       // colar fora de um patch cria sempre uma camisa nova (sem foto prévia)
-      const linha = await novaLinha({ categoria: "Camisa de futebol" });
-      await uploadFotoLinha(linha.id, ficheiro);
+      const linha = await novaLinha(CAMISA_NOVA);
+      await uploadFotoLinha(linha.id, ficheiro, "frente");
     }
     window.addEventListener("paste", aoColar);
     return () => window.removeEventListener("paste", aoColar);
   }, []);
 
-  const totalPecas = rascunho.reduce((n, l) => n + Math.max(1, l.quantidade || 1), 0);
+  const totalPecas = rascunho.reduce((n, l) => n + totalDaLinha(l), 0);
   const setP = (campo) => (e) => setPedido((f) => ({ ...f, [campo]: e.target.value }));
 
   const titulo = pedido.nome.trim() || t("comum.encomenda");
+  const labelsPdf = () => ({ frente: t("novo.frente"), verso: t("novo.verso") });
+  const nomePdf = () => `pedido-${new Date().toISOString().slice(0, 10)}.pdf`;
 
-  async function preverImagem() {
+  async function descarregarPdf() {
     if (rascunho.length === 0) return;
-    descarregar(await gerarCatalogo(rascunho, { titulo }), `encomenda-${new Date().toISOString().slice(0, 10)}.png`);
+    descarregar(await gerarPdf(rascunho, { titulo, labels: labelsPdf() }), nomePdf());
   }
 
   async function criarPedido() {
     if (rascunho.length === 0) return;
     setACriar(true);
     try {
-      // 1) imagem-catálogo (enquanto ainda temos as fotos do rascunho)
-      descarregar(await gerarCatalogo(rascunho, { titulo }), `encomenda-${new Date().toISOString().slice(0, 10)}.png`);
+      // 1) PDF (enquanto ainda temos as fotos frente/verso do rascunho)
+      descarregar(await gerarPdf(rascunho, { titulo, labels: labelsPdf() }), nomePdf());
       const texto = textoEncomenda(rascunho, { titulo });
       const num = (estado.config.fornecedorWhats || "").replace(/\D/g, "");
       const waUrl = urlWhats(num, texto);
@@ -146,7 +159,7 @@ export default function PaginaNovoPedido() {
               key={linha.id} linha={linha} templates={templates}
               onEditar={(campo, valor) => editarCampo("rascunho", linha.id, campo, valor)}
               onTemplate={(origemId) => aplicarTemplateLinha(linha.id, origemId)}
-              onUploadFoto={(f) => uploadFotoLinha(linha.id, f)}
+              onUploadFoto={(f, lado) => uploadFotoLinha(linha.id, f, lado)}
               onApagar={() => apagarLinha(linha.id)}
               onAddPatch={() => novoPatch({ linhaId: linha.id })}
               onEditarPatch={(id, nome) => editarCampo("patches", id, "nome", nome)}
@@ -154,7 +167,7 @@ export default function PaginaNovoPedido() {
               onUploadFotoPatch={uploadFotoPatch}
             />
           ))}
-          <button className="item-add" onClick={() => novaLinha({ categoria: "Camisa de futebol" })}>{t("novo.adicionarCamisa")}</button>
+          <button className="item-add" onClick={() => novaLinha(CAMISA_NOVA)}>{t("novo.adicionarCamisa")}</button>
         </div>
       </section>
 
@@ -182,7 +195,7 @@ export default function PaginaNovoPedido() {
             <button className="btn primario grande" onClick={criarPedido} disabled={aCriar}>
               {aCriar ? t("novo.aCriar") : t("novo.criarPedidoN", { n: totalPecas })}
             </button>
-            <button className="btn" onClick={preverImagem}>{t("novo.prever")}</button>
+            <button className="btn" onClick={descarregarPdf}>{t("novo.descarregarPdf")}</button>
             <button className="btn" onClick={() => { navigator.clipboard?.writeText(textoEncomenda(rascunho, { titulo })); }}>{t("novo.copiarTexto")}</button>
           </div>
         </section>
@@ -199,26 +212,52 @@ export default function PaginaNovoPedido() {
   );
 }
 
+// Slot de foto (frente ou verso) com file-picker e clicar para trocar.
+function FotoSlot({ url, rotulo, onPick, nome, t }) {
+  const input = useRef(null);
+  return (
+    <div className="linha-foto-wrap">
+      <span className="linha-foto-rotulo">{rotulo}</span>
+      <div className="linha-foto">
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={url} alt={nome || t("comum.foto")} onClick={() => input.current?.click()} title={t("novo.trocarFotoLinha")} />
+        ) : (
+          <button className="foto-vazia" onClick={() => input.current?.click()}>📷<span>{rotulo}</span></button>
+        )}
+        <input ref={input} type="file" accept="image/*" hidden
+          onChange={(e) => { if (e.target.files[0]) onPick(e.target.files[0]); e.target.value = ""; }} />
+      </div>
+    </div>
+  );
+}
+
 function LinhaCamisa({
   linha, templates, onEditar, onTemplate, onUploadFoto, onApagar,
   onAddPatch, onEditarPatch, onApagarPatch, onUploadFotoPatch,
 }) {
   const { t } = useIdioma();
-  const input = useRef(null);
   const tamanhos = tamanhosPara(linha.categoria || "Camisa de futebol");
-  const fotoUrl = linha.foto ? `/api/fotos/${linha.foto}` : null;
+  const mapa = linha.tamanhos || {};
+  const total = tamanhos.length
+    ? tamanhos.reduce((s, tam) => s + (Number(mapa[tam]) || 0), 0)
+    : Math.max(1, Number(linha.quantidade) || 1);
+
+  // muda a quantidade de um tamanho na repartição {tam:qtd}
+  function setTamanho(tam, valor) {
+    const n = Math.max(0, Math.round(Number(valor) || 0));
+    const novo = { ...mapa };
+    if (n > 0) novo[tam] = n; else delete novo[tam];
+    onEditar("tamanhos", novo);
+  }
 
   return (
     <div className="linha-camisa">
-      <div className="linha-foto">
-        {fotoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={fotoUrl} alt={linha.nome || t("comum.foto")} onClick={() => input.current?.click()} title={t("novo.trocarFotoLinha")} />
-        ) : (
-          <button className="foto-vazia" onClick={() => input.current?.click()}>📷<span>{t("novo.fotoBtn")}</span></button>
-        )}
-        <input ref={input} type="file" accept="image/*" hidden
-          onChange={(e) => { if (e.target.files[0]) onUploadFoto(e.target.files[0]); e.target.value = ""; }} />
+      <div className="linha-fotos">
+        <FotoSlot url={linha.foto ? `/api/fotos/${linha.foto}` : null} rotulo={t("novo.frente")}
+          nome={linha.nome} t={t} onPick={(f) => onUploadFoto(f, "frente")} />
+        <FotoSlot url={linha.fotoVerso ? `/api/fotos/${linha.fotoVerso}` : null} rotulo={t("novo.verso")}
+          nome={linha.nome} t={t} onPick={(f) => onUploadFoto(f, "verso")} />
       </div>
 
       <div className="linha-campos">
@@ -228,19 +267,28 @@ function LinhaCamisa({
             value={linha.nome} templates={templates} excluirId={linha.id}
             onChange={(v) => onEditar("nome", v)} onEscolher={onTemplate} placeholder={t("comum.nome")}
           />
-          <select className="item-tam" value={linha.tamanho} onChange={(e) => onEditar("tamanho", e.target.value)}>
-            <option value="">{t("det.tam")}</option>
-            {tamanhos.map((tam) => <option key={tam} value={tam}>{tam}</option>)}
-          </select>
         </span>
-        <div className="linha-grid">
-          <label><span>{t("novo.quantidade")}</span>
-            <input className="num" type="number" min="1" step="1" value={linha.quantidade}
-              onChange={(e) => onEditar("quantidade", e.target.value)} /></label>
-          <label><span>{t("novo.compraOpc")}</span>
-            <input className="num" type="number" step="0.01" value={linha.precoCompra}
-              onChange={(e) => onEditar("precoCompra", e.target.value)} /></label>
-        </div>
+
+        {tamanhos.length ? (
+          <div className="tamanhos-grid">
+            <span className="tamanhos-label">{t("novo.tamanhosLabel")}</span>
+            {tamanhos.map((tam) => (
+              <label key={tam} className="tam-celula">
+                <span>{tam}</span>
+                <input className="num" type="number" min="0" step="1" placeholder="0"
+                  value={mapa[tam] ?? ""} onChange={(e) => setTamanho(tam, e.target.value)} />
+              </label>
+            ))}
+            <span className="tam-total">{t("novo.totalLinha", { n: total })}</span>
+          </div>
+        ) : (
+          <div className="linha-grid">
+            <label><span>{t("novo.quantidade")}</span>
+              <input className="num" type="number" min="1" step="1" value={linha.quantidade}
+                onChange={(e) => onEditar("quantidade", e.target.value)} /></label>
+          </div>
+        )}
+
         <Patches
           patches={linha.patches} onAdd={onAddPatch} onEditarNome={onEditarPatch}
           onApagar={onApagarPatch} onUploadFoto={onUploadFotoPatch}

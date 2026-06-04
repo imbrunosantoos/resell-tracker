@@ -16,7 +16,10 @@ export async function POST(request, { params }) {
     return NextResponse.json({ erro: "Sem ficheiro." }, { status: 400 });
   }
 
-  apagarFoto(linha.foto); // substitui a anterior
+  // lado: "frente" (foto) ou "verso" (foto_verso)
+  const verso = String(form.get("lado") || "frente") === "verso";
+  const campo = verso ? "fotoVerso" : "foto";
+  apagarFoto(verso ? linha.fotoVerso : linha.foto); // substitui a desse lado
   const nome = await guardarFoto(file);
-  return NextResponse.json(atualizarLinha(params.id, { foto: nome }));
+  return NextResponse.json(atualizarLinha(params.id, { [campo]: nome }));
 }

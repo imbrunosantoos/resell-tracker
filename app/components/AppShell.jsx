@@ -283,11 +283,12 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
       setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.filter((l) => l.id !== id) }));
     });
   }
-  async function uploadFotoLinha(linhaId, ficheiro) {
+  async function uploadFotoLinha(linhaId, ficheiro, lado = "frente") {
     return comEscrita(async () => {
       const otimizada = await prepararImagem(ficheiro);
       const fd = new FormData();
       fd.append("foto", otimizada);
+      fd.append("lado", lado);
       const r = await fetch(`/api/rascunho/${linhaId}/foto`, { method: "POST", body: fd });
       if (!r.ok) { mostrarErro(t("erro.guardarFoto")); return; }
       const linha = await r.json();
