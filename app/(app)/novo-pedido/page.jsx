@@ -46,6 +46,8 @@ export default function PaginaNovoPedido() {
   const [pedido, setPedido] = useState(PEDIDO_INICIAL);
   const [aCriar, setACriar] = useState(false);
   const [criado, setCriado] = useState(null); // { pedidoId, waUrl } após "Criar pedido"
+  // qual slot de foto (frente/verso de uma camisa) recebe o próximo ⌘V
+  const [selFoto, setSelFoto] = useState(null); // { linhaId, lado } | null
 
   // templates para o autofill (itens já existentes, distintos por nome)
   const templates = useMemo(() => {
@@ -65,10 +67,10 @@ export default function PaginaNovoPedido() {
     return [...porNome.values()];
   }, [estado.pedidos]);
 
-  // colar imagem (⌘V): se o foco estiver no nome de um patch → foto desse patch;
-  // senão cria uma camisa nova com a foto.
+  // colar imagem (⌘V): foco no nome de um patch → foto desse patch; slot de
+  // foto selecionado (frente/verso) → essa foto; senão cria uma camisa nova.
   const refColar = useRef(null);
-  refColar.current = { novaLinha, uploadFotoLinha, uploadFotoPatch, confirmar, rascunho, t };
+  refColar.current = { novaLinha, uploadFotoLinha, uploadFotoPatch, confirmar, rascunho, t, selFoto };
   useEffect(() => {
     async function aoColar(e) {
       const itens = e.clipboardData?.items;
@@ -79,7 +81,7 @@ export default function PaginaNovoPedido() {
       }
       if (!ficheiro) return;
       e.preventDefault();
-      const { novaLinha, uploadFotoLinha, uploadFotoPatch, confirmar, rascunho, t } = refColar.current;
+      const { novaLinha, uploadFotoLinha, uploadFotoPatch, confirmar, rascunho, t, selFoto } = refColar.current;
       const patchId = document.activeElement?.dataset?.patchId;
       if (patchId) {
         // se o patch já tem foto, confirmar antes de trocar
@@ -88,7 +90,17 @@ export default function PaginaNovoPedido() {
         await uploadFotoPatch(patchId, ficheiro);
         return;
       }
-      // colar fora de um patch cria sempre uma camisa nova (sem foto prévia)
+      // slot frente/verso selecionado → cola nesse (mesmo numa camisa já criada)
+      if (selFoto) {
+        const alvo = rascunho.find((l) => l.id === selFoto.linhaId);
+        if (alvo) {
+          const atual = selFoto.lado === "verso" ? alvo.fotoVerso : alvo.foto;
+          if (atual && !(await confirmar({ titulo: t("conf.trocarFotoTitulo"), mensagem: t("conf.trocarFotoMsgItem"), textoConfirmar: t("conf.trocarFotoBtn") }))) return;
+          await uploadFotoLinha(selFoto.linhaId, ficheiro, selFoto.lado);
+          return;
+        }
+      }
+      // sem slot selecionado: colar cria uma camisa nova com a foto na frente
       const linha = await novaLinha(CAMISA_NOVA);
       await uploadFotoLinha(linha.id, ficheiro, "frente");
     }
@@ -160,6 +172,14 @@ export default function PaginaNovoPedido() {
               onEditar={(campo, valor) => editarCampo("rascunho", linha.id, campo, valor)}
               onTemplate={(origemId) => aplicarTemplateLinha(linha.id, origemId)}
               onUploadFoto={(f, lado) => uploadFotoLinha(linha.id, f, lado)}
+              selFoto={selFoto}
+              onSelecionarFoto={(lado) =>
+                setSelFoto((s) =>
+                  s && s.linhaId === linha.id && s.lado === lado
+                    ? null
+                    : { linhaId: linha.id, lado },
+                )
+              }
               onApagar={() => apagarLinha(linha.id)}
               onAddPatch={() => novoPatch({ linhaId: linha.id })}
               onEditarPatch={(id, nome) => editarCampo("patches", id, "nome", nome)}
@@ -212,19 +232,26 @@ export default function PaginaNovoPedido() {
   );
 }
 
-// Slot de foto (frente ou verso) com file-picker e clicar para trocar.
-function FotoSlot({ url, rotulo, onPick, nome, t }) {
+// Slot de foto (frente ou verso). Clicar seleciona o slot (fica com contorno)
+// para o próximo ⌘V cair aqui; o botãozinho ⤓ carrega uma foto de ficheiro.
+function FotoSlot({ url, rotulo, onPick, onSelecionar, selecionado, nome, t }) {
   const input = useRef(null);
   return (
     <div className="linha-foto-wrap">
       <span className="linha-foto-rotulo">{rotulo}</span>
-      <div className="linha-foto">
+      <div
+        className={"linha-foto" + (selecionado ? " selecionada" : "")}
+        onClick={onSelecionar}
+        title={selecionado ? t("novo.fotoSelecionada") : t("novo.selecionarFoto")}
+      >
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={url} alt={nome || t("comum.foto")} onClick={() => input.current?.click()} title={t("novo.trocarFotoLinha")} />
+          <img src={url} alt={nome || t("comum.foto")} />
         ) : (
-          <button className="foto-vazia" onClick={() => input.current?.click()}>📷<span>{rotulo}</span></button>
+          <span className="foto-vazia">📷<span>{rotulo}</span></span>
         )}
+        <button type="button" className="foto-upload" title={t("novo.carregarFoto")}
+          onClick={(e) => { e.stopPropagation(); input.current?.click(); }}>⤓</button>
         <input ref={input} type="file" accept="image/*" hidden
           onChange={(e) => { if (e.target.files[0]) onPick(e.target.files[0]); e.target.value = ""; }} />
       </div>
@@ -235,6 +262,7 @@ function FotoSlot({ url, rotulo, onPick, nome, t }) {
 function LinhaCamisa({
   linha, templates, onEditar, onTemplate, onUploadFoto, onApagar,
   onAddPatch, onEditarPatch, onApagarPatch, onUploadFotoPatch,
+  selFoto, onSelecionarFoto,
 }) {
   const { t } = useIdioma();
   const tamanhos = tamanhosPara(linha.categoria || "Camisa de futebol");
@@ -255,9 +283,13 @@ function LinhaCamisa({
     <div className="linha-camisa">
       <div className="linha-fotos">
         <FotoSlot url={linha.foto ? `/api/fotos/${linha.foto}` : null} rotulo={t("novo.frente")}
-          nome={linha.nome} t={t} onPick={(f) => onUploadFoto(f, "frente")} />
+          nome={linha.nome} t={t} onPick={(f) => onUploadFoto(f, "frente")}
+          selecionado={selFoto?.linhaId === linha.id && selFoto?.lado === "frente"}
+          onSelecionar={() => onSelecionarFoto("frente")} />
         <FotoSlot url={linha.fotoVerso ? `/api/fotos/${linha.fotoVerso}` : null} rotulo={t("novo.verso")}
-          nome={linha.nome} t={t} onPick={(f) => onUploadFoto(f, "verso")} />
+          nome={linha.nome} t={t} onPick={(f) => onUploadFoto(f, "verso")}
+          selecionado={selFoto?.linhaId === linha.id && selFoto?.lado === "verso"}
+          onSelecionar={() => onSelecionarFoto("verso")} />
       </div>
 
       <div className="linha-campos">

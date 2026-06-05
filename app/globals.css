@@ -669,9 +669,17 @@ tbody tr.selecionado { background: var(--accent-soft); }
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 14px; box-shadow: var(--sombra);
 }
-.linha-foto { width: 96px; height: 96px; flex-shrink: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--bg); }
-.linha-foto img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; display: block; }
+.linha-foto { position: relative; width: 96px; height: 96px; flex-shrink: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--bg); cursor: pointer; }
+.linha-foto.selecionada { box-shadow: inset 0 0 0 2px var(--accent); }
+.linha-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .linha-foto .foto-vazia { width: 100%; height: 100%; }
+.foto-upload {
+  position: absolute; right: 4px; bottom: 4px; width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; border-radius: 6px; background: rgba(0, 0, 0, 0.55);
+  color: #fff; font-size: 14px; line-height: 1; cursor: pointer;
+}
+.foto-upload:hover { background: var(--accent); }
 .linha-campos { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .linha-campos .td-nome { display: flex; align-items: center; gap: 8px; }
 .linha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
