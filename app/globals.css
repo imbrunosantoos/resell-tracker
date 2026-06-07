@@ -597,13 +597,41 @@ tbody tr.selecionado { background: var(--accent-soft); }
 .nav-icone { font-size: 14px; }
 .nav-sessao { display: flex; align-items: center; gap: 10px; }
 .nav-user { font-size: 13px; color: var(--muted); font-weight: 600; }
-.nav-idioma { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; }
-.nav-idioma select {
-  background: transparent; color: var(--muted); border: 1px solid var(--linha);
-  border-radius: 8px; padding: 3px 6px; font: inherit; font-size: 12px; font-weight: 700;
-  cursor: pointer; appearance: none; -webkit-appearance: none;
+/* Seletor de idioma no topo: botão de bandeira + mini-menu */
+.nav-idioma { position: relative; display: inline-flex; }
+.nav-idioma-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--surface-2); color: var(--text); border: 1px solid var(--line);
+  border-radius: 8px; padding: 4px 8px; cursor: pointer; font-size: 14px; line-height: 1;
 }
-.nav-idioma select:hover { color: var(--text); }
+.nav-idioma-btn:hover { border-color: var(--muted); }
+.nav-idioma-btn .seta { font-size: 9px; color: var(--muted); }
+.nav-idioma-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 50;
+  min-width: 150px; list-style: none; margin: 0; padding: 5px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+}
+.nav-idioma-item {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  background: none; border: none; border-radius: 7px; padding: 7px 9px;
+  color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; text-align: left;
+}
+.nav-idioma-item:hover { background: var(--surface-2); }
+.nav-idioma-item.ativo { color: var(--accent); }
+.nav-idioma-item .check { margin-left: auto; color: var(--accent); }
+.bandeira { font-size: 15px; line-height: 1; }
+
+/* Controlo segmentado de idioma (Definições) */
+.idioma-seg { display: inline-flex; align-self: flex-start; gap: 4px; padding: 4px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; }
+.idioma-seg-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; border-radius: 9px; padding: 8px 14px;
+  color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.idioma-seg-btn:hover { color: var(--text); }
+.idioma-seg-btn.ativo { background: var(--accent-soft); color: var(--accent); }
+.idioma-seg-btn .check { font-size: 11px; }
 
 .pagina { padding-top: 26px; }
 .voltar {

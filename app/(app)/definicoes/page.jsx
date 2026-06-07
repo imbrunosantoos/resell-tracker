@@ -56,14 +56,21 @@ export default function PaginaDefinicoes() {
               value={estado.config.fornecedorWhats ?? ""}
               onChange={(e) => editarConfig("fornecedorWhats", e.target.value)} />
           </label>
-          <label className="campo">
-            <span>{t("defin.idioma")}</span>
-            <select className="num" value={idioma} onChange={(e) => setIdioma(e.target.value)}>
-              {IDIOMAS.map((i) => (
-                <option key={i.codigo} value={i.codigo}>{i.bandeira} {i.nome}</option>
-              ))}
-            </select>
-          </label>
+        </div>
+
+        <div className="campo" style={{ marginTop: 14 }}>
+          <span>{t("defin.idioma")}</span>
+          <div className="idioma-seg" role="group" aria-label={t("defin.idioma")}>
+            {IDIOMAS.map((i) => (
+              <button key={i.codigo} type="button"
+                className={"idioma-seg-btn" + (i.codigo === idioma ? " ativo" : "")}
+                aria-pressed={i.codigo === idioma}
+                onClick={() => setIdioma(i.codigo)}>
+                <span className="bandeira">{i.bandeira}</span> {i.codigo.toUpperCase()}
+                {i.codigo === idioma && <span className="check">✓</span>}
+              </button>
+            ))}
+          </div>
         </div>
         <p className="dim pequeno" style={{ marginTop: 8 }}>{t("defin.whatsHint")}</p>
       </section>
