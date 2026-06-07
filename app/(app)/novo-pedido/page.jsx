@@ -39,7 +39,7 @@ export default function PaginaNovoPedido() {
   const router = useRouter();
   const { t } = useIdioma();
   const {
-    estado, novaLinha, apagarLinha, uploadFotoLinha, aplicarTemplateLinha, editarCampo,
+    estado, novaLinha, apagarLinha, uploadFotoLinha, removerFotoLinha, aplicarTemplateLinha, editarCampo,
     finalizarRascunho, novoPatch, apagarPatch, uploadFotoPatch, confirmar,
   } = useEstado();
   const rascunho = estado.rascunho ?? [];
@@ -172,6 +172,7 @@ export default function PaginaNovoPedido() {
               onEditar={(campo, valor) => editarCampo("rascunho", linha.id, campo, valor)}
               onTemplate={(origemId) => aplicarTemplateLinha(linha.id, origemId)}
               onUploadFoto={(f, lado) => uploadFotoLinha(linha.id, f, lado)}
+              onRemoverFoto={(lado) => removerFotoLinha(linha.id, lado)}
               selFoto={selFoto}
               onSelecionarFoto={(lado) =>
                 setSelFoto((s) =>
@@ -232,15 +233,15 @@ export default function PaginaNovoPedido() {
   );
 }
 
-// Slot de foto (frente ou verso). Clicar seleciona o slot (fica com contorno)
-// para o próximo ⌘V cair aqui; o botãozinho ⤓ carrega uma foto de ficheiro.
-function FotoSlot({ url, rotulo, onPick, onSelecionar, selecionado, nome, t }) {
+// Slot de foto (frente ou verso). Clicar no tile seleciona-o como destino do
+// próximo ⌘V (anel accent + chip ⌘V); ⤓ carrega de ficheiro, ✕ remove a foto.
+function FotoSlot({ url, rotulo, onPick, onRemover, onSelecionar, selecionado, nome, t }) {
   const input = useRef(null);
   return (
     <div className="linha-foto-wrap">
       <span className="linha-foto-rotulo">{rotulo}</span>
       <div
-        className={"linha-foto" + (selecionado ? " selecionada" : "")}
+        className={"foto-slot" + (selecionado ? " selecionada" : "")}
         onClick={onSelecionar}
         title={selecionado ? t("novo.fotoSelecionada") : t("novo.selecionarFoto")}
       >
@@ -248,10 +249,17 @@ function FotoSlot({ url, rotulo, onPick, onSelecionar, selecionado, nome, t }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={url} alt={nome || t("comum.foto")} />
         ) : (
-          <span className="foto-vazia">📷<span>{rotulo}</span></span>
+          <span className="foto-vazia-mini">📷</span>
         )}
-        <button type="button" className="foto-upload" title={t("novo.carregarFoto")}
-          onClick={(e) => { e.stopPropagation(); input.current?.click(); }}>⤓</button>
+        {selecionado && <span className="foto-chip">⌘V</span>}
+        <span className="foto-acoes">
+          <button type="button" className="foto-acao" title={t("novo.carregarFoto")}
+            onClick={(e) => { e.stopPropagation(); input.current?.click(); }}>⤓</button>
+          {url && (
+            <button type="button" className="foto-acao rem" title={t("novo.removerFoto")}
+              onClick={(e) => { e.stopPropagation(); onRemover(); }}>✕</button>
+          )}
+        </span>
         <input ref={input} type="file" accept="image/*" hidden
           onChange={(e) => { if (e.target.files[0]) onPick(e.target.files[0]); e.target.value = ""; }} />
       </div>
@@ -260,7 +268,7 @@ function FotoSlot({ url, rotulo, onPick, onSelecionar, selecionado, nome, t }) {
 }
 
 function LinhaCamisa({
-  linha, templates, onEditar, onTemplate, onUploadFoto, onApagar,
+  linha, templates, onEditar, onTemplate, onUploadFoto, onRemoverFoto, onApagar,
   onAddPatch, onEditarPatch, onApagarPatch, onUploadFotoPatch,
   selFoto, onSelecionarFoto,
 }) {
@@ -283,11 +291,11 @@ function LinhaCamisa({
     <div className="linha-camisa">
       <div className="linha-fotos">
         <FotoSlot url={linha.foto ? `/api/fotos/${linha.foto}` : null} rotulo={t("novo.frente")}
-          nome={linha.nome} t={t} onPick={(f) => onUploadFoto(f, "frente")}
+          nome={linha.nome} t={t} onPick={(f) => onUploadFoto(f, "frente")} onRemover={() => onRemoverFoto("frente")}
           selecionado={selFoto?.linhaId === linha.id && selFoto?.lado === "frente"}
           onSelecionar={() => onSelecionarFoto("frente")} />
         <FotoSlot url={linha.fotoVerso ? `/api/fotos/${linha.fotoVerso}` : null} rotulo={t("novo.verso")}
-          nome={linha.nome} t={t} onPick={(f) => onUploadFoto(f, "verso")}
+          nome={linha.nome} t={t} onPick={(f) => onUploadFoto(f, "verso")} onRemover={() => onRemoverFoto("verso")}
           selecionado={selFoto?.linhaId === linha.id && selFoto?.lado === "verso"}
           onSelecionar={() => onSelecionarFoto("verso")} />
       </div>

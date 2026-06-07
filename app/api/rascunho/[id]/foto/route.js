@@ -23,3 +23,16 @@ export async function POST(request, { params }) {
   const nome = await guardarFoto(file);
   return NextResponse.json(atualizarLinha(params.id, { [campo]: nome }));
 }
+
+// Remove a foto de um lado (frente/verso) da linha: apaga o ficheiro e limpa o campo.
+export async function DELETE(request, { params }) {
+  if (!utilizadorAtual()) return NextResponse.json({ erro: "Sem sessão." }, { status: 401 });
+
+  const linha = lerLinha(params.id);
+  if (!linha) return NextResponse.json({ erro: "Linha não encontrada." }, { status: 404 });
+
+  const verso = new URL(request.url).searchParams.get("lado") === "verso";
+  const campo = verso ? "fotoVerso" : "foto";
+  apagarFoto(verso ? linha.fotoVerso : linha.foto);
+  return NextResponse.json(atualizarLinha(params.id, { [campo]: "" }));
+}
