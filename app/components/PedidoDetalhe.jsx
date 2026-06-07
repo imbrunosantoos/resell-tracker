@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEstado } from "./contexto";
 import {
   eur, toNumber, custoReal, margem, margemPct, diasParaVender, diasEmStock,
-  estaVendido, precoMinimo, resumoPedido,
+  estaVendido, estaRecebido, precoMinimo, resumoPedido,
 } from "@/lib/calculos";
 import { corCategoria } from "@/lib/cores";
 import { tamanhosPara } from "@/lib/tamanhos";
@@ -21,7 +21,7 @@ export default function PedidoDetalhe({ pedido }) {
   const router = useRouter();
   const { t } = useIdioma();
   const {
-    estado, editarCampo, marcarVendido, novoItem, apagarItem, apagarPedido,
+    estado, editarCampo, marcarVendido, marcarRecebido, novoItem, apagarItem, apagarPedido,
     uploadFoto, removerFoto, bulkCategoria, aplicarTemplate,
     novoPatch, apagarPatch, uploadFotoPatch, confirmar,
   } = useEstado();
@@ -168,6 +168,7 @@ export default function PedidoDetalhe({ pedido }) {
             onSelecionar={() => alternar(item.id)}
             onEditar={(campo, valor) => editI(item.id, campo, valor)}
             onVender={() => setVendaItem(item)}
+            onRecebido={(v) => marcarRecebido(pedido.id, item.id, v)}
             onApagar={() => apagarItem(pedido.id, item.id)}
             onUploadFoto={(f) => uploadFoto(item.id, f)}
             onRemoverFoto={() => removerFoto(item.id)}
@@ -198,13 +199,14 @@ export default function PedidoDetalhe({ pedido }) {
 
 function ItemCartao({
   pedido, item, margemMin, diasAlerta, selecionado,
-  onSelecionar, onEditar, onVender, onApagar, onUploadFoto, onRemoverFoto, onZoom,
+  onSelecionar, onEditar, onVender, onRecebido, onApagar, onUploadFoto, onRemoverFoto, onZoom,
   templates = [], onTemplate,
   onAddPatch, onEditarPatch, onApagarPatch, onUploadFotoPatch,
 }) {
   const { t } = useIdioma();
   const input = useRef(null);
   const vendido = estaVendido(item);
+  const recebido = estaRecebido(item);
   const m = margem(pedido, item);
   const dias = diasParaVender(pedido, item);
   const emStock = diasEmStock(pedido, item);
@@ -276,6 +278,17 @@ function ItemCartao({
 
         <div className="item-acoes">
           {!vendido && <button className="btn mini vender" onClick={onVender}>{t("det.marcarVendido")}</button>}
+          {vendido && (
+            recebido ? (
+              <button className="btn mini fantasma" title={t("det.recebido")} onClick={() => onRecebido(false)}>
+                <span className="estado-venda pos">● {t("det.recebido")}</span>
+              </button>
+            ) : (
+              <button className="btn mini" onClick={() => onRecebido(true)}>
+                <span className="estado-venda ambar">● {t("det.pendente")}</span> → {t("vendas.marcarRecebido")}
+              </button>
+            )
+          )}
           <button className="btn fantasma" title={t("det.apagarItem")} onClick={onApagar}>✕</button>
         </div>
       </div>

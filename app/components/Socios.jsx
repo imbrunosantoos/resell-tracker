@@ -40,7 +40,7 @@ export default function Socios({ socios, acerto, onCriar, onEditar, onApagar, on
 function SocioCartao({ socio, dados, onEditar, onApagar, onAcertar }) {
   const { t } = useIdioma();
   const [verAcertadas, setVerAcertadas] = useState(false);
-  const d = dados ?? { devido: 0, acertado: 0, falta: 0, investido: 0, porAcertar: [], jaAcertadas: [] };
+  const d = dados ?? { devido: 0, acertado: 0, falta: 0, investido: 0, pendente: 0, porAcertar: [], jaAcertadas: [] };
 
   return (
     <div className="socio-cartao">
@@ -55,6 +55,9 @@ function SocioCartao({ socio, dados, onEditar, onApagar, onAcertar }) {
         <span className="dim">{t("socios.investiu")}: <b>{eur(d.investido)}</b></span>
         <span className="dim">{t("socios.jaAcertado")} <b>{eur(d.acertado)}</b></span>
         <span>{t("socios.faltaEnviar")} <b className={d.falta > 0.005 ? "neg" : "pos"}>{eur(d.falta)}</b></span>
+        {d.pendente > 0.005 && (
+          <span className="dim">{t("socios.aEsperaReceber")} <b className="ambar">{eur(d.pendente)}</b></span>
+        )}
       </div>
 
       {d.porAcertar.length > 0 && (

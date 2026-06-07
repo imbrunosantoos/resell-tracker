@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { eur, margem, margemPct, estaVendido } from "@/lib/calculos";
+import { eur, margem, margemPct, estaVendido, estaPendente } from "@/lib/calculos";
 import { corCategoria } from "@/lib/cores";
 import { useIdioma } from "./Idioma";
 
@@ -68,6 +68,7 @@ export default function UltimasVendas({ pedidos, socios = [], limite = 8, mes = 
                   <span className="venda-nome">
                     {item.nome || t("comum.semNome")}
                     {pedido.tipo === "encomenda" && <span className="chip encomenda venda-tag">{t("comum.encomenda")}</span>}
+                    {estaPendente(item) && <span className="chip pendente venda-tag">{t("vendas.pendenteTag")}</span>}
                   </span>
                   <span className="venda-sub">{pedido.nome} · {item.dataVenda}</span>
                 </span>

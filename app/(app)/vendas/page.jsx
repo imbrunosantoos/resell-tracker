@@ -1,0 +1,91 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useEstado } from "@/app/components/contexto";
+import { useIdioma } from "@/app/components/Idioma";
+import { eur } from "@/lib/calculos";
+import { corCategoria } from "@/lib/cores";
+
+// Aba Vendas: fluxo de caixa. Na Vinted o dinheiro fica pendente até o comprador
+// receber; aqui separa-se Pendentes (a caminho) de Concluídos (já caiu). Só as
+// concluídas se acertam com o sócio (na aba Sócios).
+export default function PaginaVendas() {
+  const { vendas, marcarRecebido } = useEstado();
+  const { t } = useIdioma();
+  const [vista, setVista] = useState("pendentes"); // "pendentes" | "concluidos"
+
+  return (
+    <div className="pagina">
+      <div className="cartoes">
+        <div className="cartao destaque">
+          <span className="cartao-label">{t("vendas.aTuaParte")}</span>
+          <span className="cartao-valor">{eur(vendas.minhaPartePendente)}</span>
+        </div>
+        <div className="cartao">
+          <span className="cartao-label">{t("vendas.recebidoMes")}</span>
+          <span className="cartao-valor teal">{eur(vendas.recebidoMes)}</span>
+        </div>
+        <div className="cartao">
+          <span className="cartao-label">{t("vendas.nPendentes")}</span>
+          <span className="cartao-valor">{vendas.nPendentes}</span>
+        </div>
+      </div>
+
+      <section className="bloco">
+        <h2>{t("vendas.titulo")} <span className="conta">— {t("vendas.subFluxo")}</span></h2>
+
+        <div className="grafico-toggle" style={{ marginBottom: 12 }}>
+          <button className={vista === "pendentes" ? "ativo" : ""} onClick={() => setVista("pendentes")}>
+            {t("vendas.pendentes")} ({vendas.nPendentes})
+          </button>
+          <button className={vista === "concluidos" ? "ativo" : ""} onClick={() => setVista("concluidos")}>
+            {t("vendas.concluidos")} ({vendas.nConcluidos})
+          </button>
+        </div>
+
+        {vista === "pendentes" ? (
+          vendas.pendentes.length === 0 ? (
+            <p className="dim pequeno">{t("vendas.vazioPendentes")}</p>
+          ) : (
+            <div className="acerto-lista">
+              {vendas.pendentes.map(({ pedido, item, minhaParte, dias }) => (
+                <div className="venda-acerto" key={item.id}>
+                  <span className="venda-acerto-txt">
+                    <span className="venda-dot" style={{ background: corCategoria(item.categoria) }} />
+                    <Link href={`/pedidos/${pedido.id}`}>{item.nome || t("comum.semNome")}</Link>
+                    <span className="dim"> · {pedido.nome} · {item.dataVenda}</span>
+                  </span>
+                  <span className="venda-acerto-vals">
+                    {dias !== null && <span className="badge">⏳ {t("vendas.diasEspera", { n: dias })}</span>}
+                    <span className="venda-acerto-meia pos">{eur(item.precoVenda)} <span className="dim">· {t("vendas.tua")} {eur(minhaParte)}</span></span>
+                  </span>
+                  <button className="btn mini" onClick={() => marcarRecebido(pedido.id, item.id, true)}>{t("vendas.marcarRecebido")}</button>
+                </div>
+              ))}
+            </div>
+          )
+        ) : (
+          vendas.concluidos.length === 0 ? (
+            <p className="dim pequeno">{t("vendas.vazioConcluidos")}</p>
+          ) : (
+            <div className="acerto-lista">
+              {vendas.concluidos.map(({ pedido, item, minhaParte }) => (
+                <div className="venda-acerto feita" key={item.id}>
+                  <span className="venda-acerto-txt">
+                    ✓ <Link href={`/pedidos/${pedido.id}`}>{item.nome || t("comum.semNome")}</Link>
+                    <span className="dim"> · {pedido.nome} · {t("vendas.recebidoEm", { data: item.dataRecebido })}</span>
+                  </span>
+                  <span className="venda-acerto-vals">
+                    <span className="venda-acerto-meia dim">{eur(item.precoVenda)} · {t("vendas.tua")} {eur(minhaParte)}</span>
+                  </span>
+                  <button className="btn mini fantasma" onClick={() => marcarRecebido(pedido.id, item.id, false)}>{t("vendas.desfazerRecebido")}</button>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+      </section>
+    </div>
+  );
+}

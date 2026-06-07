@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { resumoGlobal, categoriasOrdenadas, dadosMensais, relatorioMensal, estaVendido } from "@/lib/calculos";
+import { resumoGlobal, categoriasOrdenadas, dadosMensais, relatorioMensal, estaVendido, resumoVendas } from "@/lib/calculos";
 import { EstadoContexto } from "./contexto";
 import { useIdioma } from "./Idioma";
 import { prepararImagem } from "./prepararImagem";
@@ -214,6 +214,15 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
       if (!r.ok) { mostrarErro(t("erro.guardarVenda")); recarregar(); }
     });
   }
+  // Concluir/reabrir uma venda: define (ou limpa) a data em que o dinheiro caiu.
+  async function marcarRecebido(pedidoId, itemId, recebido) {
+    const dataRecebido = recebido ? new Date().toISOString().slice(0, 10) : "";
+    return comEscrita(async () => {
+      setEstado((prev) => substituirItemCampos(prev, pedidoId, itemId, { dataRecebido }));
+      const r = await persistir(`/api/itens/${itemId}`, "PATCH", { dataRecebido });
+      if (!r.ok) { mostrarErro(t("erro.guardarVenda")); recarregar(); }
+    });
+  }
   // Autofill: preenche um item a partir de outro (copia nome/categoria/preço + foto).
   async function aplicarTemplate(itemId, origemId) {
     return comEscrita(async () => {
@@ -291,6 +300,14 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
       fd.append("lado", lado);
       const r = await fetch(`/api/rascunho/${linhaId}/foto`, { method: "POST", body: fd });
       if (!r.ok) { mostrarErro(t("erro.guardarFoto")); return; }
+      const linha = await r.json();
+      setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.map((l) => (l.id === linha.id ? linha : l)) }));
+    });
+  }
+  async function removerFotoLinha(linhaId, lado = "frente") {
+    return comEscrita(async () => {
+      const r = await fetch(`/api/rascunho/${linhaId}/foto?lado=${lado}`, { method: "DELETE" });
+      if (!r.ok) { mostrarErro(t("erro.removerFoto")); return; }
       const linha = await r.json();
       setEstado((prev) => ({ ...prev, rascunho: prev.rascunho.map((l) => (l.id === linha.id ? linha : l)) }));
     });
@@ -433,13 +450,14 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   const categorias = useMemo(() => categoriasOrdenadas(resumo.categorias), [resumo]);
   const mensal = useMemo(() => dadosMensais(estado), [estado]);
   const relatorio = useMemo(() => relatorioMensal(estado), [estado]);
+  const vendas = useMemo(() => resumoVendas(estado), [estado]);
   const listaCategorias = useMemo(() => nomesDeCategorias(estado.pedidos), [estado.pedidos]);
 
   const valor = {
-    utilizador, estado, resumo, categorias, mensal, relatorio, listaCategorias, estaVendido,
+    utilizador, estado, resumo, categorias, mensal, relatorio, vendas, listaCategorias, estaVendido,
     editarCampo, editarConfig,
-    novoPedido, novaEncomenda, apagarPedido, novoItem, apagarItem, marcarVendido, bulkCategoria, aplicarTemplate,
-    novaLinha, apagarLinha, uploadFotoLinha, aplicarTemplateLinha, finalizarRascunho,
+    novoPedido, novaEncomenda, apagarPedido, novoItem, apagarItem, marcarVendido, marcarRecebido, bulkCategoria, aplicarTemplate,
+    novaLinha, apagarLinha, uploadFotoLinha, removerFotoLinha, aplicarTemplateLinha, finalizarRascunho,
     novoPatch, apagarPatch, uploadFotoPatch,
     uploadFoto, removerFoto,
     novoSocio, apagarSocio, novaDespesa, apagarDespesa, novaCredencial, apagarCredencial,
