@@ -11,6 +11,7 @@ import { corCategoria } from "@/lib/cores";
 import { tamanhosPara } from "@/lib/tamanhos";
 import { useIdioma } from "./Idioma";
 import ModalVenda from "./ModalVenda";
+import ModalData from "./ModalData";
 import Lightbox from "./Lightbox";
 import SugestoesItem from "./SugestoesItem";
 import Patches from "./Patches";
@@ -51,6 +52,7 @@ export default function PedidoDetalhe({ pedido }) {
   }, [estado.pedidos]);
 
   const [vendaItem, setVendaItem] = useState(null);
+  const [recebidoItem, setRecebidoItem] = useState(null); // item a marcar recebido (escolher data)
   const [zoom, setZoom] = useState(null); // src da foto em lightbox
   const [selecionados, setSelecionados] = useState(() => new Set());
   const [catBulk, setCatBulk] = useState("");
@@ -168,7 +170,8 @@ export default function PedidoDetalhe({ pedido }) {
             onSelecionar={() => alternar(item.id)}
             onEditar={(campo, valor) => editI(item.id, campo, valor)}
             onVender={() => setVendaItem(item)}
-            onRecebido={(v) => marcarRecebido(pedido.id, item.id, v)}
+            onRecebido={() => setRecebidoItem(item)}
+            onDesmarcarRecebido={() => marcarRecebido(pedido.id, item.id, "")}
             onApagar={() => apagarItem(pedido.id, item.id)}
             onUploadFoto={(f) => uploadFoto(item.id, f)}
             onRemoverFoto={() => removerFoto(item.id)}
@@ -192,6 +195,15 @@ export default function PedidoDetalhe({ pedido }) {
           onFechar={() => setVendaItem(null)}
         />
       )}
+      {recebidoItem && (
+        <ModalData
+          titulo={t("vendas.tituloRecebido")}
+          sub={recebidoItem.nome || t("comum.semNome")}
+          rotulo={t("vendas.dataRecebido")}
+          onConfirmar={(data) => { marcarRecebido(pedido.id, recebidoItem.id, data); setRecebidoItem(null); }}
+          onFechar={() => setRecebidoItem(null)}
+        />
+      )}
       {zoom && <Lightbox src={zoom} onFechar={() => setZoom(null)} />}
     </article>
   );
@@ -199,7 +211,7 @@ export default function PedidoDetalhe({ pedido }) {
 
 function ItemCartao({
   pedido, item, margemMin, diasAlerta, selecionado,
-  onSelecionar, onEditar, onVender, onRecebido, onApagar, onUploadFoto, onRemoverFoto, onZoom,
+  onSelecionar, onEditar, onVender, onRecebido, onDesmarcarRecebido, onApagar, onUploadFoto, onRemoverFoto, onZoom,
   templates = [], onTemplate,
   onAddPatch, onEditarPatch, onApagarPatch, onUploadFotoPatch,
 }) {
@@ -280,11 +292,11 @@ function ItemCartao({
           {!vendido && <button className="btn mini vender" onClick={onVender}>{t("det.marcarVendido")}</button>}
           {vendido && (
             recebido ? (
-              <button className="btn mini fantasma" title={t("det.recebido")} onClick={() => onRecebido(false)}>
+              <button className="btn mini fantasma" title={t("det.recebido")} onClick={onDesmarcarRecebido}>
                 <span className="estado-venda pos">● {t("det.recebido")}</span>
               </button>
             ) : (
-              <button className="btn mini" onClick={() => onRecebido(true)}>
+              <button className="btn mini" onClick={onRecebido}>
                 <span className="estado-venda ambar">● {t("det.pendente")}</span> → {t("vendas.marcarRecebido")}
               </button>
             )

@@ -6,6 +6,7 @@ import { useEstado } from "@/app/components/contexto";
 import { useIdioma } from "@/app/components/Idioma";
 import { eur } from "@/lib/calculos";
 import { corCategoria } from "@/lib/cores";
+import ModalData from "@/app/components/ModalData";
 
 // Aba Vendas: fluxo de caixa. Na Vinted o dinheiro fica pendente até o comprador
 // receber; aqui separa-se Pendentes (a caminho) de Concluídos (já caiu). Só as
@@ -14,6 +15,7 @@ export default function PaginaVendas() {
   const { vendas, marcarRecebido } = useEstado();
   const { t } = useIdioma();
   const [vista, setVista] = useState("pendentes"); // "pendentes" | "concluidos"
+  const [recebendo, setRecebendo] = useState(null); // { pedido, item } a marcar recebido
 
   return (
     <div className="pagina">
@@ -60,7 +62,7 @@ export default function PaginaVendas() {
                     {dias !== null && <span className="badge">⏳ {t("vendas.diasEspera", { n: dias })}</span>}
                     <span className="venda-acerto-meia pos">{eur(item.precoVenda)} <span className="dim">· {t("vendas.tua")} {eur(minhaParte)}</span></span>
                   </span>
-                  <button className="btn mini" onClick={() => marcarRecebido(pedido.id, item.id, true)}>{t("vendas.marcarRecebido")}</button>
+                  <button className="btn mini" onClick={() => setRecebendo({ pedido, item })}>{t("vendas.marcarRecebido")}</button>
                 </div>
               ))}
             </div>
@@ -79,13 +81,23 @@ export default function PaginaVendas() {
                   <span className="venda-acerto-vals">
                     <span className="venda-acerto-meia dim">{eur(item.precoVenda)} · {t("vendas.tua")} {eur(minhaParte)}</span>
                   </span>
-                  <button className="btn mini fantasma" onClick={() => marcarRecebido(pedido.id, item.id, false)}>{t("vendas.desfazerRecebido")}</button>
+                  <button className="btn mini fantasma" onClick={() => marcarRecebido(pedido.id, item.id, "")}>{t("vendas.desfazerRecebido")}</button>
                 </div>
               ))}
             </div>
           )
         )}
       </section>
+
+      {recebendo && (
+        <ModalData
+          titulo={t("vendas.tituloRecebido")}
+          sub={recebendo.item.nome || t("comum.semNome")}
+          rotulo={t("vendas.dataRecebido")}
+          onConfirmar={(data) => { marcarRecebido(recebendo.pedido.id, recebendo.item.id, data); setRecebendo(null); }}
+          onFechar={() => setRecebendo(null)}
+        />
+      )}
     </div>
   );
 }

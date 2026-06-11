@@ -214,9 +214,8 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
       if (!r.ok) { mostrarErro(t("erro.guardarVenda")); recarregar(); }
     });
   }
-  // Concluir/reabrir uma venda: define (ou limpa) a data em que o dinheiro caiu.
-  async function marcarRecebido(pedidoId, itemId, recebido) {
-    const dataRecebido = recebido ? new Date().toISOString().slice(0, 10) : "";
+  // Concluir/reabrir uma venda: define a data em que o dinheiro caiu ("" = reabrir).
+  async function marcarRecebido(pedidoId, itemId, dataRecebido = "") {
     return comEscrita(async () => {
       setEstado((prev) => substituirItemCampos(prev, pedidoId, itemId, { dataRecebido }));
       const r = await persistir(`/api/itens/${itemId}`, "PATCH", { dataRecebido });
