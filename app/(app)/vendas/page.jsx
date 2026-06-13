@@ -1,21 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useEstado } from "@/app/components/contexto";
 import { useIdioma } from "@/app/components/Idioma";
-import { eur } from "@/lib/calculos";
+import { eur, previsaoCaixa } from "@/lib/calculos";
 import { corCategoria } from "@/lib/cores";
 import ModalData from "@/app/components/ModalData";
+import PrevisaoCaixa from "@/app/components/PrevisaoCaixa";
 
 // Aba Vendas: fluxo de caixa. Na Vinted o dinheiro fica pendente até o comprador
 // receber; aqui separa-se Pendentes (a caminho) de Concluídos (já caiu). Só as
 // concluídas se acertam com o sócio (na aba Sócios).
 export default function PaginaVendas() {
-  const { vendas, marcarRecebido } = useEstado();
+  const { vendas, estado, marcarRecebido } = useEstado();
   const { t } = useIdioma();
   const [vista, setVista] = useState("pendentes"); // "pendentes" | "concluidos"
   const [recebendo, setRecebendo] = useState(null); // { pedido, item } a marcar recebido
+  const previsao = useMemo(() => previsaoCaixa(estado), [estado]);
 
   return (
     <div className="pagina">
@@ -33,6 +35,11 @@ export default function PaginaVendas() {
           <span className="cartao-valor">{vendas.nPendentes}</span>
         </div>
       </div>
+
+      <section className="bloco">
+        <h2>{t("caixa.titulo")}</h2>
+        <PrevisaoCaixa previsao={previsao} />
+      </section>
 
       <section className="bloco">
         <h2>{t("vendas.titulo")} <span className="conta">— {t("vendas.subFluxo")}</span></h2>
