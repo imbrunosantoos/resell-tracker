@@ -22,12 +22,30 @@ function fmtData(d, locale) {
   return new Date(t).toLocaleDateString(locale, { day: "2-digit", month: "2-digit", year: "2-digit" });
 }
 
+// Ordenação: valor comparável por coluna. Texto compara-se com localeCompare;
+// número e data comparam-se diretamente; o status segue a ordem do ciclo.
+const STATUS_ORDEM = { transito: 0, venda: 1, vendido: 2 };
+function valorOrdenacao(l, campo) {
+  switch (campo) {
+    case "artigo": return (l.item.nome || "").toLowerCase();
+    case "tamanho": return (l.item.tamanho || "").toLowerCase();
+    case "fonte": return (l.pedido.nome || "").toLowerCase();
+    case "data": return l.pedido.dataCompra || "";
+    case "custo": return l.custo;
+    case "venda": return Number(l.item.precoVenda) || 0;
+    case "lucro": return l.lucro ?? -Infinity;
+    case "status": return STATUS_ORDEM[l.status] ?? 0;
+    default: return 0;
+  }
+}
+
 export default function TabelaInventario({ estado }) {
   const { t, idioma } = useIdioma();
   const router = useRouter();
   const locale = idioma === "en" ? "en-GB" : idioma === "es" ? "es-ES" : "pt-PT";
   const [status, setStatus] = useState("todos");
   const [texto, setTexto] = useState("");
+  const [ordenar, setOrdenar] = useState({ campo: "data", dir: "desc" });
 
   // Achata todos os itens em linhas com os campos já calculados, mais recentes
   // primeiro (por data de compra do pedido).
@@ -62,6 +80,18 @@ export default function TabelaInventario({ estado }) {
     return true;
   });
 
+  const ordenadas = [...visiveis].sort((a, b) => {
+    const va = valorOrdenacao(a, ordenar.campo);
+    const vb = valorOrdenacao(b, ordenar.campo);
+    const cmp = typeof va === "string" ? va.localeCompare(vb) : va - vb;
+    return ordenar.dir === "asc" ? cmp : -cmp;
+  });
+
+  function clicarOrdenar(campo) {
+    setOrdenar((o) => (o.campo === campo ? { campo, dir: o.dir === "asc" ? "desc" : "asc" } : { campo, dir: "asc" }));
+  }
+  const seta = (campo) => (ordenar.campo === campo ? <span className="seta">{ordenar.dir === "asc" ? "↑" : "↓"}</span> : null);
+
   const tabs = [
     { id: "todos", label: t("inv.todos") },
     { id: "transito", label: t("inv.transito") },
@@ -92,29 +122,32 @@ export default function TabelaInventario({ estado }) {
         />
       </div>
 
-      {visiveis.length === 0 ? (
+      {ordenadas.length === 0 ? (
         <div className="vazio">{t("inv.vazio")}</div>
       ) : (
-        <div className="tabela-scroll">
+        <div className="inv-scroll">
           <table className="inv-tabela">
             <thead>
               <tr>
-                <th>{t("inv.artigo")}</th>
-                <th>{t("inv.tamanho")}</th>
-                <th>{t("inv.fonte")}</th>
-                <th>{t("inv.dataCompra")}</th>
-                <th className="dir">{t("inv.custo")}</th>
-                <th className="dir">{t("inv.vendaPreco")}</th>
-                <th className="dir">{t("inv.lucro")}</th>
-                <th>{t("inv.status")}</th>
+                <th className="ordenavel" onClick={() => clicarOrdenar("artigo")}>{t("inv.artigo")} {seta("artigo")}</th>
+                <th className="ordenavel" onClick={() => clicarOrdenar("tamanho")}>{t("inv.tamanho")} {seta("tamanho")}</th>
+                <th className="ordenavel" onClick={() => clicarOrdenar("fonte")}>{t("inv.fonte")} {seta("fonte")}</th>
+                <th className="ordenavel" onClick={() => clicarOrdenar("data")}>{t("inv.dataCompra")} {seta("data")}</th>
+                <th className="dir ordenavel" onClick={() => clicarOrdenar("custo")}>{t("inv.custo")} {seta("custo")}</th>
+                <th className="dir ordenavel" onClick={() => clicarOrdenar("venda")}>{t("inv.vendaPreco")} {seta("venda")}</th>
+                <th className="dir ordenavel" onClick={() => clicarOrdenar("lucro")}>{t("inv.lucro")} {seta("lucro")}</th>
+                <th className="ordenavel" onClick={() => clicarOrdenar("status")}>{t("inv.status")} {seta("status")}</th>
               </tr>
             </thead>
             <tbody>
-              {visiveis.map(({ pedido, item, status: st, pendente, custo, lucro }) => (
+              {ordenadas.map(({ pedido, item, status: st, pendente, custo, lucro }) => (
                 <tr key={item.id} className="inv-linha" onClick={() => router.push(`/pedidos/${pedido.id}`)}>
                   <td>
                     <span className="td-nome">
-                      <span className="dot" style={{ background: corCategoria(item.categoria) }} />
+                      <span className="inv-capa" style={item.foto ? undefined : { background: corCategoria(item.categoria) }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {item.foto ? <img src={`/api/fotos/${item.foto}`} alt="" /> : (item.nome || "?").trim().charAt(0).toUpperCase()}
+                      </span>
                       <span className="inv-nome">{item.nome || t("comum.semNome")}</span>
                     </span>
                   </td>
