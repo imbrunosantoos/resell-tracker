@@ -15,8 +15,11 @@ export default function PaginaInicio() {
   const { t } = useIdioma();
   const diasAlerta = toNumber(estado.config.diasAlerta) || 30;
 
-  const totalItens = estado.pedidos.reduce((n, p) => n + p.itens.length, 0);
-  const emStock = estado.pedidos.reduce(
+  // Só conta o que já está na mão: pedidos sem data de chegada ainda estão a
+  // caminho, por isso não entram no stock atual deste atalho.
+  const chegados = estado.pedidos.filter((p) => p.dataChegada);
+  const totalItens = chegados.reduce((n, p) => n + p.itens.length, 0);
+  const emStock = chegados.reduce(
     (n, p) => n + p.itens.filter((it) => !(Number(it.precoVenda) > 0 && it.dataVenda)).length, 0);
 
   return (
