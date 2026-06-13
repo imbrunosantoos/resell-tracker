@@ -5,8 +5,9 @@ import { useEstado } from "@/app/components/contexto";
 import { useIdioma } from "@/app/components/Idioma";
 import { toNumber } from "@/lib/calculos";
 import ResumoCartoes from "@/app/components/ResumoCartoes";
+import KpisDashboard from "@/app/components/KpisDashboard";
 import RelatorioMensal from "@/app/components/RelatorioMensal";
-import GraficoMensal from "@/app/components/GraficoMensal";
+import GraficoLucro from "@/app/components/GraficoLucro";
 import ListaParado from "@/app/components/ListaParado";
 
 // Página inicial — visão geral: cartões, este mês, gráfico de lucro, "não vende".
@@ -24,24 +25,27 @@ export default function PaginaInicio() {
 
   return (
     <div className="pagina">
-      <ResumoCartoes resumo={resumo} />
+      <KpisDashboard estado={estado} resumo={resumo} />
+
+      <section className="bloco">
+        <h2>{t("home.lucroPorMes")}</h2>
+        <GraficoLucro dados={mensal} />
+      </section>
+
+      <section className="bloco">
+        <h2>{t("home.resumoFinanceiro")}</h2>
+        <ResumoCartoes resumo={resumo} />
+      </section>
 
       <section className="bloco">
         <h2>{t("home.esteMes")}</h2>
         <RelatorioMensal relatorio={relatorio} />
       </section>
 
-      <div className="inicio-grelha">
-        <section className="bloco">
-          <h2>{t("home.lucroPorMes")}</h2>
-          <GraficoMensal dados={mensal} />
-        </section>
-
-        <section className="bloco">
-          <h2>{t("home.naoVende")} <span className="conta">{t("home.parados", { n: diasAlerta })}</span></h2>
-          <ListaParado pedidos={estado.pedidos} diasAlerta={diasAlerta} />
-        </section>
-      </div>
+      <section className="bloco">
+        <h2>{t("home.naoVende")} <span className="conta">{t("home.parados", { n: diasAlerta })}</span></h2>
+        <ListaParado pedidos={estado.pedidos} diasAlerta={diasAlerta} />
+      </section>
 
       <section className="bloco">
         <h2>{t("home.atalhos")}</h2>
