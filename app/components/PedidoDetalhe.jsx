@@ -24,7 +24,7 @@ export default function PedidoDetalhe({ pedido }) {
   const {
     estado, editarCampo, marcarVendido, marcarRecebido, novoItem, apagarItem, apagarPedido,
     uploadFoto, removerFoto, bulkEditar, aplicarTemplate,
-    novoPatch, apagarPatch, uploadFotoPatch, confirmar,
+    novoPatch, apagarPatch, uploadFotoPatch, confirmar, atribuirVariante,
   } = useEstado();
   const socios = estado.socios;
   const config = estado.config;
@@ -228,6 +228,8 @@ export default function PedidoDetalhe({ pedido }) {
             onEditarPatch={(id, nome) => editarCampo("patches", id, "nome", nome)}
             onApagarPatch={apagarPatch}
             onUploadFotoPatch={uploadFotoPatch}
+            produtos={estado.produtos ?? []}
+            onAtribuirVariante={(varianteId) => atribuirVariante(item.id, varianteId)}
           />
         ))}
         <button className="item-add" onClick={() => novoItem(pedido.id)}>{t("det.adicionarItem")}</button>
@@ -260,6 +262,7 @@ function ItemCartao({
   onSelecionar, onEditar, onVender, onRecebido, onDesmarcarRecebido, onApagar, onUploadFoto, onRemoverFoto, onZoom,
   templates = [], onTemplate,
   onAddPatch, onEditarPatch, onApagarPatch, onUploadFotoPatch,
+  produtos = [], onAtribuirVariante,
 }) {
   const { t } = useIdioma();
   const input = useRef(null);
@@ -321,6 +324,24 @@ function ItemCartao({
         </div>
 
         <input className="item-notas" placeholder={t("det.phNotaItem")} value={item.notas} onChange={(e) => onEditar("notas", e.target.value)} />
+
+        {produtos.length > 0 && (
+          <div className="item-sku-linha">
+            <select value={item.varianteId || ""} onChange={(e) => onAtribuirVariante(e.target.value)} aria-label={t("prod.ligar")}>
+              <option value="">{t("prod.semLigacao")}</option>
+              {produtos.map((p) => (
+                <optgroup key={p.id} label={p.nome}>
+                  {p.variantes.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.sku}{v.tamanho ? ` · ${v.tamanho}` : ""}{v.versao ? ` · ${v.versao}` : ""}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            {item.sku && <span className="item-sku-tag">{item.sku}</span>}
+          </div>
+        )}
 
         <Patches
           patches={item.patches} onAdd={onAddPatch} onEditarNome={onEditarPatch}
