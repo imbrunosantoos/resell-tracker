@@ -1,13 +1,14 @@
 "use client";
 
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, ReferenceLine } from "recharts";
+import { useEffect, useState } from "react";
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine } from "recharts";
 import { eur } from "@/lib/calculos";
 import { useIdioma } from "./Idioma";
+import Skeleton from "./Skeleton";
 
-// Gráfico de lucro mensal (a minha parte, líquida de despesas) — barras verdes
-// nos meses positivos, vermelhas nos negativos. Substitui o gráfico de barras
-// feito à mão pela página inicial; usa Recharts para tooltip/eixos polidos.
-const POS = "#34D399", NEG = "#FB7185";
+// Gráfico de lucro mensal (a minha parte, líquida de despesas) — área com
+// gradiente sob a linha; os meses negativos descem abaixo da linha do zero.
+const ACCENT = "#34D399";
 
 function rotuloMes(mes, locale) {
   const [a, m] = String(mes).split("-").map(Number);
@@ -29,6 +30,8 @@ function Toolttip({ active, payload, label }) {
 
 export default function GraficoLucro({ dados }) {
   const { t, idioma } = useIdioma();
+  const [montado, setMontado] = useState(false);
+  useEffect(() => setMontado(true), []);
   const locale = idioma === "en" ? "en-GB" : idioma === "es" ? "es-ES" : "pt-PT";
 
   const data = (dados ?? []).map((d) => ({
@@ -41,20 +44,29 @@ export default function GraficoLucro({ dados }) {
 
   return (
     <div className="grafico">
-      <ResponsiveContainer width="100%" height={272}>
-        <BarChart data={data} margin={{ top: 12, right: 4, left: 0, bottom: 0 }} barCategoryGap="22%">
-          <CartesianGrid strokeDasharray="3 4" stroke="rgba(255,255,255,0.05)" vertical={false} />
-          <XAxis dataKey="mes" tick={{ fill: "#939BAA", fontSize: 11 }} axisLine={false} tickLine={false} dy={4} interval="preserveStartEnd" />
-          <YAxis tick={{ fill: "#5C6675", fontSize: 11 }} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => "€" + v} />
-          <ReferenceLine y={0} stroke="rgba(255,255,255,0.14)" />
-          <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<Toolttip />} />
-          <Bar dataKey="lucro" radius={[6, 6, 0, 0]} maxBarSize={48} isAnimationActive>
-            {data.map((d, i) => (
-              <Cell key={i} fill={d.lucro >= 0 ? POS : NEG} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      {!montado ? (
+        <Skeleton rows={1} height={272} />
+      ) : (
+        <ResponsiveContainer width="100%" height={272}>
+          <AreaChart data={data} margin={{ top: 12, right: 4, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="lucroGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={ACCENT} stopOpacity={0.42} />
+                <stop offset="92%" stopColor={ACCENT} stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 4" stroke="rgba(255,255,255,0.05)" vertical={false} />
+            <XAxis dataKey="mes" tick={{ fill: "#939BAA", fontSize: 11 }} axisLine={false} tickLine={false} dy={4} interval="preserveStartEnd" />
+            <YAxis tick={{ fill: "#5C6675", fontSize: 11 }} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => "€" + v} />
+            <ReferenceLine y={0} stroke="rgba(255,255,255,0.16)" />
+            <Tooltip cursor={{ stroke: "rgba(255,255,255,0.14)", strokeWidth: 1 }} content={<Toolttip />} />
+            <Area
+              type="monotone" dataKey="lucro" stroke={ACCENT} strokeWidth={2.5}
+              fill="url(#lucroGrad)" dot={{ r: 2.6, fill: ACCENT, strokeWidth: 0 }} activeDot={{ r: 4.5 }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      )}
     </div>
   );
 }
