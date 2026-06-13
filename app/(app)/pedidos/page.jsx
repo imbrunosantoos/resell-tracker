@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useEstado } from "@/app/components/contexto";
 import { useIdioma } from "@/app/components/Idioma";
 import { estaVendido } from "@/lib/calculos";
@@ -10,6 +10,15 @@ import Filtros from "@/app/components/Filtros";
 import PedidoLinha from "@/app/components/PedidoLinha";
 
 const FILTROS_VAZIO = { texto: "", estado: "todos", categoria: "", socio: "", tipo: "" };
+const CHAVE_FILTROS = "pedidos:filtros"; // guarda o filtro entre navegações (sessão)
+
+function lerFiltrosGuardados() {
+  if (typeof window === "undefined") return FILTROS_VAZIO;
+  try {
+    const guardado = JSON.parse(sessionStorage.getItem(CHAVE_FILTROS) || "null");
+    return guardado && typeof guardado === "object" ? { ...FILTROS_VAZIO, ...guardado } : FILTROS_VAZIO;
+  } catch { return FILTROS_VAZIO; }
+}
 
 // Página de pedidos: criar + filtrar + lista compacta (clica para o detalhe).
 export default function PaginaPedidos() {
@@ -17,6 +26,14 @@ export default function PaginaPedidos() {
   const { t } = useIdioma();
   const [filtros, setFiltros] = useState(FILTROS_VAZIO);
   const [aCriar, setACriar] = useState("pedido"); // "pedido" | "encomenda"
+
+  // Recupera o filtro guardado ao voltar à página (ex.: depois de abrir um pedido).
+  useEffect(() => { setFiltros(lerFiltrosGuardados()); }, []);
+  // Guarda sempre que muda; "Limpar" grava o estado vazio (volta ao normal).
+  const aplicarFiltros = (novos) => {
+    setFiltros(novos);
+    try { sessionStorage.setItem(CHAVE_FILTROS, JSON.stringify(novos)); } catch { /* ignora */ }
+  };
   const clientesEncomenda = [...new Set(
     estado.pedidos.filter((p) => p.tipo === "encomenda" && p.cliente?.trim()).map((p) => p.cliente.trim())
   )].sort();
@@ -72,7 +89,7 @@ export default function PaginaPedidos() {
 
       <section className="bloco">
         <h2>{t("nav.pedidos")} <span className="conta">— {visiveis.length}{filtroAtivo ? ` ${t("pedidos.de")} ${estado.pedidos.length}` : ""}</span></h2>
-        <Filtros valor={filtros} onMudar={setFiltros} categorias={listaCategorias} socios={estado.socios} />
+        <Filtros valor={filtros} onMudar={aplicarFiltros} categorias={listaCategorias} socios={estado.socios} />
         {estado.pedidos.length === 0 ? (
           <div className="vazio">{t("pedidos.vazio")}</div>
         ) : visiveis.length === 0 ? (
