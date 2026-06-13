@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine } from "recharts";
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine, LabelList } from "recharts";
 import { eur } from "@/lib/calculos";
 import { useIdioma } from "./Idioma";
 import Skeleton from "./Skeleton";
@@ -9,6 +9,9 @@ import Skeleton from "./Skeleton";
 // Gráfico de lucro mensal (a minha parte, líquida de despesas) — área com
 // gradiente sob a linha; os meses negativos descem abaixo da linha do zero.
 const ACCENT = "#34D399";
+
+// Rótulo do valor de cada mês, por cima do ponto (€ arredondado para caber).
+const rotuloValor = (v) => (v || v === 0 ? "€" + Math.round(v) : "");
 
 function rotuloMes(mes, locale) {
   const [a, m] = String(mes).split("-").map(Number);
@@ -48,7 +51,7 @@ export default function GraficoLucro({ dados }) {
         <Skeleton rows={1} height={272} />
       ) : (
         <ResponsiveContainer width="100%" height={272}>
-          <AreaChart data={data} margin={{ top: 12, right: 4, left: 0, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 26, right: 8, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="lucroGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={ACCENT} stopOpacity={0.42} />
@@ -63,7 +66,9 @@ export default function GraficoLucro({ dados }) {
             <Area
               type="monotone" dataKey="lucro" stroke={ACCENT} strokeWidth={2.5}
               fill="url(#lucroGrad)" dot={{ r: 2.6, fill: ACCENT, strokeWidth: 0 }} activeDot={{ r: 4.5 }}
-            />
+            >
+              <LabelList dataKey="lucro" position="top" offset={10} formatter={rotuloValor} fill="#ECEEF2" fontSize={11} fontWeight={600} />
+            </Area>
           </AreaChart>
         </ResponsiveContainer>
       )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, ReferenceLine, Legend } from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, ReferenceLine, Legend, LabelList } from "recharts";
 import { eur } from "@/lib/calculos";
 import { useIdioma } from "./Idioma";
 import Skeleton from "./Skeleton";
@@ -10,6 +10,9 @@ import Skeleton from "./Skeleton";
 //   "lucro" — uma barra por mês com o teu lucro (verde ≥0 / vermelho <0)
 //   "fluxo" — recebido (verde) vs investido (âmbar) por mês
 const POS = "#34D399", NEG = "#FB7185", INV = "#FBBF24";
+
+// Rótulo do valor por cima da barra (€ arredondado, para caber bem).
+const rotuloValor = (v) => (v || v === 0 ? "€" + Math.round(v) : "");
 
 const fazRotulo = (locale) => (mes) => {
   const [a, m] = String(mes).split("-");
@@ -68,21 +71,26 @@ export default function GraficoMensal({ dados }) {
       ) : (
         <ResponsiveContainer width="100%" height={250}>
           {vista === "lucro" ? (
-            <BarChart data={data} margin={{ top: 12, right: 4, left: 0, bottom: 0 }} barCategoryGap="26%">
+            <BarChart data={data} margin={{ top: 24, right: 8, left: 0, bottom: 0 }} barCategoryGap="26%">
               {eixos}
               <ReferenceLine y={0} stroke="rgba(255,255,255,0.16)" />
               <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<Tip />} />
               <Bar dataKey="lucro" name={t("vendas.lucro")} radius={[6, 6, 0, 0]} maxBarSize={46}>
                 {data.map((d, i) => <Cell key={i} fill={d.lucro >= 0 ? POS : NEG} />)}
+                <LabelList dataKey="lucro" position="top" offset={8} formatter={rotuloValor} fill="#ECEEF2" fontSize={11} fontWeight={600} />
               </Bar>
             </BarChart>
           ) : (
-            <BarChart data={data} margin={{ top: 12, right: 4, left: 0, bottom: 0 }} barGap={3} barCategoryGap="22%">
+            <BarChart data={data} margin={{ top: 24, right: 8, left: 0, bottom: 0 }} barGap={3} barCategoryGap="22%">
               {eixos}
               <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<Tip />} />
               <Legend wrapperStyle={{ fontSize: 12 }} iconType="circle" />
-              <Bar dataKey="recebido" name={t("grafico.recebido")} fill={POS} radius={[5, 5, 0, 0]} maxBarSize={30} />
-              <Bar dataKey="investido" name={t("grafico.investido")} fill={INV} radius={[5, 5, 0, 0]} maxBarSize={30} />
+              <Bar dataKey="recebido" name={t("grafico.recebido")} fill={POS} radius={[5, 5, 0, 0]} maxBarSize={30}>
+                <LabelList dataKey="recebido" position="top" offset={6} formatter={rotuloValor} fill="#9fb3c8" fontSize={9.5} />
+              </Bar>
+              <Bar dataKey="investido" name={t("grafico.investido")} fill={INV} radius={[5, 5, 0, 0]} maxBarSize={30}>
+                <LabelList dataKey="investido" position="top" offset={6} formatter={rotuloValor} fill="#9fb3c8" fontSize={9.5} />
+              </Bar>
             </BarChart>
           )}
         </ResponsiveContainer>
