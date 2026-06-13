@@ -1,17 +1,20 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { useEstado } from "@/app/components/contexto";
 import { useIdioma } from "@/app/components/Idioma";
-import { eur } from "@/lib/calculos";
+import { eur, lucroPorModelo } from "@/lib/calculos";
 import GraficoMensal from "@/app/components/GraficoMensal";
 import Categorias from "@/app/components/Categorias";
 import UltimasVendas from "@/app/components/UltimasVendas";
 
-// Página de análise: lucro por sócio (resumo), gráfico mensal, categorias e vendas.
+// Página de análise: lucro por sócio (resumo), gráfico mensal, por modelo,
+// por categoria e últimas vendas.
 export default function PaginaLucro() {
   const { estado, resumo, categorias, mensal } = useEstado();
   const { t } = useIdioma();
+  const modelos = useMemo(() => lucroPorModelo(estado), [estado]);
 
   return (
     <div className="pagina">
@@ -35,6 +38,11 @@ export default function PaginaLucro() {
       <section className="bloco">
         <h2>{t("home.lucroPorMes")}</h2>
         <GraficoMensal dados={mensal} />
+      </section>
+
+      <section className="bloco">
+        <h2>{t("lucro.porModelo")} <span className="conta">— {t("lucro.porModeloSub")}</span></h2>
+        <Categorias categorias={modelos} />
       </section>
 
       <section className="bloco">
