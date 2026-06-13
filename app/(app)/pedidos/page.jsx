@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useEstado } from "@/app/components/contexto";
 import { useIdioma } from "@/app/components/Idioma";
 import { estaVendido, diasEmStock, toNumber } from "@/lib/calculos";
@@ -25,13 +26,26 @@ function lerFiltrosGuardados() {
 export default function PaginaPedidos() {
   const { estado, listaCategorias, novoPedido, novaEncomenda } = useEstado();
   const { t } = useIdioma();
+  const router = useRouter();
   const [filtros, setFiltros] = useState(FILTROS_VAZIO);
   const [aCriar, setACriar] = useState("pedido"); // "pedido" | "encomenda"
-  const [vista, setVista] = useState("stock"); // "stock" (itens) | "pedidos" (agrupados)
+  // Vista por defeito: "pedidos" (lista agrupada). O atalho da página inicial
+  // aponta para /pedidos?vista=stock para abrir já na lista de itens em stock.
+  const [vista, setVista] = useState("pedidos"); // "pedidos" | "stock"
   const diasAlerta = toNumber(estado.config.diasAlerta) || 30;
+
+  // Cria o pedido e entra logo no detalhe para adicionar os itens.
+  async function criarEEntrar(dados) {
+    const pedido = await novoPedido(dados);
+    if (pedido) router.push(`/pedidos/${pedido.id}`);
+  }
 
   // Recupera o filtro guardado ao voltar à página (ex.: depois de abrir um pedido).
   useEffect(() => { setFiltros(lerFiltrosGuardados()); }, []);
+  // ?vista=stock (vindo do atalho da página inicial) → abre na lista de stock.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("vista") === "stock") setVista("stock");
+  }, []);
   // Guarda sempre que muda; "Limpar" grava o estado vazio (volta ao normal).
   const aplicarFiltros = (novos) => {
     setFiltros(novos);
@@ -112,7 +126,7 @@ export default function PaginaPedidos() {
           >{t("pedidos.novaEncomenda")}</button>
         </div>
         {aCriar === "pedido" ? (
-          <NovoPedido socios={estado.socios} onCriar={novoPedido} />
+          <NovoPedido socios={estado.socios} onCriar={criarEEntrar} />
         ) : (
           <NovaEncomenda socios={estado.socios} clientes={clientesEncomenda} onCriar={novaEncomenda} />
         )}
@@ -121,13 +135,13 @@ export default function PaginaPedidos() {
       <section className="bloco">
         <div className="criar-toggle">
           <button
-            className={"toggle-btn" + (ehStock ? " ativo" : "")}
-            onClick={() => setVista("stock")}
-          >{t("pedidos.emStock")}</button>
-          <button
             className={"toggle-btn" + (!ehStock ? " ativo" : "")}
             onClick={() => setVista("pedidos")}
           >{t("nav.pedidos")}</button>
+          <button
+            className={"toggle-btn" + (ehStock ? " ativo" : "")}
+            onClick={() => setVista("stock")}
+          >{t("pedidos.emStock")}</button>
         </div>
 
         <h2>

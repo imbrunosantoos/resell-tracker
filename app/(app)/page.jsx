@@ -46,7 +46,7 @@ export default function PaginaInicio() {
       <section className="bloco">
         <h2>{t("home.atalhos")}</h2>
         <div className="atalhos">
-          <Link href="/pedidos" className="atalho">
+          <Link href="/pedidos?vista=stock" className="atalho">
             <span className="atalho-icone">▦</span>
             <span className="atalho-texto">
               <span className="atalho-label">{t("nav.pedidos")}</span>
