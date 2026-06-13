@@ -1655,3 +1655,68 @@ tbody tr.selecionado { background: rgba(var(--rgb-pagina, 52, 211, 153), 0.12); 
 }
 .login-cartao .tagline { padding-left: 30px; }
 .login-troca button { color: var(--accent); }
+
+/* =========================================================
+   Catálogo de produtos (SKU + variantes) — aba Produtos
+   ========================================================= */
+.app-pagina[data-pagina="produtos"] { --cor-pagina: #22D3EE; --rgb-pagina: 34, 211, 238; }
+
+/* botões de versão (Adepto/Jogador) no formulário */
+.prod-versoes { display: inline-flex; gap: 6px; }
+.prod-ver-btn {
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  color: var(--muted); background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 99px; padding: 8px 14px;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.prod-ver-btn:hover { color: var(--text); }
+.prod-ver-btn.ativo {
+  color: #05140E;
+  background: linear-gradient(180deg, var(--cor-pagina, var(--accent)), color-mix(in srgb, var(--cor-pagina, var(--accent-2)) 82%, #0E1116));
+  border-color: transparent;
+}
+
+.prod-lista { display: flex; flex-direction: column; gap: 14px; }
+.prod-cartao {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0) 42%),
+    var(--vidro);
+  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur);
+  border: 1px solid var(--vidro-borda); border-radius: var(--radius);
+  padding: 16px 18px; box-shadow: var(--sombra);
+}
+.prod-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.prod-titulo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.prod-nome { font-size: 16px; font-weight: 700; }
+
+.prod-vars { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+.prod-var {
+  display: flex; flex-direction: column; gap: 6px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+}
+.prod-sku {
+  font-family: var(--mono); font-size: 12.5px; font-weight: 700; letter-spacing: 0.3px;
+  color: var(--cor-pagina, var(--accent));
+}
+.prod-var-meta { display: flex; align-items: center; gap: 6px; }
+.prod-ver {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  color: var(--muted); background: rgba(255,255,255,0.05);
+  border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px;
+}
+.prod-var-cont { font-size: 12px; font-family: var(--mono); color: var(--muted); }
+.prod-var-cont b { font-weight: 700; }
+.prod-var-cont b.azul { color: #60A5FA; }
+.prod-var-cont b.pos { color: var(--pos); }
+
+/* ligação item → SKU no cartão de item (aba detalhe do pedido) */
+.item-sku-linha { display: flex; align-items: center; gap: 8px; }
+.item-sku-linha select { flex: 1; min-width: 0; font-size: 12.5px; }
+.item-sku-tag {
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  color: var(--cor-pagina, var(--accent));
+  background: rgba(var(--rgb-pagina, 52,211,153), 0.12);
+  border: 1px solid color-mix(in srgb, var(--cor-pagina, var(--accent)) 35%, transparent);
+  border-radius: 6px; padding: 2px 8px; white-space: nowrap;
+}

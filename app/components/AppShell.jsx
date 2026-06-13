@@ -16,6 +16,7 @@ const PAGINAS = [
   { rota: "/", id: "inicio", titulo: "nav.inicio", sub: "hero.inicio" },
   { rota: "/pedidos", id: "pedidos", titulo: "nav.pedidos", sub: "hero.pedidos" },
   { rota: "/novo-pedido", id: "novo-pedido", titulo: "nav.novoPedido", sub: "hero.novoPedido" },
+  { rota: "/produtos", id: "produtos", titulo: "nav.produtos", sub: "hero.produtos" },
   { rota: "/lucro", id: "lucro", titulo: "nav.lucro", sub: "hero.lucro" },
   { rota: "/vendas", id: "vendas", titulo: "nav.vendas", sub: "hero.vendas" },
   { rota: "/socios", id: "socios", titulo: "nav.socios", sub: "hero.socios" },
@@ -37,7 +38,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     ?? PAGINAS.find((p) => p.rota !== "/" && pathname.startsWith(p.rota))
     ?? PAGINAS[0];
   // As credenciais não vêm no estado inicial (carregam-se só na aba Contas).
-  const [estado, setEstado] = useState(() => ({ ...estadoInicial, credenciais: [], rascunho: estadoInicial.rascunho ?? [] }));
+  const [estado, setEstado] = useState(() => ({ ...estadoInicial, credenciais: [], rascunho: estadoInicial.rascunho ?? [], produtos: estadoInicial.produtos ?? [] }));
 
   const timers = useRef({}); // debounce por campo
   const pendentes = useRef(0); // nº de escritas por confirmar
@@ -269,6 +270,51 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     });
   }
 
+  // ---------- Catálogo (produtos + variantes / SKU) ----------
+  async function novoProduto(dados) {
+    return comEscrita(async () => {
+      const r = await persistir("/api/produtos", "POST", dados);
+      if (!r.ok) { mostrarErro(t("erro.criarProduto")); return null; }
+      const produto = await r.json();
+      setEstado((prev) => ({ ...prev, produtos: [produto, ...(prev.produtos ?? [])] }));
+      return produto;
+    });
+  }
+  async function apagarProduto(id) {
+    const ok = await confirmar({
+      titulo: t("conf.apagarProdutoTitulo"),
+      mensagem: t("conf.apagarProdutoMsg"),
+      textoConfirmar: t("comum.apagar"),
+      perigo: true,
+    });
+    if (!ok) return;
+    // ids das variantes deste produto, para limpar a ligação dos itens
+    const prod = (estado.produtos ?? []).find((p) => p.id === id);
+    const vids = new Set((prod?.variantes ?? []).map((v) => v.id));
+    return comEscrita(async () => {
+      const r = await persistir(`/api/produtos/${id}`, "DELETE");
+      if (!r.ok) { mostrarErro(t("erro.apagarProduto")); recarregar(); return; }
+      setEstado((prev) => ({
+        ...prev,
+        produtos: (prev.produtos ?? []).filter((p) => p.id !== id),
+        pedidos: prev.pedidos.map((p) => ({
+          ...p,
+          itens: p.itens.map((it) => (vids.has(it.varianteId) ? { ...it, varianteId: null, sku: "" } : it)),
+        })),
+      }));
+    });
+  }
+  // Liga um item a uma variante (ou desliga, varianteId vazio). O servidor copia
+  // nome/categoria/tamanho do modelo e devolve o item já atualizado.
+  async function atribuirVariante(itemId, varianteId) {
+    return comEscrita(async () => {
+      const r = await persistir(`/api/itens/${itemId}/variante`, "POST", { varianteId });
+      if (!r.ok) { mostrarErro(t("erro.ligarVariante")); recarregar(); return; }
+      const item = await r.json();
+      setEstado((prev) => substituirItem(prev, item));
+    });
+  }
+
   // ---------- Fotos ----------
   async function uploadFoto(itemId, ficheiro) {
     return comEscrita(async () => {
@@ -483,6 +529,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
     novoPatch, apagarPatch, uploadFotoPatch,
     uploadFoto, removerFoto,
     novoSocio, apagarSocio, novaDespesa, apagarDespesa, novaCredencial, apagarCredencial,
+    novoProduto, apagarProduto, atribuirVariante,
     carregarCredenciais, exportar, importar, sair, confirmar,
     restaurarBackup, listarBackups,
   };

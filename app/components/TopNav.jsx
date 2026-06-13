@@ -53,6 +53,7 @@ const ABAS = [
   { href: "/", chave: "nav.inicio", icone: "◇" },
   { href: "/pedidos", chave: "nav.pedidos", icone: "▦" },
   { href: "/novo-pedido", chave: "nav.novoPedido", icone: "🧵" },
+  { href: "/produtos", chave: "nav.produtos", icone: "🏷️" },
   { href: "/lucro", chave: "nav.lucro", icone: "📈" },
   { href: "/vendas", chave: "nav.vendas", icone: "💶" },
   { href: "/socios", chave: "nav.socios", icone: "🤝" },
