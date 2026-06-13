@@ -10,6 +10,7 @@ import NovaEncomenda from "@/app/components/NovaEncomenda";
 import Filtros from "@/app/components/Filtros";
 import PedidoLinha from "@/app/components/PedidoLinha";
 import ListaStock from "@/app/components/ListaStock";
+import TabelaInventario from "@/app/components/TabelaInventario";
 
 const FILTROS_VAZIO = { texto: "", estado: "todos", categoria: "", socio: "", tipo: "" };
 const CHAVE_FILTROS = "pedidos:filtros"; // guarda o filtro entre navegações (sessão)
@@ -111,6 +112,7 @@ export default function PaginaPedidos() {
   itensStock.sort((a, b) => (b.dias ?? 0) - (a.dias ?? 0));
 
   const ehStock = vista === "stock";
+  const ehInventario = vista === "inventario";
 
   return (
     <div className="pagina">
@@ -135,22 +137,32 @@ export default function PaginaPedidos() {
       <section className="bloco">
         <div className="criar-toggle">
           <button
-            className={"toggle-btn" + (!ehStock ? " ativo" : "")}
+            className={"toggle-btn" + (vista === "pedidos" ? " ativo" : "")}
             onClick={() => setVista("pedidos")}
           >{t("nav.pedidos")}</button>
           <button
             className={"toggle-btn" + (ehStock ? " ativo" : "")}
             onClick={() => setVista("stock")}
           >{t("pedidos.emStock")}</button>
+          <button
+            className={"toggle-btn" + (ehInventario ? " ativo" : "")}
+            onClick={() => setVista("inventario")}
+          >{t("inv.titulo")}</button>
         </div>
 
         <h2>
-          {ehStock ? t("pedidos.emStock") : t("nav.pedidos")}{" "}
-          <span className="conta">— {ehStock ? itensStock.length : `${visiveis.length}${filtroAtivo ? ` ${t("pedidos.de")} ${estado.pedidos.length}` : ""}`}</span>
+          {ehInventario ? t("inv.titulo") : ehStock ? t("pedidos.emStock") : t("nav.pedidos")}{" "}
+          {!ehInventario && (
+            <span className="conta">— {ehStock ? itensStock.length : `${visiveis.length}${filtroAtivo ? ` ${t("pedidos.de")} ${estado.pedidos.length}` : ""}`}</span>
+          )}
         </h2>
-        <Filtros valor={filtros} onMudar={aplicarFiltros} categorias={listaCategorias} socios={estado.socios} ocultarEstado={ehStock} />
+        {!ehInventario && (
+          <Filtros valor={filtros} onMudar={aplicarFiltros} categorias={listaCategorias} socios={estado.socios} ocultarEstado={ehStock} />
+        )}
 
-        {ehStock ? (
+        {ehInventario ? (
+          <TabelaInventario estado={estado} />
+        ) : ehStock ? (
           <ListaStock itens={itensStock} diasAlerta={diasAlerta} />
         ) : estado.pedidos.length === 0 ? (
           <div className="vazio">{t("pedidos.vazio")}</div>

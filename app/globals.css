@@ -1412,3 +1412,65 @@ tbody tr.selecionado { background: rgba(var(--rgb-pagina, 52, 211, 153), 0.12); 
 .rc-tip-val.neg { color: var(--neg); }
 .recharts-surface:focus { outline: none; }
 @media (prefers-reduced-motion: reduce) { .kpi { animation: none; } }
+
+/* =========================================================
+   Tabela de inventário avançada (vista da aba Pedidos)
+   ========================================================= */
+.inv-controlos {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px;
+}
+/* controlo segmentado de status (Todos / Em trânsito / À venda / Vendido) */
+.seg {
+  display: inline-flex; gap: 3px; padding: 4px;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 99px;
+}
+.seg-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--muted);
+  background: transparent; border: none; cursor: pointer;
+  padding: 7px 14px; border-radius: 99px; white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.seg-btn:hover { color: var(--text); }
+.seg-btn .seg-conta {
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  padding: 1px 7px; border-radius: 99px;
+  background: rgba(255,255,255,0.06); color: var(--muted);
+}
+.seg-btn.ativo {
+  color: #05140E;
+  background: linear-gradient(180deg, var(--cor-pagina, var(--accent)), color-mix(in srgb, var(--cor-pagina, var(--accent-2)) 82%, #0E1116));
+  box-shadow: 0 4px 12px -4px rgba(var(--rgb-pagina, 52, 211, 153), 0.45);
+}
+.seg-btn.ativo .seg-conta { background: rgba(5,20,14,0.18); color: #05140E; }
+.inv-pesquisa { flex: 1; min-width: 200px; }
+
+/* tabela: cartão de vidro à volta, linhas clicáveis */
+.inv-tabela { min-width: 880px; }
+.inv-tabela th { white-space: nowrap; }
+.inv-linha { cursor: pointer; }
+.inv-linha:hover { background: rgba(var(--rgb-pagina, 52, 211, 153), 0.06); }
+.inv-nome { font-weight: 600; }
+.inv-fonte { color: var(--muted); font-size: 13px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inv-tam {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 30px;
+  font-family: var(--mono); font-size: 12px; font-weight: 700; padding: 2px 8px;
+  border-radius: 7px; background: var(--surface-2); border: 1px solid var(--line); color: var(--text);
+}
+
+/* badges de status, com cores funcionais (verde vendido, âmbar trânsito, azul venda) */
+.status-badge {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px;
+  border: 1px solid transparent;
+}
+.status-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.status-badge.st-vendido  { color: var(--pos);   background: rgba(52, 211, 153, 0.12);  border-color: rgba(52, 211, 153, 0.32); }
+.status-badge.st-transito { color: var(--aviso); background: rgba(251, 191, 36, 0.12);  border-color: rgba(251, 191, 36, 0.32); }
+.status-badge.st-venda    { color: #60A5FA;      background: rgba(96, 165, 250, 0.12);  border-color: rgba(96, 165, 250, 0.32); }
+
+@media (max-width: 600px) {
+  .inv-controlos { flex-direction: column; align-items: stretch; }
+  .seg { overflow-x: auto; scrollbar-width: none; }
+  .seg::-webkit-scrollbar { display: none; }
+}
