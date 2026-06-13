@@ -588,7 +588,11 @@ tbody tr.selecionado { background: var(--accent-soft); }
 /* as abas ficam sempre numa linha só; se não couberem, deslizam de lado (scroll) */
 .nav-abas {
   display: flex; flex-wrap: nowrap; gap: 3px; flex: 1; min-width: 0;
-  overflow-x: auto; scrollbar-width: none;
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+  /* respiro à direita p/ a última aba (ex.: ES "Ajustes") não ficar colada/cortada,
+     e padding vertical p/ a sombra da aba ativa não ser cortada pelo overflow. */
+  padding: 6px 8px 6px 0; margin: -6px 0;
+  scroll-padding-inline-end: 8px;
 }
 .nav-abas::-webkit-scrollbar { display: none; }
 .nav-aba {
