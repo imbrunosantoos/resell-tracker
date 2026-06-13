@@ -51,13 +51,11 @@ export default function PaginaDefinicoes() {
               onChange={(e) => editarConfig("diasAlerta", e.target.value)} />
           </label>
           <label className="defin-linha">
-            <span className="defin-rotulo">
-              {t("defin.whatsFornecedor")}
-              <small className="defin-ajuda">{t("defin.whatsHint")}</small>
-            </span>
+            <span className="defin-rotulo">{t("defin.whatsFornecedor")}</span>
             <input type="tel" inputMode="tel" placeholder={t("defin.whatsPlaceholder")}
               value={estado.config.fornecedorWhats ?? ""}
               onChange={(e) => editarConfig("fornecedorWhats", e.target.value)} />
+            <small className="defin-ajuda">{t("defin.whatsHint")}</small>
           </label>
           <div className="defin-linha">
             <span className="defin-rotulo">{t("defin.idioma")}</span>

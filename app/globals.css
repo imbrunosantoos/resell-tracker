@@ -656,22 +656,22 @@ tbody tr.selecionado { background: var(--accent-soft); }
 /* ---------- Definições: lista de preferências ---------- */
 .defin-lista {
   border: 1px solid var(--line); border-radius: var(--radius-sm);
-  background: var(--surface-2); overflow: hidden;
+  background: var(--surface-2);
 }
 .defin-linha {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
-  gap: 14px 18px; padding: 14px 16px; border-top: 1px solid var(--line-soft);
+  display: grid; grid-template-columns: 1fr auto; align-items: center;
+  column-gap: 18px; row-gap: 8px; padding: 15px 16px; border-top: 1px solid var(--line-soft);
 }
 .defin-linha:first-child { border-top: none; }
 .defin-rotulo {
-  display: flex; flex-direction: column; gap: 3px;
   font-size: 13.5px; font-weight: 600; color: var(--text);
   text-transform: none; letter-spacing: 0;
 }
-.defin-ajuda { font-size: 11.5px; font-weight: 500; color: var(--dim); max-width: 52ch; line-height: 1.45; }
-.defin-linha > input { flex-shrink: 0; width: auto; min-width: 130px; max-width: 240px; }
-.defin-linha > input[type="number"] { min-width: 96px; max-width: 110px; text-align: right; }
-.defin-linha .idioma-seg { align-self: auto; }
+/* a dica ocupa a largura toda, por baixo do campo (não fica espremida ao lado) */
+.defin-ajuda { grid-column: 1 / -1; font-size: 11.5px; font-weight: 500; color: var(--dim); line-height: 1.5; }
+.defin-linha > input { justify-self: end; width: 100%; max-width: 240px; }
+.defin-linha > input[type="number"] { max-width: 120px; text-align: right; }
+.defin-linha > .idioma-seg { justify-self: end; align-self: center; }
 .defin-intro { margin-bottom: 14px; }
 .defin-acoes { margin-top: 0; margin-bottom: 14px; }
 .btn-ficheiro { cursor: pointer; display: inline-flex; align-items: center; }
@@ -1042,10 +1042,10 @@ b.ambar { color: var(--aviso); }
   .pl-nums { flex-direction: column; gap: 2px; }
   .itens-grelha { grid-template-columns: 1fr; }
   .inicio-grelha { grid-template-columns: 1fr; gap: 30px; }
-  .defin-linha { align-items: stretch; }
-  .defin-rotulo { flex: 1 1 100%; }
-  .defin-linha > input { width: 100%; max-width: none; }
+  .defin-linha { grid-template-columns: 1fr; }
+  .defin-linha > input { justify-self: stretch; max-width: none; }
   .defin-linha > input[type="number"] { max-width: none; text-align: left; }
+  .defin-linha > .idioma-seg { justify-self: start; }
 }
 
 @media (max-width: 900px) {
