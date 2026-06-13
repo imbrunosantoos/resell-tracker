@@ -10,8 +10,20 @@ import Skeleton from "./Skeleton";
 // gradiente sob a linha; os meses negativos descem abaixo da linha do zero.
 const ACCENT = "#34D399";
 
-// Rótulo do valor de cada mês, por cima do ponto (€ arredondado para caber).
-const rotuloValor = (v) => (v || v === 0 ? "€" + Math.round(v) : "");
+// Rótulo do valor de cada mês — na fonte mono do site e verde/vermelho pelo sinal.
+const corSinal = (v) => (v >= 0 ? "#34D399" : "#FB7185");
+const rotuloMono = (cor) => {
+  function Rotulo({ x, y, width = 0, value }) {
+    if (value == null || value === "") return null;
+    const c = typeof cor === "function" ? cor(value) : cor;
+    return (
+      <text x={x + width / 2} y={y - 9} textAnchor="middle" fill={c} fontSize={11} fontWeight={700} style={{ fontFamily: "var(--mono)" }}>
+        {"€" + Math.round(value)}
+      </text>
+    );
+  }
+  return Rotulo;
+};
 
 function rotuloMes(mes, locale) {
   const [a, m] = String(mes).split("-").map(Number);
@@ -67,7 +79,7 @@ export default function GraficoLucro({ dados }) {
               type="monotone" dataKey="lucro" stroke={ACCENT} strokeWidth={2.5}
               fill="url(#lucroGrad)" dot={{ r: 2.6, fill: ACCENT, strokeWidth: 0 }} activeDot={{ r: 4.5 }}
             >
-              <LabelList dataKey="lucro" position="top" offset={10} formatter={rotuloValor} fill="#ECEEF2" fontSize={11} fontWeight={600} />
+              <LabelList dataKey="lucro" content={rotuloMono(corSinal)} />
             </Area>
           </AreaChart>
         </ResponsiveContainer>

@@ -11,8 +11,20 @@ import Skeleton from "./Skeleton";
 //   "fluxo" — recebido (verde) vs investido (âmbar) por mês
 const POS = "#34D399", NEG = "#FB7185", INV = "#FBBF24";
 
-// Rótulo do valor por cima da barra (€ arredondado, para caber bem).
-const rotuloValor = (v) => (v || v === 0 ? "€" + Math.round(v) : "");
+// Rótulo do valor por cima da barra — fonte mono do site, cor dada (ou pelo sinal).
+const corSinal = (v) => (v >= 0 ? "#34D399" : "#FB7185");
+const rotuloMono = (cor) => {
+  function Rotulo({ x, y, width = 0, value }) {
+    if (value == null || value === "") return null;
+    const c = typeof cor === "function" ? cor(value) : cor;
+    return (
+      <text x={x + width / 2} y={y - 8} textAnchor="middle" fill={c} fontSize={11} fontWeight={700} style={{ fontFamily: "var(--mono)" }}>
+        {"€" + Math.round(value)}
+      </text>
+    );
+  }
+  return Rotulo;
+};
 
 const fazRotulo = (locale) => (mes) => {
   const [a, m] = String(mes).split("-");
@@ -77,7 +89,7 @@ export default function GraficoMensal({ dados }) {
               <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<Tip />} />
               <Bar dataKey="lucro" name={t("vendas.lucro")} radius={[6, 6, 0, 0]} maxBarSize={46}>
                 {data.map((d, i) => <Cell key={i} fill={d.lucro >= 0 ? POS : NEG} />)}
-                <LabelList dataKey="lucro" position="top" offset={8} formatter={rotuloValor} fill="#ECEEF2" fontSize={11} fontWeight={600} />
+                <LabelList dataKey="lucro" content={rotuloMono(corSinal)} />
               </Bar>
             </BarChart>
           ) : (
@@ -86,10 +98,10 @@ export default function GraficoMensal({ dados }) {
               <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<Tip />} />
               <Legend wrapperStyle={{ fontSize: 12 }} iconType="circle" />
               <Bar dataKey="recebido" name={t("grafico.recebido")} fill={POS} radius={[5, 5, 0, 0]} maxBarSize={30}>
-                <LabelList dataKey="recebido" position="top" offset={6} formatter={rotuloValor} fill="#9fb3c8" fontSize={9.5} />
+                <LabelList dataKey="recebido" content={rotuloMono(POS)} />
               </Bar>
               <Bar dataKey="investido" name={t("grafico.investido")} fill={INV} radius={[5, 5, 0, 0]} maxBarSize={30}>
-                <LabelList dataKey="investido" position="top" offset={6} formatter={rotuloValor} fill="#9fb3c8" fontSize={9.5} />
+                <LabelList dataKey="investido" content={rotuloMono(INV)} />
               </Bar>
             </BarChart>
           )}
