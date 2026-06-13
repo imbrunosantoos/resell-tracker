@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { useEstado } from "@/app/components/contexto";
 import { useIdioma } from "@/app/components/Idioma";
-import { estaVendido } from "@/lib/calculos";
+import { estaVendido, diasEmStock, toNumber } from "@/lib/calculos";
 import NovoPedido from "@/app/components/NovoPedido";
 import NovaEncomenda from "@/app/components/NovaEncomenda";
 import Filtros from "@/app/components/Filtros";
 import PedidoLinha from "@/app/components/PedidoLinha";
+import ListaStock from "@/app/components/ListaStock";
 
 const FILTROS_VAZIO = { texto: "", estado: "todos", categoria: "", socio: "", tipo: "" };
 const CHAVE_FILTROS = "pedidos:filtros"; // guarda o filtro entre navegações (sessão)
@@ -26,6 +27,8 @@ export default function PaginaPedidos() {
   const { t } = useIdioma();
   const [filtros, setFiltros] = useState(FILTROS_VAZIO);
   const [aCriar, setACriar] = useState("pedido"); // "pedido" | "encomenda"
+  const [vista, setVista] = useState("stock"); // "stock" (itens) | "pedidos" (agrupados)
+  const diasAlerta = toNumber(estado.config.diasAlerta) || 30;
 
   // Recupera o filtro guardado ao voltar à página (ex.: depois de abrir um pedido).
   useEffect(() => { setFiltros(lerFiltrosGuardados()); }, []);
@@ -67,6 +70,34 @@ export default function PaginaPedidos() {
   }
   const visiveis = filtroAtivo ? estado.pedidos.filter(correspondePedido) : estado.pedidos;
 
+  // Itens em stock atual: não vendidos, de pedidos já chegados (com data de
+  // chegada). Respeita os filtros de pesquisa/categoria/sócio/tipo (o filtro de
+  // "estado" não se aplica aqui — esta vista é só stock). Mais parados primeiro.
+  const itensStock = [];
+  for (const p of estado.pedidos) {
+    if (!p.dataChegada) continue;
+    if (filtros.tipo) {
+      const tipo = p.tipo || "normal";
+      if (filtros.tipo === "encomenda" ? tipo !== "encomenda" : tipo === "encomenda") continue;
+    }
+    if (filtros.socio) {
+      const ok = filtros.socio === "solo" ? !p.socioId : p.socioId === filtros.socio;
+      if (!ok) continue;
+    }
+    for (const it of p.itens) {
+      if (estaVendido(it)) continue;
+      if (filtros.categoria && it.categoria !== filtros.categoria) continue;
+      if (filtros.texto) {
+        const alvo = `${it.nome} ${it.categoria} ${it.notas} ${p.nome}`.toLowerCase();
+        if (!alvo.includes(filtros.texto.toLowerCase())) continue;
+      }
+      itensStock.push({ pedido: p, item: it, dias: diasEmStock(p, it) });
+    }
+  }
+  itensStock.sort((a, b) => (b.dias ?? 0) - (a.dias ?? 0));
+
+  const ehStock = vista === "stock";
+
   return (
     <div className="pagina">
       <section className="bloco">
@@ -88,9 +119,26 @@ export default function PaginaPedidos() {
       </section>
 
       <section className="bloco">
-        <h2>{t("nav.pedidos")} <span className="conta">— {visiveis.length}{filtroAtivo ? ` ${t("pedidos.de")} ${estado.pedidos.length}` : ""}</span></h2>
-        <Filtros valor={filtros} onMudar={aplicarFiltros} categorias={listaCategorias} socios={estado.socios} />
-        {estado.pedidos.length === 0 ? (
+        <div className="criar-toggle">
+          <button
+            className={"toggle-btn" + (ehStock ? " ativo" : "")}
+            onClick={() => setVista("stock")}
+          >{t("pedidos.emStock")}</button>
+          <button
+            className={"toggle-btn" + (!ehStock ? " ativo" : "")}
+            onClick={() => setVista("pedidos")}
+          >{t("nav.pedidos")}</button>
+        </div>
+
+        <h2>
+          {ehStock ? t("pedidos.emStock") : t("nav.pedidos")}{" "}
+          <span className="conta">— {ehStock ? itensStock.length : `${visiveis.length}${filtroAtivo ? ` ${t("pedidos.de")} ${estado.pedidos.length}` : ""}`}</span>
+        </h2>
+        <Filtros valor={filtros} onMudar={aplicarFiltros} categorias={listaCategorias} socios={estado.socios} ocultarEstado={ehStock} />
+
+        {ehStock ? (
+          <ListaStock itens={itensStock} diasAlerta={diasAlerta} />
+        ) : estado.pedidos.length === 0 ? (
           <div className="vazio">{t("pedidos.vazio")}</div>
         ) : visiveis.length === 0 ? (
           <div className="vazio">{t("pedidos.semFiltro")}</div>

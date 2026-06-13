@@ -3,7 +3,7 @@
 import { useIdioma } from "./Idioma";
 
 // Barra de pesquisa + filtros por estado, sócio e categoria.
-export default function Filtros({ valor, onMudar, categorias, socios = [] }) {
+export default function Filtros({ valor, onMudar, categorias, socios = [], ocultarEstado = false }) {
   const { t } = useIdioma();
   const set = (campo) => (e) => onMudar({ ...valor, [campo]: e.target.value });
   const ativo = valor.texto || valor.estado !== "todos" || valor.categoria || valor.socio || valor.tipo;
@@ -29,11 +29,13 @@ export default function Filtros({ valor, onMudar, categorias, socios = [] }) {
         <option value="normal">{t("filtros.soPedidos")}</option>
         <option value="encomenda">{t("filtros.soEncomendas")}</option>
       </select>
-      <select value={valor.estado} onChange={set("estado")}>
-        <option value="todos">{t("filtros.estadoTodos")}</option>
-        <option value="stock">{t("filtros.emStock")}</option>
-        <option value="vendido">{t("filtros.vendidos")}</option>
-      </select>
+      {!ocultarEstado && (
+        <select value={valor.estado} onChange={set("estado")}>
+          <option value="todos">{t("filtros.estadoTodos")}</option>
+          <option value="stock">{t("filtros.emStock")}</option>
+          <option value="vendido">{t("filtros.vendidos")}</option>
+        </select>
+      )}
       <select value={valor.categoria} onChange={set("categoria")}>
         <option value="">{t("filtros.todasCategorias")}</option>
         {categorias.map((c) => (
