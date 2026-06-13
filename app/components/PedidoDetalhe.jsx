@@ -23,7 +23,7 @@ export default function PedidoDetalhe({ pedido }) {
   const { t } = useIdioma();
   const {
     estado, editarCampo, marcarVendido, marcarRecebido, novoItem, apagarItem, apagarPedido,
-    uploadFoto, removerFoto, bulkCategoria, aplicarTemplate,
+    uploadFoto, removerFoto, bulkEditar, aplicarTemplate,
     novoPatch, apagarPatch, uploadFotoPatch, confirmar,
   } = useEstado();
   const socios = estado.socios;
@@ -56,6 +56,19 @@ export default function PedidoDetalhe({ pedido }) {
   const [zoom, setZoom] = useState(null); // src da foto em lightbox
   const [selecionados, setSelecionados] = useState(() => new Set());
   const [catBulk, setCatBulk] = useState("");
+  const [tamBulk, setTamBulk] = useState("");
+  const [precoBulk, setPrecoBulk] = useState("");
+
+  // Tamanhos possíveis para a seleção atual: união dos tamanhos das categorias
+  // dos itens selecionados (categorias sem tamanhos não acrescentam nada).
+  const tamanhosBulk = useMemo(() => {
+    const set = new Set();
+    for (const it of pedido.itens) {
+      if (selecionados.has(it.id)) for (const tam of tamanhosPara(it.categoria)) set.add(tam);
+    }
+    return [...set];
+  }, [pedido.itens, selecionados]);
+  const todosSelecionados = pedido.itens.length > 0 && selecionados.size === pedido.itens.length;
 
   const margemMin = toNumber(config.margemMinima);
   const diasAlerta = toNumber(config.diasAlerta) || 30;
@@ -72,10 +85,17 @@ export default function PedidoDetalhe({ pedido }) {
   function alternar(id) {
     setSelecionados((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
-  function aplicarCategoria() {
-    bulkCategoria([...selecionados], catBulk);
+  function alternarTodos() {
+    setSelecionados((s) => (s.size === pedido.itens.length ? new Set() : new Set(pedido.itens.map((it) => it.id))));
+  }
+  function aplicarBulk() {
+    const campos = {};
+    if (catBulk.trim()) campos.categoria = catBulk.trim();
+    if (tamBulk) campos.tamanho = tamBulk;
+    if (precoBulk !== "") campos.precoCompra = precoBulk;
+    bulkEditar([...selecionados], campos);
     setSelecionados(new Set());
-    setCatBulk("");
+    setCatBulk(""); setTamBulk(""); setPrecoBulk("");
   }
 
   // Colar (Cmd/Ctrl+V) uma imagem: se houver 1 item selecionado, vai para esse;
@@ -162,12 +182,30 @@ export default function PedidoDetalhe({ pedido }) {
         <div className="bulk-bar">
           <strong>{selecionados.size}</strong> {t("det.bulkResto")}
           <input list="categorias" value={catBulk} onChange={(e) => setCatBulk(e.target.value)} placeholder={t("det.phCategoria")} />
-          <button className="btn mini primario" onClick={aplicarCategoria}>{t("det.aplicar")}</button>
+          {tamanhosBulk.length > 0 && (
+            <select value={tamBulk} onChange={(e) => setTamBulk(e.target.value)} aria-label={t("det.tam")}>
+              <option value="">{t("det.tam")}</option>
+              {tamanhosBulk.map((tam) => <option key={tam} value={tam}>{tam}</option>)}
+            </select>
+          )}
+          <input className="num" type="number" step="0.01" min="0" value={precoBulk}
+            onChange={(e) => setPrecoBulk(e.target.value)} placeholder={t("det.compraItem")} />
+          <button className="btn mini primario" onClick={aplicarBulk}>{t("det.aplicar")}</button>
           <button className="btn mini" onClick={() => setSelecionados(new Set())}>{t("filtros.limpar")}</button>
         </div>
       )}
 
-      <p className="colar-dica">{t("det.colarDica")}</p>
+      <div className="det-itens-topo">
+        {pedido.itens.length > 0 && (
+          <label className="sel-todos">
+            <input type="checkbox" checked={todosSelecionados}
+              ref={(el) => { if (el) el.indeterminate = selecionados.size > 0 && !todosSelecionados; }}
+              onChange={alternarTodos} />
+            <span>{t("det.selecionarTodos")}</span>
+          </label>
+        )}
+        <p className="colar-dica">{t("det.colarDica")}</p>
+      </div>
 
       <div className="itens-grelha">
         {pedido.itens.map((item) => (

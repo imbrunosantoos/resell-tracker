@@ -231,16 +231,18 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
       setEstado((prev) => substituirItem(prev, item));
     });
   }
-  async function bulkCategoria(ids, categoria) {
-    if (ids.length === 0) return;
+  // Edição em massa: aplica os mesmos `campos` (categoria, tamanho, preço…) a
+  // todos os itens selecionados.
+  async function bulkEditar(ids, campos) {
+    if (ids.length === 0 || !campos || Object.keys(campos).length === 0) return;
     return comEscrita(async () => {
-      const r = await persistir("/api/itens/categoria", "POST", { ids, categoria });
-      if (!r.ok) { mostrarErro(t("erro.mudarCategoria")); recarregar(); return; }
+      const r = await persistir("/api/itens/massa", "POST", { ids, campos });
+      if (!r.ok) { mostrarErro(t("erro.editarSelecao")); recarregar(); return; }
       setEstado((prev) => ({
         ...prev,
         pedidos: prev.pedidos.map((p) => ({
           ...p,
-          itens: p.itens.map((it) => (ids.includes(it.id) ? { ...it, categoria } : it)),
+          itens: p.itens.map((it) => (ids.includes(it.id) ? { ...it, ...campos } : it)),
         })),
       }));
     });
@@ -455,7 +457,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
   const valor = {
     utilizador, estado, resumo, categorias, mensal, relatorio, vendas, listaCategorias, estaVendido,
     editarCampo, editarConfig,
-    novoPedido, novaEncomenda, apagarPedido, novoItem, apagarItem, marcarVendido, marcarRecebido, bulkCategoria, aplicarTemplate,
+    novoPedido, novaEncomenda, apagarPedido, novoItem, apagarItem, marcarVendido, marcarRecebido, bulkEditar, aplicarTemplate,
     novaLinha, apagarLinha, uploadFotoLinha, removerFotoLinha, aplicarTemplateLinha, finalizarRascunho,
     novoPatch, apagarPatch, uploadFotoPatch,
     uploadFoto, removerFoto,

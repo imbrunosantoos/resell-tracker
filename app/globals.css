@@ -544,6 +544,14 @@ tbody tr.selecionado { background: var(--accent-soft); }
   border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 12px; font-size: 13.5px;
 }
 .bulk-bar input { width: 180px; }
+.bulk-bar .num { width: 120px; }
+.bulk-bar select { min-width: 90px; }
+
+/* Topo da grelha de itens: "selecionar todos" + dica de colar foto */
+.det-itens-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 12px; }
+.det-itens-topo .colar-dica { margin-bottom: 0; flex: 1; min-width: 200px; }
+.sel-todos { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; white-space: nowrap; }
+.sel-todos input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
 
 /* ---------- Foto + notas do item ---------- */
 .td-item { display: flex; align-items: flex-start; gap: 10px; }
