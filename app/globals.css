@@ -161,6 +161,10 @@ body::before {
   text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
 }
 .campo.inline { flex-direction: row; align-items: center; gap: 8px; }
+/* input numérico + seletor %/€ (desconto do pedido) lado a lado */
+.campo-desconto { display: flex; gap: 6px; align-items: stretch; }
+.campo-desconto .num { flex: 1; min-width: 0; }
+.campo-desconto select { flex-shrink: 0; }
 
 input, select {
   font-family: inherit; font-size: 14px; color: var(--text);

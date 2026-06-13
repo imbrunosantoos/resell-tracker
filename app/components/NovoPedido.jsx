@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useIdioma } from "./Idioma";
 
-const INICIAL = { nome: "", dataCompra: "", dataChegada: "", taxaPaypal: "3.99", saco: "0.17", socioId: "" };
+const INICIAL = { nome: "", dataCompra: "", dataChegada: "", taxaPaypal: "3.99", saco: "0.17", desconto: "", descontoTipo: "pct", socioId: "" };
 
 export default function NovoPedido({ socios, onCriar }) {
   const { t } = useIdioma();
@@ -46,6 +46,16 @@ export default function NovoPedido({ socios, onCriar }) {
       <label className="campo">
         <span>{t("novo.saco")}</span>
         <input className="num" type="number" step="0.01" value={form.saco} onChange={set("saco")} />
+      </label>
+      <label className="campo">
+        <span>{t("novo.desconto")}</span>
+        <div className="campo-desconto">
+          <input className="num" type="number" step="0.01" min="0" value={form.desconto} onChange={set("desconto")} placeholder="0" />
+          <select value={form.descontoTipo} onChange={set("descontoTipo")} aria-label={t("novo.desconto")}>
+            <option value="pct">%</option>
+            <option value="fixo">€</option>
+          </select>
+        </div>
       </label>
       <button className="btn primario" type="submit">{t("novo.criarBtn")}</button>
     </form>

@@ -138,6 +138,14 @@ export default function PedidoDetalhe({ pedido }) {
             <input className="num pequeno" type="number" step="0.01" value={pedido.taxaPaypal} onChange={(e) => editP("taxaPaypal", e.target.value)} /></label>
           <label className="campo"><span>{t("det.saco")}</span>
             <input className="num pequeno" type="number" step="0.01" value={pedido.saco} onChange={(e) => editP("saco", e.target.value)} /></label>
+          <label className="campo"><span>{t("det.desconto")}</span>
+            <div className="campo-desconto">
+              <input className="num pequeno" type="number" step="0.01" min="0" value={pedido.desconto ?? 0} onChange={(e) => editP("desconto", e.target.value)} />
+              <select value={pedido.descontoTipo || "pct"} onChange={(e) => editP("descontoTipo", e.target.value)} aria-label={t("det.desconto")}>
+                <option value="pct">%</option>
+                <option value="fixo">€</option>
+              </select>
+            </div></label>
         </div>
 
         <div className="pills">
