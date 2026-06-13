@@ -37,54 +37,55 @@ export default function PaginaDefinicoes() {
     <div className="pagina">
       <section className="bloco">
         <h2>{t("defin.preferencias")}</h2>
-        <div className="form-novo">
-          <label className="campo">
-            <span>{t("defin.margemMinima")}</span>
+        <div className="defin-lista">
+          <label className="defin-linha">
+            <span className="defin-rotulo">{t("defin.margemMinima")}</span>
             <input type="number" className="num" min="0" max="99" step="1"
               value={estado.config.margemMinima ?? 20}
               onChange={(e) => editarConfig("margemMinima", e.target.value)} />
           </label>
-          <label className="campo">
-            <span>{t("defin.alertaStock")}</span>
+          <label className="defin-linha">
+            <span className="defin-rotulo">{t("defin.alertaStock")}</span>
             <input type="number" className="num" min="1" step="1"
               value={estado.config.diasAlerta ?? 30}
               onChange={(e) => editarConfig("diasAlerta", e.target.value)} />
           </label>
-          <label className="campo">
-            <span>{t("defin.whatsFornecedor")}</span>
+          <label className="defin-linha">
+            <span className="defin-rotulo">
+              {t("defin.whatsFornecedor")}
+              <small className="defin-ajuda">{t("defin.whatsHint")}</small>
+            </span>
             <input type="tel" inputMode="tel" placeholder={t("defin.whatsPlaceholder")}
               value={estado.config.fornecedorWhats ?? ""}
               onChange={(e) => editarConfig("fornecedorWhats", e.target.value)} />
           </label>
-        </div>
-
-        <div className="campo" style={{ marginTop: 14 }}>
-          <span>{t("defin.idioma")}</span>
-          <div className="idioma-seg" role="group" aria-label={t("defin.idioma")}>
-            {IDIOMAS.map((i) => (
-              <button key={i.codigo} type="button"
-                className={"idioma-seg-btn" + (i.codigo === idioma ? " ativo" : "")}
-                aria-pressed={i.codigo === idioma}
-                onClick={() => setIdioma(i.codigo)}>
-                <span className="bandeira">{i.bandeira}</span> {i.codigo.toUpperCase()}
-                {i.codigo === idioma && <span className="check">✓</span>}
-              </button>
-            ))}
+          <div className="defin-linha">
+            <span className="defin-rotulo">{t("defin.idioma")}</span>
+            <div className="idioma-seg" role="group" aria-label={t("defin.idioma")}>
+              {IDIOMAS.map((i) => (
+                <button key={i.codigo} type="button"
+                  className={"idioma-seg-btn" + (i.codigo === idioma ? " ativo" : "")}
+                  aria-pressed={i.codigo === idioma}
+                  onClick={() => setIdioma(i.codigo)}>
+                  <span className="bandeira">{i.bandeira}</span> {i.codigo.toUpperCase()}
+                  {i.codigo === idioma && <span className="check">✓</span>}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-        <p className="dim pequeno" style={{ marginTop: 8 }}>{t("defin.whatsHint")}</p>
       </section>
 
       <section className="bloco">
         <h2>{t("defin.backups")} <span className="conta">
           — {backups.length ? t("defin.ultima", { quando: haQuanto(backups[0].data) }) : t("defin.automaticas")}</span></h2>
-        <p className="dim pequeno" style={{ marginBottom: 12 }}>{t("defin.backupsHint")}</p>
+        <p className="dim pequeno defin-intro">{t("defin.backupsHint")}</p>
 
-        <div className="barra-acoes" style={{ marginBottom: 12 }}>
+        <div className="barra-acoes defin-acoes">
           <button className="btn" onClick={criarAgora}>{t("defin.criarCopia")}</button>
           <button className="btn" onClick={() => exportar("json")}>{t("defin.exportarJson")}</button>
           <button className="btn" onClick={() => exportar("csv")}>{t("defin.exportarCsv")}</button>
-          <label className="btn" style={{ cursor: "pointer" }}>
+          <label className="btn btn-ficheiro">
             {t("comum.importar")}
             <input type="file" accept="application/json" hidden
               onChange={(e) => { importar(e.target.files[0]); e.target.value = ""; }} />
@@ -107,7 +108,7 @@ export default function PaginaDefinicoes() {
 
       <section className="bloco">
         <h2>{t("defin.sessao")}</h2>
-        <button className="btn" onClick={sair}>{t("defin.terminarSessao")}</button>
+        <button className="btn btn-perigo" onClick={sair}>{t("defin.terminarSessao")}</button>
       </section>
     </div>
   );
