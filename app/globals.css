@@ -1547,3 +1547,111 @@ tbody tr.selecionado { background: rgba(var(--rgb-pagina, 52, 211, 153), 0.12); 
 }
 @keyframes sk-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 @media (prefers-reduced-motion: reduce) { .sk-linha { animation: none; } }
+
+/* =========================================================
+   Refinamento profissional v2 — vidro coerente em todas as
+   superfícies prominentes, login premium, definições e estados
+   vazios polidos. (override por ordem de cascata, sem !important)
+   ========================================================= */
+
+/* Superfícies prominentes → vidro, como os cartões e o gráfico */
+.detalhe-topo,
+.form-novo,
+.rel-cartao,
+.item-cartao {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0) 42%),
+    var(--vidro);
+  -webkit-backdrop-filter: var(--vidro-blur);
+          backdrop-filter: var(--vidro-blur);
+  border: 1px solid var(--vidro-borda);
+}
+.form-novo { border-style: solid; }            /* tira o tracejado datado */
+.item-foto { background: var(--surface-2); }    /* fundo da foto continua opaco */
+.item-cartao.selecionado {
+  border-color: color-mix(in srgb, var(--cor-pagina, var(--accent)) 60%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cor-pagina, var(--accent)) 28%, transparent);
+}
+.item-check input, .sel-todos input { accent-color: var(--cor-pagina, var(--accent)); }
+
+/* Modais com vidro mais forte + sombra dramática */
+.modal {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0) 42%),
+    rgba(22, 26, 34, 0.86);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+          backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--vidro-borda);
+  box-shadow: 0 30px 80px -30px rgba(0,0,0,0.8);
+}
+
+/* "Colar" dica: tira o tracejado, fica subtil */
+.colar-dica { border-style: solid; background: var(--surface-2); }
+
+/* Definições: painel de vidro + segmento de idioma na cor da página */
+.defin-lista {
+  background: var(--vidro);
+  -webkit-backdrop-filter: var(--vidro-blur);
+          backdrop-filter: var(--vidro-blur);
+  border: 1px solid var(--vidro-borda); border-radius: var(--radius);
+}
+.idioma-seg-btn.ativo {
+  background: rgba(var(--rgb-pagina, 52, 211, 153), 0.16);
+  color: var(--cor-pagina, var(--accent));
+}
+
+/* Estados vazios mais cuidados (caixa pontilhada centrada) */
+.vazio {
+  justify-content: center; text-align: center;
+  border: 1px dashed var(--line); border-radius: var(--radius);
+  background: rgba(255,255,255,0.012); padding: 22px;
+}
+
+/* Categorias: barra um pouco mais alta com brilho subtil */
+.cat-barra { height: 9px; }
+.cat-barra > span { box-shadow: 0 0 10px -1px currentColor; }
+
+/* Resumo por sócio (aba Lucro): linha mais definida */
+.resumo-socio { border-radius: var(--radius-sm); }
+
+/* ---------- Login premium ---------- */
+.login-wrap {
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(900px 520px at 50% -12%, rgba(52, 211, 153, 0.18), transparent 60%),
+    radial-gradient(760px 520px at 100% 108%, rgba(45, 212, 191, 0.10), transparent 60%),
+    radial-gradient(620px 480px at 0% 100%, rgba(16, 185, 129, 0.07), transparent 62%),
+    var(--bg);
+}
+.login-wrap::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.6;
+  background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+  -webkit-mask: radial-gradient(circle at 50% 0%, #000, transparent 70%);
+          mask: radial-gradient(circle at 50% 0%, #000, transparent 70%);
+}
+.login-cartao {
+  position: relative; overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0) 38%),
+    rgba(22, 26, 34, 0.72);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+          backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--vidro-borda);
+  box-shadow: 0 30px 90px -36px rgba(0,0,0,0.75);
+  padding: 34px 32px;
+  animation: surge 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.login-cartao::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-3), transparent);
+}
+.login-cartao h1 { display: flex; align-items: center; gap: 11px; }
+.login-cartao h1::before {
+  content: ""; width: 19px; height: 19px; border-radius: 6px; flex-shrink: 0;
+  transform: rotate(45deg);
+  background: linear-gradient(140deg, var(--accent), color-mix(in srgb, var(--accent-2) 55%, #0b0d12));
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.6), inset 0 1px 0 rgba(255,255,255,0.45);
+}
+.login-cartao .tagline { padding-left: 30px; }
+.login-troca button { color: var(--accent); }
