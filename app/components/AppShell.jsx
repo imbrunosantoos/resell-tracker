@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { resumoGlobal, categoriasOrdenadas, dadosMensais, relatorioMensal, estaVendido, resumoVendas } from "@/lib/calculos";
 import { EstadoContexto } from "./contexto";
 import { useIdioma } from "./Idioma";
@@ -9,12 +9,33 @@ import { prepararImagem } from "./prepararImagem";
 import TopNav from "./TopNav";
 import ModalConfirmar from "./ModalConfirmar";
 
+// Identidade visual de cada página: cor de fundo própria + cabeçalho (título e
+// subtítulo). O cabeçalho só aparece nas rotas de topo; nos detalhes (ex.:
+// /pedidos/[id]) fica só a cor da secção.
+const PAGINAS = [
+  { rota: "/", id: "inicio", titulo: "nav.inicio", sub: "hero.inicio" },
+  { rota: "/pedidos", id: "pedidos", titulo: "nav.pedidos", sub: "hero.pedidos" },
+  { rota: "/novo-pedido", id: "novo-pedido", titulo: "nav.novoPedido", sub: "hero.novoPedido" },
+  { rota: "/lucro", id: "lucro", titulo: "nav.lucro", sub: "hero.lucro" },
+  { rota: "/vendas", id: "vendas", titulo: "nav.vendas", sub: "hero.vendas" },
+  { rota: "/socios", id: "socios", titulo: "nav.socios", sub: "hero.socios" },
+  { rota: "/despesas", id: "despesas", titulo: "nav.despesas", sub: "hero.despesas" },
+  { rota: "/contas", id: "contas", titulo: "nav.contas", sub: "hero.contas" },
+  { rota: "/definicoes", id: "definicoes", titulo: "nav.definicoes", sub: "hero.definicoes" },
+];
+
 /* O AppShell é o dono do estado do negócio. Vive no layout do grupo (app), por
    isso sobrevive à navegação entre páginas — o estado e o polling mantêm-se.
    Toda a lógica que antes estava no Dashboard está aqui, exposta por contexto. */
 export default function AppShell({ utilizador, estadoInicial, children }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { t } = useIdioma();
+  // página exata (mostra o cabeçalho) ou a secção-mãe de um detalhe (só a cor)
+  const paginaExata = PAGINAS.find((p) => p.rota === pathname);
+  const pagina = paginaExata
+    ?? PAGINAS.find((p) => p.rota !== "/" && pathname.startsWith(p.rota))
+    ?? PAGINAS[0];
   // As credenciais não vêm no estado inicial (carregam-se só na aba Contas).
   const [estado, setEstado] = useState(() => ({ ...estadoInicial, credenciais: [], rascunho: estadoInicial.rascunho ?? [] }));
 
@@ -468,8 +489,22 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
 
   return (
     <EstadoContexto.Provider value={valor}>
+      <div className="app-pagina" data-pagina={pagina.id}>
+      <div className="fundo-pagina" aria-hidden="true">
+        <span className="aurora a1" />
+        <span className="aurora a2" />
+        <span className="aurora a3" />
+      </div>
       <TopNav utilizador={utilizador} onSair={sair} />
-      <main className="container">{children}</main>
+      <main className="container">
+        {paginaExata && (
+          <header className="pagina-hero">
+            <h1>{t(paginaExata.titulo)}</h1>
+            <p>{t(paginaExata.sub)}</p>
+          </header>
+        )}
+        {children}
+      </main>
 
       <footer className="rodape">
         {t("rodape.info", { nome: utilizador.nome })}
@@ -491,6 +526,7 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
         />
       )}
       {erro && <div className="toast" role="alert">{erro}</div>}
+      </div>
     </EstadoContexto.Provider>
   );
 }

@@ -70,6 +70,7 @@ export default function TopNav({ utilizador, onSair }) {
     <header className="nav">
       <div className="nav-inner">
         <Link href="/" className="nav-marca">
+          <span className="nav-marca-mark" aria-hidden="true" />
           ReSell<span className="ponto">.</span>
         </Link>
 
