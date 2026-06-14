@@ -1,21 +1,28 @@
+"use client";
+
+import { useState } from "react";
 import { eur } from "@/lib/calculos";
 import { corCategoria } from "@/lib/cores";
 import { useIdioma } from "./Idioma";
 
-// Lucro por categoria + duas métricas que dizem quais rodam mais rápido:
-// sell-through (% já vendido) e dias médios até vender.
-export default function Categorias({ categorias }) {
+// Lucro por categoria/modelo + duas métricas que dizem quais rodam mais rápido:
+// sell-through (% já vendido) e dias médios até vender. Com `limite`, mostra só
+// os primeiros N e um "ver mais" para não despejar tudo de uma vez.
+export default function Categorias({ categorias, limite }) {
   const { t } = useIdioma();
+  const [expandido, setExpandido] = useState(false);
   const comVendas = categorias.filter((c) => c.vendidos > 0);
   if (comVendas.length === 0) {
     return <p className="dim pequeno">{t("cat.vazio")}</p>;
   }
 
   const maxLucro = Math.max(...comVendas.map((c) => Math.abs(c.lucro)), 1);
+  const temLimite = limite && comVendas.length > limite;
+  const visiveis = temLimite && !expandido ? comVendas.slice(0, limite) : comVendas;
 
   return (
     <div className="categorias">
-      {comVendas.map((c) => {
+      {visiveis.map((c) => {
         const largura = Math.round((Math.abs(c.lucro) / maxLucro) * 100);
         const cor = corCategoria(c.nome);
         return (
@@ -37,6 +44,11 @@ export default function Categorias({ categorias }) {
           </div>
         );
       })}
+      {temLimite && (
+        <button className="cat-vermais" type="button" onClick={() => setExpandido((v) => !v)}>
+          {expandido ? t("cat.verMenos") : t("cat.verMais", { n: comVendas.length - limite })}
+        </button>
+      )}
     </div>
   );
 }

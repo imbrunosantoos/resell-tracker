@@ -42,7 +42,7 @@ export default function PaginaLucro() {
 
       <section className="bloco">
         <h2>{t("lucro.porModelo")} <span className="conta">— {t("lucro.porModeloSub")}</span></h2>
-        <Categorias categorias={modelos} />
+        <Categorias categorias={modelos} limite={5} />
       </section>
 
       <section className="bloco">

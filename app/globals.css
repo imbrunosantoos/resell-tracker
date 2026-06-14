@@ -1655,3 +1655,13 @@ tbody tr.selecionado { background: rgba(var(--rgb-pagina, 52, 211, 153), 0.12); 
 }
 .login-cartao .tagline { padding-left: 30px; }
 .login-troca button { color: var(--accent); }
+
+/* botão "ver mais / ver menos" nas listas de lucro por modelo/categoria */
+.cat-vermais {
+  align-self: flex-start; margin-top: 4px;
+  font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  color: var(--cor-pagina, var(--accent));
+  background: transparent; border: none; padding: 6px 2px;
+  transition: opacity .15s;
+}
+.cat-vermais:hover { opacity: 0.75; }
