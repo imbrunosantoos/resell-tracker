@@ -14,11 +14,14 @@ const POS = "#34D399", NEG = "#FB7185", INV = "#FBBF24";
 // Rótulo do valor por cima da barra — fonte mono do site, cor dada (ou pelo sinal).
 const corSinal = (v) => (v >= 0 ? "#34D399" : "#FB7185");
 const rotuloMono = (cor) => {
-  function Rotulo({ x, y, width = 0, value }) {
+  function Rotulo({ x, y, width = 0, height = 0, value }) {
     if (value == null || value === "") return null;
     const c = typeof cor === "function" ? cor(value) : cor;
+    // barras negativas crescem para baixo — o rótulo vai por baixo da barra
+    const abaixo = typeof value === "number" && value < 0;
+    const yy = abaixo ? y + height + 14 : y - 8;
     return (
-      <text x={x + width / 2} y={y - 8} textAnchor="middle" fill={c} fontSize={11} fontWeight={700} style={{ fontFamily: "var(--mono)" }}>
+      <text x={x + width / 2} y={yy} textAnchor="middle" fill={c} fontSize={11} fontWeight={700} style={{ fontFamily: "var(--mono)" }}>
         {"€" + Math.round(value)}
       </text>
     );
