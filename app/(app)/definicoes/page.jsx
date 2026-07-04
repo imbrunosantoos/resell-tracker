@@ -35,8 +35,11 @@ export default function PaginaDefinicoes() {
 
   return (
     <div className="pagina">
-      <section className="bloco">
-        <h2>{t("defin.preferencias")}</h2>
+      <div className="g-main">
+      <section className="painel">
+        <div className="painel-cab">
+          <span className="painel-titulo">{t("defin.preferencias")}</span>
+        </div>
         <div className="defin-lista">
           <label className="defin-linha">
             <span className="defin-rotulo">{t("defin.margemMinima")}</span>
@@ -74,9 +77,11 @@ export default function PaginaDefinicoes() {
         </div>
       </section>
 
-      <section className="bloco">
-        <h2>{t("defin.backups")} <span className="conta">
-          — {backups.length ? t("defin.ultima", { quando: haQuanto(backups[0].data) }) : t("defin.automaticas")}</span></h2>
+      <section className="painel">
+        <div className="painel-cab">
+          <span className="painel-titulo">{t("defin.backups")}</span>
+          <span className="painel-sub">{backups.length ? t("defin.ultima", { quando: haQuanto(backups[0].data) }) : t("defin.automaticas")}</span>
+        </div>
         <p className="dim pequeno defin-intro">{t("defin.backupsHint")}</p>
 
         <div className="barra-acoes defin-acoes">
@@ -104,10 +109,13 @@ export default function PaginaDefinicoes() {
         )}
       </section>
 
-      <section className="bloco">
-        <h2>{t("defin.sessao")}</h2>
+      <section className="painel">
+        <div className="painel-cab">
+          <span className="painel-titulo">{t("defin.sessao")}</span>
+        </div>
         <button className="btn btn-perigo" onClick={sair}>{t("defin.terminarSessao")}</button>
       </section>
+      </div>
     </div>
   );
 }

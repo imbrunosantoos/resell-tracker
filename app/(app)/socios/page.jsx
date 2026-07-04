@@ -13,19 +13,24 @@ export default function PaginaSocios() {
 
   return (
     <div className="pagina">
-      <section className="bloco">
-        <h2>{t("nav.socios")} <span className="conta">— {t("socios.tituloConta")}</span></h2>
-        <p className="dim pequeno" style={{ marginBottom: 12 }}>{t("socios.hint")}</p>
-        <div className="socios-lista">
-          <Socios
-            socios={estado.socios} acerto={acerto}
-            onCriar={novoSocio}
-            onEditar={(id, campo, valor) => editarCampo("socios", id, campo, valor)}
-            onApagar={apagarSocio}
-            onAcertar={(itemId, valor) => editarCampo("itens", itemId, "acertado", valor)}
-          />
-        </div>
-      </section>
+      <div className="g-main">
+        <section className="painel">
+          <div className="painel-cab">
+            <span className="painel-titulo">{t("nav.socios")}</span>
+            <span className="painel-sub">{t("socios.tituloConta")}</span>
+          </div>
+          <p className="dim pequeno" style={{ marginBottom: 12 }}>{t("socios.hint")}</p>
+          <div className="socios-lista">
+            <Socios
+              socios={estado.socios} acerto={acerto}
+              onCriar={novoSocio}
+              onEditar={(id, campo, valor) => editarCampo("socios", id, campo, valor)}
+              onApagar={apagarSocio}
+              onAcertar={(itemId, valor) => editarCampo("itens", itemId, "acertado", valor)}
+            />
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

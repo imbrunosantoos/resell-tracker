@@ -11,14 +11,19 @@ export default function PaginaDespesas() {
 
   return (
     <div className="pagina">
-      <section className="bloco">
-        <h2>{t("nav.despesas")} <span className="conta">{t("desp.subLucroReal", { n: resumo.mesesAtivos })}</span></h2>
-        <Despesas
-          despesas={estado.despesas} socios={estado.socios}
-          onEditar={(id, campo, valor) => editarCampo("despesas", id, campo, valor)}
-          onCriar={novaDespesa} onApagar={apagarDespesa}
-        />
-      </section>
+      <div className="g-main">
+        <section className="painel">
+          <div className="painel-cab">
+            <span className="painel-titulo">{t("nav.despesas")}</span>
+            <span className="painel-sub">{t("desp.subLucroReal", { n: resumo.mesesAtivos })}</span>
+          </div>
+          <Despesas
+            despesas={estado.despesas} socios={estado.socios}
+            onEditar={(id, campo, valor) => editarCampo("despesas", id, campo, valor)}
+            onCriar={novaDespesa} onApagar={apagarDespesa}
+          />
+        </section>
+      </div>
     </div>
   );
 }

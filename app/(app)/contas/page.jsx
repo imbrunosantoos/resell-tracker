@@ -21,19 +21,24 @@ export default function PaginaContas() {
 
   return (
     <div className="pagina">
-      <section className="bloco">
-        <h2>{t("contas.titulo")} <span className="conta">— {t("contas.sub")}</span></h2>
-        {aCarregar ? (
-          <Skeleton rows={5} height={44} />
-        ) : (
-          <Credenciais
-            credenciais={estado.credenciais} socios={estado.socios}
-            onCriar={novaCredencial}
-            onEditar={(id, campo, valor) => editarCampo("credenciais", id, campo, valor)}
-            onApagar={apagarCredencial}
-          />
-        )}
-      </section>
+      <div className="g-main">
+        <section className="painel">
+          <div className="painel-cab">
+            <span className="painel-titulo">{t("contas.titulo")}</span>
+            <span className="painel-sub">{t("contas.sub")}</span>
+          </div>
+          {aCarregar ? (
+            <Skeleton rows={5} height={44} />
+          ) : (
+            <Credenciais
+              credenciais={estado.credenciais} socios={estado.socios}
+              onCriar={novaCredencial}
+              onEditar={(id, campo, valor) => editarCampo("credenciais", id, campo, valor)}
+              onApagar={apagarCredencial}
+            />
+          )}
+        </section>
+      </div>
     </div>
   );
 }
