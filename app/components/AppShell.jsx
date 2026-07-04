@@ -494,7 +494,6 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
       <div className="fundo-pagina" aria-hidden="true">
         <span className="aurora a1" />
         <span className="aurora a2" />
-        <span className="aurora a3" />
       </div>
       <div className="frame">
         <Sidebar utilizador={utilizador} onSair={sair} />

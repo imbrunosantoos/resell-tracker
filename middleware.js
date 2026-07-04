@@ -17,6 +17,6 @@ export function middleware(request) {
 // públicos (manifest, service worker, ícones).
 export const config = {
   matcher: [
-    "/((?!login|api/auth|_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|icon.svg|icons|bg).*)",
+    "/((?!login|api/auth|_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|icon.svg|icons).*)",
   ],
 };

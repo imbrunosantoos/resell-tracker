@@ -73,93 +73,64 @@ body {
   syntax: "<number>#"; inherits: true; initial-value: 52, 211, 153;
 }
 
-/* Fundo da página: várias camadas para profundidade —
-   1. aurora suave no topo, na cor da secção;
-   2. dois halos laterais (topo-direita e fundo-esquerda);
-   3. vinheta que escurece os cantos e foca o conteúdo;
-   4. base com tom levíssimo da secção, esbatendo para o carvão. */
+/* Fundo "minimal premium": atmosfera disciplinada na cor da secção —
+   aurora larga no topo, halo ténue, vinheta leve e base tingida a esbater
+   para o carvão. Sem ilustrações: a vida vem de dois brilhos muito lentos
+   e do feixe de horizonte no topo. */
 .fundo-pagina {
   position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
-    radial-gradient(140% 78% at 50% -22%, rgba(var(--rgb-pagina), 0.20), transparent 56%),
-    radial-gradient(58% 52% at 92% -4%, rgba(var(--rgb-pagina), 0.12), transparent 60%),
-    radial-gradient(64% 58% at 2% 104%, rgba(var(--rgb-pagina), 0.08), transparent 60%),
-    radial-gradient(120% 120% at 50% 36%, transparent 58%, rgba(5, 7, 11, 0.55) 100%),
-    linear-gradient(180deg, color-mix(in srgb, var(--bg) 90%, var(--cor-pagina)), var(--bg) 34%);
+    radial-gradient(120% 62% at 50% -18%, rgba(var(--rgb-pagina), 0.16), transparent 55%),
+    radial-gradient(46% 38% at 88% -6%, rgba(var(--rgb-pagina), 0.08), transparent 62%),
+    radial-gradient(120% 120% at 50% 38%, transparent 60%, rgba(5, 7, 11, 0.45) 100%),
+    linear-gradient(180deg, color-mix(in srgb, var(--bg) 91%, var(--cor-pagina)), var(--bg) 36%);
   transition: background 700ms cubic-bezier(0.22, 0.61, 0.36, 1);
   animation: fundo-entrada 900ms ease both;
 }
 @keyframes fundo-entrada { from { opacity: 0; } to { opacity: 1; } }
 
-/* Imagem/textura própria de cada página (SVG bespoke em public/bg). Fica numa
-   camada por cima da atmosfera de cor, esbatida nas bordas para não competir com
-   o conteúdo, com uma deriva muito lenta para dar vida sem distrair. */
-.fundo-pagina::before {
-  content: ""; position: fixed; inset: -4%; z-index: 1; pointer-events: none;
-  background-position: center; background-repeat: no-repeat; background-size: cover;
-  opacity: 0.55;
-  -webkit-mask: radial-gradient(135% 115% at 50% 4%, #000 32%, rgba(0,0,0,0.35) 62%, transparent 86%);
-          mask: radial-gradient(135% 115% at 50% 4%, #000 32%, rgba(0,0,0,0.35) 62%, transparent 86%);
-  animation: fundo-entrada 1100ms ease both, fundo-deriva 46s ease-in-out infinite alternate;
-}
-@keyframes fundo-deriva {
-  from { transform: translate3d(-12px, -8px, 0) scale(1.015); }
-  to   { transform: translate3d(12px, 8px, 0) scale(1.045); }
+/* Feixe de horizonte: linha de luz de 1px no topo do viewport, na cor da
+   página, com brilho suave — o detalhe assinatura do fundo. */
+.fundo-pagina::after {
+  content: ""; position: fixed; left: 0; right: 0; top: 0; height: 1px;
+  background: linear-gradient(90deg,
+    transparent 4%,
+    rgba(var(--rgb-pagina), 0.55) 28%,
+    rgba(var(--rgb-pagina), 0.22) 62%,
+    transparent 96%);
+  box-shadow: 0 0 26px 1px rgba(var(--rgb-pagina), 0.35);
+  transition: background 700ms cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 700ms ease;
 }
 
-/* Auroras de luz: orbes grandes e difusos na cor da página que flutuam e
-   "respiram" em loops longos e desfasados. `mix-blend-mode: screen` faz a cor
-   brilhar sobre o carvão; só `transform`/`opacity` animam (suave em GPU). */
+/* Dois brilhos vivos, muito lentos e discretos ("respiram" em GPU). */
 .aurora {
   position: absolute; border-radius: 50%; pointer-events: none;
   mix-blend-mode: screen; will-change: transform, opacity;
   filter: blur(8px);
 }
 .aurora.a1 {
-  width: 62vw; height: 62vw; left: -14vw; top: -22vw;
-  background: radial-gradient(circle at 50% 50%, rgba(var(--rgb-pagina), 0.42), transparent 62%);
-  animation: aurora-1 34s ease-in-out infinite;
+  width: 60vw; height: 60vw; left: -16vw; top: -26vw;
+  background: radial-gradient(circle at 50% 50%, rgba(var(--rgb-pagina), 0.26), transparent 62%);
+  animation: aurora-1 48s ease-in-out infinite;
 }
 .aurora.a2 {
-  width: 50vw; height: 50vw; right: -12vw; top: 8vh;
-  background: radial-gradient(circle at 50% 50%, rgba(var(--rgb-pagina), 0.30), transparent 64%);
-  animation: aurora-2 44s ease-in-out infinite;
-}
-.aurora.a3 {
-  width: 56vw; height: 56vw; left: 18vw; bottom: -26vw;
-  background: radial-gradient(circle at 50% 50%, rgba(var(--rgb-pagina), 0.26), transparent 66%);
-  animation: aurora-3 52s ease-in-out infinite;
+  width: 48vw; height: 48vw; right: -14vw; bottom: -20vw;
+  background: radial-gradient(circle at 50% 50%, rgba(var(--rgb-pagina), 0.16), transparent 64%);
+  animation: aurora-2 60s ease-in-out infinite;
 }
 @keyframes aurora-1 {
-  0%   { transform: translate3d(0, 0, 0) scale(1);      opacity: 0.85; }
-  33%  { transform: translate3d(6vw, 5vh, 0) scale(1.18); opacity: 1; }
-  66%  { transform: translate3d(-4vw, 9vh, 0) scale(0.96); opacity: 0.7; }
-  100% { transform: translate3d(0, 0, 0) scale(1);      opacity: 0.85; }
+  0%   { transform: translate3d(0, 0, 0) scale(1);        opacity: 0.75; }
+  50%  { transform: translate3d(5vw, 4vh, 0) scale(1.12); opacity: 1; }
+  100% { transform: translate3d(0, 0, 0) scale(1);        opacity: 0.75; }
 }
 @keyframes aurora-2 {
-  0%   { transform: translate3d(0, 0, 0) scale(1.05);   opacity: 0.7; }
-  40%  { transform: translate3d(-7vw, 6vh, 0) scale(0.9); opacity: 1; }
-  70%  { transform: translate3d(-2vw, -4vh, 0) scale(1.2); opacity: 0.8; }
-  100% { transform: translate3d(0, 0, 0) scale(1.05);   opacity: 0.7; }
+  0%   { transform: translate3d(0, 0, 0) scale(1.06);       opacity: 0.6; }
+  50%  { transform: translate3d(-5vw, -4vh, 0) scale(0.94); opacity: 0.9; }
+  100% { transform: translate3d(0, 0, 0) scale(1.06);       opacity: 0.6; }
 }
-@keyframes aurora-3 {
-  0%   { transform: translate3d(0, 0, 0) scale(1);      opacity: 0.65; }
-  50%  { transform: translate3d(8vw, -7vh, 0) scale(1.22); opacity: 0.95; }
-  100% { transform: translate3d(0, 0, 0) scale(1);      opacity: 0.65; }
-}
-.app-pagina[data-pagina="inicio"]      .fundo-pagina::before { background-image: url(/bg/inicio.svg); }
-.app-pagina[data-pagina="pedidos"]     .fundo-pagina::before { background-image: url(/bg/pedidos.svg); }
-.app-pagina[data-pagina="novo-pedido"] .fundo-pagina::before { background-image: url(/bg/novo-pedido.svg); }
-.app-pagina[data-pagina="lucro"]       .fundo-pagina::before { background-image: url(/bg/lucro.svg); }
-.app-pagina[data-pagina="vendas"]      .fundo-pagina::before { background-image: url(/bg/vendas.svg); }
-.app-pagina[data-pagina="socios"]      .fundo-pagina::before { background-image: url(/bg/socios.svg); }
-.app-pagina[data-pagina="despesas"]    .fundo-pagina::before { background-image: url(/bg/despesas.svg); }
-.app-pagina[data-pagina="contas"]      .fundo-pagina::before { background-image: url(/bg/contas.svg); }
-.app-pagina[data-pagina="definicoes"]  .fundo-pagina::before { background-image: url(/bg/definicoes.svg); }
 
 @media (prefers-reduced-motion: reduce) {
-  .fundo-pagina, .fundo-pagina::before, .aurora { animation: none; transition: none; }
-  .fundo-pagina::before { transform: none; }
+  .fundo-pagina, .fundo-pagina::after, .aurora { animation: none; transition: none; }
 }
 
 /* Cabeçalho de página: filete da cor da secção + título grande + subtítulo */
@@ -180,16 +151,18 @@ body {
   background: linear-gradient(90deg, rgba(var(--rgb-pagina), 0.5), var(--line) 38%, transparent);
 }
 
-/* textura subtil de fundo — pontos muito ténues, esbatidos no topo */
+/* grelha finíssima de linhas, a esbater do topo (quase invisível) */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 30px 30px;
-  -webkit-mask: radial-gradient(circle at 50% -10%, #000, transparent 70%);
-          mask: radial-gradient(circle at 50% -10%, #000, transparent 70%);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask: radial-gradient(90% 62% at 50% 0%, #000 18%, transparent 78%);
+          mask: radial-gradient(90% 62% at 50% 0%, #000 18%, transparent 78%);
   pointer-events: none;
 }
 
@@ -1573,17 +1546,23 @@ tbody tr.selecionado { background: rgba(var(--rgb-pagina, 52, 211, 153), 0.12); 
 .login-wrap {
   position: relative; overflow: hidden;
   background:
-    radial-gradient(900px 520px at 50% -12%, rgba(52, 211, 153, 0.18), transparent 60%),
-    radial-gradient(760px 520px at 100% 108%, rgba(45, 212, 191, 0.10), transparent 60%),
-    radial-gradient(620px 480px at 0% 100%, rgba(16, 185, 129, 0.07), transparent 62%),
-    var(--bg);
+    radial-gradient(120% 62% at 50% -18%, rgba(52, 211, 153, 0.15), transparent 55%),
+    radial-gradient(46% 38% at 88% -6%, rgba(45, 212, 191, 0.07), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--bg) 91%, var(--accent)), var(--bg) 40%);
 }
 .login-wrap::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.6;
-  background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 30px 30px;
-  -webkit-mask: radial-gradient(circle at 50% 0%, #000, transparent 70%);
-          mask: radial-gradient(circle at 50% 0%, #000, transparent 70%);
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask: radial-gradient(90% 62% at 50% 0%, #000 18%, transparent 78%);
+          mask: radial-gradient(90% 62% at 50% 0%, #000 18%, transparent 78%);
+}
+.login-wrap::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 4%, rgba(52, 211, 153, 0.5) 30%, rgba(45, 212, 191, 0.2) 62%, transparent 96%);
+  box-shadow: 0 0 26px 1px rgba(52, 211, 153, 0.3);
 }
 .login-cartao {
   position: relative; overflow: hidden;
