@@ -6,7 +6,8 @@ import { resumoGlobal, categoriasOrdenadas, dadosMensais, relatorioMensal, estaV
 import { EstadoContexto } from "./contexto";
 import { useIdioma } from "./Idioma";
 import { prepararImagem } from "./prepararImagem";
-import TopNav from "./TopNav";
+import Sidebar from "./Sidebar";
+import TabBarMovel from "./TabBarMovel";
 import ModalConfirmar from "./ModalConfirmar";
 
 // Identidade visual de cada página: cor de fundo própria + cabeçalho (título e
@@ -495,20 +496,25 @@ export default function AppShell({ utilizador, estadoInicial, children }) {
         <span className="aurora a2" />
         <span className="aurora a3" />
       </div>
-      <TopNav utilizador={utilizador} onSair={sair} />
-      <main className="container">
-        {paginaExata && (
-          <header className="pagina-hero">
-            <h1>{t(paginaExata.titulo)}</h1>
-            <p>{t(paginaExata.sub)}</p>
-          </header>
-        )}
-        {children}
-      </main>
+      <div className="frame">
+        <Sidebar utilizador={utilizador} onSair={sair} />
+        <div className="frame-main">
+          <TabBarMovel onSair={sair} />
+          <main className="container">
+            {paginaExata && (
+              <header className="pagina-hero">
+                <h1>{t(paginaExata.titulo)}</h1>
+                <p>{t(paginaExata.sub)}</p>
+              </header>
+            )}
+            {children}
+          </main>
 
-      <footer className="rodape">
-        {t("rodape.info", { nome: utilizador.nome })}
-      </footer>
+          <footer className="rodape">
+            {t("rodape.info", { nome: utilizador.nome })}
+          </footer>
+        </div>
+      </div>
 
       <datalist id="categorias">
         <option value="Camisa de futebol" />

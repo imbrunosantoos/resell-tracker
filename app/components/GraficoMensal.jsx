@@ -83,7 +83,7 @@ export default function GraficoMensal({ dados }) {
       ) : (
         <ResponsiveContainer width="100%" height={250}>
           {vista === "lucro" ? (
-            <BarChart data={data} margin={{ top: 24, right: 8, left: 0, bottom: 0 }} barCategoryGap="26%">
+            <BarChart data={data} margin={{ top: 24, right: 16, left: 0, bottom: 0 }} barCategoryGap="26%">
               {eixos}
               <ReferenceLine y={0} stroke="rgba(255,255,255,0.16)" />
               <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<Tip />} />
@@ -93,7 +93,7 @@ export default function GraficoMensal({ dados }) {
               </Bar>
             </BarChart>
           ) : (
-            <BarChart data={data} margin={{ top: 24, right: 8, left: 0, bottom: 0 }} barGap={3} barCategoryGap="22%">
+            <BarChart data={data} margin={{ top: 24, right: 16, left: 0, bottom: 0 }} barGap={3} barCategoryGap="22%">
               {eixos}
               <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<Tip />} />
               <Legend wrapperStyle={{ fontSize: 12 }} iconType="circle" />

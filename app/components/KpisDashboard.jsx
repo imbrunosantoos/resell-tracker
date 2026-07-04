@@ -2,6 +2,7 @@
 
 import { eur, estaVendido } from "@/lib/calculos";
 import { useIdioma } from "./Idioma";
+import Icone from "./Icones";
 
 // Métricas rápidas do topo do dashboard: Investido, Lucro líquido, Margem média
 // e Inventário (em stock vs vendidos). Calcula contagens e margem global a
@@ -20,13 +21,13 @@ export default function KpisDashboard({ estado, resumo }) {
   const margem = resumo.receita > 0 ? Math.round((resumo.lucro / resumo.receita) * 100) : null;
 
   const kpis = [
-    { icone: "💰", c: "ambar", label: t("kpi.investido"), valor: eur(resumo.investido),
+    { icone: "carteira", c: "ambar", label: t("kpi.investido"), valor: eur(resumo.investido),
       sub: t("kpi.subInvestido", { stock: eur(resumo.stock) }) },
-    { icone: "📈", c: resumo.lucroReal >= 0 ? "pos" : "neg", label: t("kpi.lucroLiquido"), valor: eur(resumo.lucroReal),
+    { icone: "lucro", c: resumo.lucroReal >= 0 ? "pos" : "neg", label: t("kpi.lucroLiquido"), valor: eur(resumo.lucroReal),
       sub: t("kpi.subLucro", { bruto: eur(resumo.lucro) }) },
-    { icone: "％", c: "teal", label: t("kpi.margem"), valor: margem === null ? "—" : margem + "%",
+    { icone: "percent", c: "teal", label: t("kpi.margem"), valor: margem === null ? "—" : margem + "%",
       sub: t("kpi.subMargem") },
-    { icone: "📦", c: "azul", label: t("kpi.inventario"), valor: `${emStock} / ${vendidos}`,
+    { icone: "pedidos", c: "azul", label: t("kpi.inventario"), valor: `${emStock} / ${vendidos}`,
       sub: t("kpi.subInventario", { transito: emTransito }) },
   ];
 
@@ -34,7 +35,7 @@ export default function KpisDashboard({ estado, resumo }) {
     <div className="kpis">
       {kpis.map((k) => (
         <div className={"kpi kpi-" + k.c} key={k.label}>
-          <span className="kpi-icone" aria-hidden="true">{k.icone}</span>
+          <span className="kpi-icone" aria-hidden="true"><Icone id={k.icone} size={21} /></span>
           <span className="kpi-corpo">
             <span className="kpi-label">{k.label}</span>
             <span className={"kpi-valor " + k.c}>{k.valor}</span>

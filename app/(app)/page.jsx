@@ -9,6 +9,7 @@ import KpisDashboard from "@/app/components/KpisDashboard";
 import RelatorioMensal from "@/app/components/RelatorioMensal";
 import GraficoLucro from "@/app/components/GraficoLucro";
 import ListaParado from "@/app/components/ListaParado";
+import Icone from "@/app/components/Icones";
 
 // Página inicial — visão geral: cartões, este mês, gráfico de lucro, "não vende".
 export default function PaginaInicio() {
@@ -51,7 +52,7 @@ export default function PaginaInicio() {
         <h2>{t("home.atalhos")}</h2>
         <div className="atalhos">
           <Link href="/pedidos?vista=stock" className="atalho">
-            <span className="atalho-icone">▦</span>
+            <span className="atalho-icone"><Icone id="pedidos" /></span>
             <span className="atalho-texto">
               <span className="atalho-label">{t("nav.pedidos")}</span>
               <span className="atalho-sub">{t("home.atalhoStock", { emStock, total: totalItens })}</span>
@@ -59,7 +60,7 @@ export default function PaginaInicio() {
             <span className="atalho-seta">›</span>
           </Link>
           <Link href="/lucro" className="atalho">
-            <span className="atalho-icone">📈</span>
+            <span className="atalho-icone"><Icone id="lucro" /></span>
             <span className="atalho-texto">
               <span className="atalho-label">{t("nav.lucro")}</span>
               <span className="atalho-sub">{t("home.atalhoLucro")}</span>
@@ -67,7 +68,7 @@ export default function PaginaInicio() {
             <span className="atalho-seta">›</span>
           </Link>
           <Link href="/contas" className="atalho">
-            <span className="atalho-icone">🔑</span>
+            <span className="atalho-icone"><Icone id="contas" /></span>
             <span className="atalho-texto">
               <span className="atalho-label">{t("nav.contas")}</span>
               <span className="atalho-sub">{t("home.atalhoContas")}</span>

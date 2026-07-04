@@ -761,21 +761,7 @@ tbody tr.selecionado { background: var(--accent-soft); }
   font-size: 10px; line-height: 1; display: flex; align-items: center; justify-content: center;
 }
 
-/* ---------- Barra de navegação (topo, sticky) ---------- */
-.nav {
-  position: sticky; top: 0; z-index: 40;
-  background:
-    linear-gradient(180deg, rgba(var(--rgb-pagina), 0.06), transparent),
-    rgba(14, 17, 22, 0.82);
-  backdrop-filter: saturate(140%) blur(12px);
-  border-bottom: 1px solid var(--line);
-  box-shadow: inset 0 -1px 0 rgba(var(--rgb-pagina), 0.18);
-  transition: background 700ms cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 700ms ease;
-}
-.nav-inner {
-  max-width: 1400px; margin: 0 auto; padding: 10px 18px;
-  min-height: 62px; display: flex; align-items: center; gap: 14px;
-}
+/* ---------- Marca (usada na sidebar e no cabeçalho móvel) ---------- */
 .nav-marca {
   display: inline-flex; align-items: center; gap: 9px;
   font-size: 21px; font-weight: 800; letter-spacing: -0.5px;
@@ -789,34 +775,7 @@ tbody tr.selecionado { background: var(--accent-soft); }
   transition: box-shadow .4s ease, background .7s cubic-bezier(0.22,0.61,0.36,1);
 }
 .nav-marca .ponto { color: var(--cor-pagina, var(--accent)); }
-/* as abas ficam sempre numa linha só; se não couberem, deslizam de lado (scroll) */
-.nav-abas {
-  display: flex; flex-wrap: nowrap; justify-content: center; gap: 4px; flex: 1; min-width: 0;
-  overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
-  /* padding vertical p/ a sombra da aba ativa não ser cortada pelo overflow */
-  padding: 6px 6px; margin: -6px 0;
-  scroll-padding-inline: 8px;
-}
-.nav-abas::-webkit-scrollbar { display: none; }
-.nav-aba {
-  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;
-  padding: 8px 13px; border-radius: 99px; text-decoration: none;
-  font-size: 13.5px; font-weight: 600; color: var(--muted);
-  border: 1px solid transparent; transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-.nav-aba:hover { color: var(--text); background: var(--surface); }
-.nav-aba.ativa {
-  color: #05140E;
-  background: linear-gradient(180deg, var(--cor-pagina, var(--accent)), color-mix(in srgb, var(--cor-pagina, var(--accent-2)) 82%, #0E1116));
-  box-shadow: 0 4px 14px -4px rgba(var(--rgb-pagina, 52, 211, 153), 0.45);
-}
-.nav-icone { font-size: 14px; }
-.nav-sessao { display: flex; align-items: center; gap: 10px; }
-.nav-user { font-size: 13px; color: var(--muted); font-weight: 600; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* em ecrãs mais estreitos esconde o nome (o rodapé já saúda pelo nome) para as
-   abas terem espaço e nunca ficarem cortadas */
-@media (max-width: 1400px) { .nav-user { display: none; } }
-/* Seletor de idioma no topo: botão de bandeira + mini-menu */
+/* Seletor de idioma: botão de bandeira + mini-menu */
 .nav-idioma { position: relative; display: inline-flex; }
 .nav-idioma-btn {
   display: inline-flex; align-items: center; gap: 4px;
@@ -1233,11 +1192,7 @@ b.ambar { color: var(--aviso); }
   .despesa-linha select, .despesa-linha .desp-data { grid-column: auto; }
   .socio-linha { grid-template-columns: 1fr 90px 36px; }
   .socio-pedidos { display: none; }
-  .nav-inner { gap: 10px; padding: 0 14px; }
   .nav-marca { font-size: 18px; }
-  .nav-label { display: none; } /* só ícones no telemóvel */
-  .nav-aba { padding: 8px 11px; }
-  .nav-user { display: none; }
   .pl-nums { flex-direction: column; gap: 2px; }
   .itens-grelha { grid-template-columns: 1fr; }
   .inicio-grelha { grid-template-columns: 1fr; gap: 30px; }
@@ -1665,3 +1620,178 @@ tbody tr.selecionado { background: rgba(var(--rgb-pagina, 52, 211, 153), 0.12); 
   transition: opacity .15s;
 }
 .cat-vermais:hover { opacity: 0.75; }
+
+/* =========================================================
+   Shell v3 — sidebar no desktop + tab bar no telemóvel.
+   A sidebar vive dentro de .app-pagina, por isso o item ativo
+   e a marca pintam-se com a cor da página atual.
+   ========================================================= */
+.frame { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100dvh; }
+.frame-main { min-width: 0; display: flex; flex-direction: column; }
+.frame-main > .container { flex: 1; width: 100%; }
+
+/* ---------- Sidebar (desktop) ---------- */
+.sidebar {
+  position: sticky; top: 0; height: 100dvh; overflow-y: auto;
+  display: flex; flex-direction: column;
+  padding: 20px 14px 14px;
+  background:
+    linear-gradient(180deg, rgba(var(--rgb-pagina), 0.06), transparent 40%),
+    rgba(13, 16, 21, 0.62);
+  -webkit-backdrop-filter: blur(14px) saturate(135%);
+          backdrop-filter: blur(14px) saturate(135%);
+  border-right: 1px solid var(--line-soft);
+  scrollbar-width: thin;
+  transition: background 700ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.sb-marca { padding: 0 8px 6px; }
+
+.sb-nav { flex: 1; display: flex; flex-direction: column; }
+.sb-grupo { display: flex; flex-direction: column; gap: 2px; }
+.sb-grupo-rotulo {
+  display: block; padding: 0 10px; margin: 16px 0 6px;
+  font-size: 10px; font-weight: 700; letter-spacing: 1.1px;
+  text-transform: uppercase; color: var(--dim);
+}
+.sb-item {
+  position: relative;
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 10px; border-radius: 10px;
+  font-size: 13.5px; font-weight: 600; color: var(--muted);
+  text-decoration: none; border: 1px solid transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.sb-item svg { flex-shrink: 0; opacity: 0.8; }
+.sb-item:hover { color: var(--text); background: rgba(255, 255, 255, 0.04); }
+.sb-item.ativo {
+  color: var(--text);
+  background: rgba(var(--rgb-pagina), 0.10);
+  border-color: color-mix(in srgb, var(--cor-pagina) 24%, transparent);
+}
+.sb-item.ativo svg { color: var(--cor-pagina); opacity: 1; }
+.sb-item.ativo::before {
+  content: ""; position: absolute; left: -14px; top: 8px; bottom: 8px; width: 3px;
+  border-radius: 0 3px 3px 0; background: var(--cor-pagina);
+  box-shadow: 0 0 10px rgba(var(--rgb-pagina), 0.7);
+}
+
+/* rodapé da sidebar: sessão + idioma + sair */
+.sb-fundo {
+  margin-top: auto; padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.sb-sessao { display: flex; align-items: center; gap: 9px; min-width: 0; padding: 0 2px; }
+.sb-avatar {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; color: #05140E;
+  background: linear-gradient(140deg, var(--cor-pagina, var(--accent)), color-mix(in srgb, var(--cor-pagina, var(--accent-2)) 62%, #0b0d12));
+  box-shadow: 0 0 10px rgba(var(--rgb-pagina), 0.4);
+}
+.sb-nome { font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-acoes { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sb-sair { display: inline-flex; align-items: center; gap: 6px; }
+/* o menu de idioma no rodapé abre para CIMA (senão sai do ecrã) */
+.sb-acoes .nav-idioma-menu { top: auto; bottom: calc(100% + 6px); }
+
+/* ---------- Cabeçalho + tab bar (telemóvel) ---------- */
+.mheader { display: none; }
+.tabbar { display: none; }
+
+@media (max-width: 899px) {
+  .frame { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+
+  .mheader {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 10px 16px;
+    background:
+      linear-gradient(180deg, rgba(var(--rgb-pagina), 0.06), transparent),
+      rgba(14, 17, 22, 0.92);
+    border-bottom: 1px solid var(--line);
+  }
+  .mh-acoes { display: flex; align-items: center; gap: 8px; }
+
+  .tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+    display: flex; align-items: stretch;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+    background: rgba(15, 18, 24, 0.94);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+            backdrop-filter: blur(14px) saturate(140%);
+    border-top: 1px solid var(--line);
+  }
+  .tab {
+    flex: 1; min-width: 0; min-height: 48px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    padding: 5px 2px; border: none; background: none; cursor: pointer;
+    border-radius: 10px; text-decoration: none;
+    font-family: inherit; font-size: 9.5px; font-weight: 600; color: var(--muted);
+  }
+  .tab span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tab.ativo { color: var(--cor-pagina, var(--accent)); }
+  .tab.ativo svg { filter: drop-shadow(0 0 6px rgba(var(--rgb-pagina), 0.6)); }
+
+  /* espaço para a tab bar não tapar conteúdo */
+  body { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+}
+
+/* folha "Mais" (por cima da tab bar) */
+.msheet-fundo { position: fixed; inset: 0; z-index: 44; background: rgba(5, 7, 11, 0.55); animation: fade 0.15s ease; }
+.msheet {
+  position: fixed; left: 10px; right: 10px; z-index: 46;
+  bottom: calc(74px + env(safe-area-inset-bottom));
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0) 42%),
+    rgba(22, 26, 34, 0.94);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+          backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--vidro-borda); border-radius: 18px;
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.8);
+  animation: msheet-subir 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes msheet-subir { from { transform: translateY(14px); opacity: 0; } }
+.msheet-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 12px; border-radius: 12px; min-height: 48px;
+  font-size: 14px; font-weight: 600; color: var(--text); text-decoration: none;
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line-soft);
+}
+.msheet-item svg { color: var(--muted); flex-shrink: 0; }
+.msheet-item.ativo { border-color: color-mix(in srgb, var(--cor-pagina) 40%, transparent); }
+.msheet-item.ativo svg { color: var(--cor-pagina); }
+
+/* ---------- Acessibilidade: foco visível na cor da página ---------- */
+a:focus-visible, button:focus-visible, .sb-item:focus-visible, .tab:focus-visible {
+  outline: 2px solid var(--cor-pagina, var(--accent));
+  outline-offset: 2px;
+}
+input:focus-visible, select:focus-visible { outline: none; } /* já têm anel próprio */
+
+/* ---------- Performance no telemóvel ----------
+   blur/auroras são caros em GPU de telemóvel: superfícies ficam opacas e os
+   orbes desligam (a atmosfera de cor do fundo + motivo SVG mantém-se). */
+@media (max-width: 899px) {
+  .cartao, .kpi, .grafico, .pedido, .detalhe-topo, .form-novo, .rel-cartao,
+  .item-cartao, .caixa, .defin-lista, .prod-cartao, .login-cartao {
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+    background-color: #151922;
+  }
+  .aurora { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .msheet, .msheet-fundo { animation: none; }
+}
+
+/* ícones SVG dentro dos KPIs e atalhos pintam-se com o acento respetivo */
+.kpi-icone { color: var(--c); }
+.atalho-icone {
+  color: var(--cor-pagina, var(--accent));
+  background: rgba(var(--rgb-pagina, 52, 211, 153), 0.10);
+  border-color: color-mix(in srgb, var(--cor-pagina, var(--accent)) 26%, transparent);
+}
