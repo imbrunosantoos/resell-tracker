@@ -1885,3 +1885,26 @@ input:focus-visible, select:focus-visible { outline: none; } /* já têm anel pr
   .pagina-topo-acoes { width: 100%; }
   .pagina-topo-acoes .btn { flex: 1; }
 }
+
+/* Últimas vendas na home — lista compacta dentro do painel */
+.painel-link {
+  font-size: 12px; font-weight: 700; text-decoration: none;
+  color: var(--cor-pagina, var(--accent));
+}
+.painel-link:hover { opacity: 0.8; }
+.mini-vendas { display: flex; flex-direction: column; }
+.mini-venda {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 2px; border-top: 1px solid var(--line-soft);
+}
+.mini-vendas .mini-venda:first-child { border-top: none; padding-top: 2px; }
+.mini-venda-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.mini-venda-txt a {
+  color: var(--text); font-size: 13.5px; font-weight: 600; text-decoration: none;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mini-venda-txt a:hover { color: var(--cor-pagina, var(--accent)); }
+.mini-venda-txt small { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mini-venda-vals { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
+.mini-venda-vals b { font-family: var(--mono); font-size: 13.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mini-venda-vals small { font-size: 10.5px; font-family: var(--mono); }

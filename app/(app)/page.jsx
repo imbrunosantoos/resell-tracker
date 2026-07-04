@@ -4,15 +4,15 @@ import Link from "next/link";
 import { useEstado } from "@/app/components/contexto";
 import { useIdioma } from "@/app/components/Idioma";
 import { eur, toNumber } from "@/lib/calculos";
+import { corCategoria } from "@/lib/cores";
 import KpisDashboard from "@/app/components/KpisDashboard";
 import GraficoLucro from "@/app/components/GraficoLucro";
 import ListaParado from "@/app/components/ListaParado";
 
-// Página inicial — dashboard: KPIs em cima; grelha 2:1 com o gráfico de lucro
-// (comparativo do mês no cabeçalho) e, ao lado, o resumo financeiro em linhas
-// compactas + a lista "não vende".
+// Página inicial — dashboard: KPIs em cima; gráfico + resumo financeiro na
+// fila do meio; últimas vendas + "não vende" lado a lado a fechar.
 export default function PaginaInicio() {
-  const { estado, resumo, relatorio, mensal } = useEstado();
+  const { estado, resumo, relatorio, vendas, mensal } = useEstado();
   const { t } = useIdioma();
   const diasAlerta = toNumber(estado.config.diasAlerta) || 30;
 
@@ -29,6 +29,14 @@ export default function PaginaInicio() {
     { c: "#FB7185", rotulo: t("resumo.despesas"), valor: eur(resumo.despesasTotal), classe: resumo.despesasTotal > 0 ? "neg" : "" },
     { c: resumo.lucroReal >= 0 ? "#34D399" : "#FB7185", rotulo: t("resumo.lucroReal"), valor: eur(resumo.lucroReal), classe: sinal(resumo.lucroReal) },
   ];
+
+  // últimas 5 vendas (pendentes + concluídas), mais recentes primeiro
+  const ultimas = [
+    ...vendas.pendentes.map((v) => ({ ...v, pendente: true })),
+    ...vendas.concluidos.map((v) => ({ ...v, pendente: false })),
+  ]
+    .sort((a, b) => (a.item.dataVenda < b.item.dataVenda ? 1 : -1))
+    .slice(0, 5);
 
   return (
     <div className="pagina">
@@ -56,33 +64,62 @@ export default function PaginaInicio() {
             <GraficoLucro dados={mensal} />
           </section>
 
-          <div className="g-col">
-            <section className="painel">
-              <div className="painel-cab">
-                <span className="painel-titulo">{t("home.resumoFinanceiro")}</span>
+          <section className="painel">
+            <div className="painel-cab">
+              <span className="painel-titulo">{t("home.resumoFinanceiro")}</span>
+            </div>
+            <div className="linhas-kv">
+              {linhas.map((l) => (
+                <div className="kv" key={l.rotulo}>
+                  <span className="kv-rotulo" style={{ "--kv-c": l.c }}>{l.rotulo}</span>
+                  <span className={"kv-valor " + (l.classe || "")}>{l.valor}</span>
+                </div>
+              ))}
+              <div className="kv destaque">
+                <span className="kv-rotulo" style={{ "--kv-c": "var(--cor-pagina)" }}>{t("resumo.teuLucro")}</span>
+                <span className="kv-valor">{eur(resumo.meuLucro)}</span>
               </div>
-              <div className="linhas-kv">
-                {linhas.map((l) => (
-                  <div className="kv" key={l.rotulo}>
-                    <span className="kv-rotulo" style={{ "--kv-c": l.c }}>{l.rotulo}</span>
-                    <span className={"kv-valor " + (l.classe || "")}>{l.valor}</span>
+            </div>
+          </section>
+        </div>
+
+        <div className="g-meio">
+          <section className="painel">
+            <div className="painel-cab">
+              <span className="painel-titulo">{t("lucro.ultimasVendas")}</span>
+              <div className="painel-acoes">
+                <Link className="painel-link" href="/lucro">{t("home.verTodas")}</Link>
+              </div>
+            </div>
+            {ultimas.length === 0 ? (
+              <p className="dim pequeno">{t("vendas.semVendasAinda")}</p>
+            ) : (
+              <div className="mini-vendas">
+                {ultimas.map(({ pedido, item, minhaParte, pendente }) => (
+                  <div className="mini-venda" key={item.id}>
+                    <span className="venda-dot" style={{ background: corCategoria(item.categoria) }} />
+                    <span className="mini-venda-txt">
+                      <Link href={`/pedidos/${pedido.id}`}>{item.nome || t("comum.semNome")}</Link>
+                      <small className="dim">{pedido.nome} · {item.dataVenda}</small>
+                    </span>
+                    {pendente && <span className="badge">{t("inv.pendente")}</span>}
+                    <span className="mini-venda-vals">
+                      <b>{eur(item.precoVenda)}</b>
+                      <small className="dim">{t("vendas.tua")} <span className="pos">{eur(minhaParte)}</span></small>
+                    </span>
                   </div>
                 ))}
-                <div className="kv destaque">
-                  <span className="kv-rotulo" style={{ "--kv-c": "var(--cor-pagina)" }}>{t("resumo.teuLucro")}</span>
-                  <span className="kv-valor">{eur(resumo.meuLucro)}</span>
-                </div>
               </div>
-            </section>
+            )}
+          </section>
 
-            <section className="painel">
-              <div className="painel-cab">
-                <span className="painel-titulo">{t("home.naoVende")}</span>
-                <span className="painel-sub">{t("home.parados", { n: diasAlerta })}</span>
-              </div>
-              <ListaParado pedidos={estado.pedidos} diasAlerta={diasAlerta} />
-            </section>
-          </div>
+          <section className="painel">
+            <div className="painel-cab">
+              <span className="painel-titulo">{t("home.naoVende")}</span>
+              <span className="painel-sub">{t("home.parados", { n: diasAlerta })}</span>
+            </div>
+            <ListaParado pedidos={estado.pedidos} diasAlerta={diasAlerta} />
+          </section>
         </div>
       </div>
     </div>
