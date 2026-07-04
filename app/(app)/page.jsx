@@ -3,80 +3,88 @@
 import Link from "next/link";
 import { useEstado } from "@/app/components/contexto";
 import { useIdioma } from "@/app/components/Idioma";
-import { toNumber } from "@/lib/calculos";
-import ResumoCartoes from "@/app/components/ResumoCartoes";
+import { eur, toNumber } from "@/lib/calculos";
 import KpisDashboard from "@/app/components/KpisDashboard";
-import RelatorioMensal from "@/app/components/RelatorioMensal";
 import GraficoLucro from "@/app/components/GraficoLucro";
 import ListaParado from "@/app/components/ListaParado";
-import Icone from "@/app/components/Icones";
 
-// Página inicial — visão geral: cartões, este mês, gráfico de lucro, "não vende".
+// Página inicial — dashboard: KPIs em cima; grelha 2:1 com o gráfico de lucro
+// (comparativo do mês no cabeçalho) e, ao lado, o resumo financeiro em linhas
+// compactas + a lista "não vende".
 export default function PaginaInicio() {
   const { estado, resumo, relatorio, mensal } = useEstado();
   const { t } = useIdioma();
   const diasAlerta = toNumber(estado.config.diasAlerta) || 30;
 
-  // Só conta o que já está na mão: pedidos sem data de chegada ainda estão a
-  // caminho, por isso não entram no stock atual deste atalho.
-  const chegados = estado.pedidos.filter((p) => p.dataChegada);
-  const totalItens = chegados.reduce((n, p) => n + p.itens.length, 0);
-  const emStock = chegados.reduce(
-    (n, p) => n + p.itens.filter((it) => !(Number(it.precoVenda) > 0 && it.dataVenda)).length, 0);
+  const { atual, anterior, variacao } = relatorio;
+  const subiu = variacao >= 0;
+
+  // resumo financeiro em linhas rótulo→valor (cores funcionais nos pontos)
+  const sinal = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "");
+  const linhas = [
+    { c: "#FBBF24", rotulo: t("resumo.investido"), valor: eur(resumo.investido) },
+    { c: "#60A5FA", rotulo: t("resumo.emStock"), valor: eur(resumo.stock) },
+    { c: "#2DD4BF", rotulo: t("resumo.receita"), valor: eur(resumo.receita) },
+    { c: resumo.lucro >= 0 ? "#34D399" : "#FB7185", rotulo: t("resumo.lucroVendas"), valor: eur(resumo.lucro), classe: sinal(resumo.lucro) },
+    { c: "#FB7185", rotulo: t("resumo.despesas"), valor: eur(resumo.despesasTotal), classe: resumo.despesasTotal > 0 ? "neg" : "" },
+    { c: resumo.lucroReal >= 0 ? "#34D399" : "#FB7185", rotulo: t("resumo.lucroReal"), valor: eur(resumo.lucroReal), classe: sinal(resumo.lucroReal) },
+  ];
 
   return (
     <div className="pagina">
       <KpisDashboard estado={estado} resumo={resumo} />
 
-      <section className="bloco">
-        <h2>{t("home.lucroPorMes")}</h2>
-        <GraficoLucro dados={mensal} />
-      </section>
+      <div className="g-main">
+        <div className="g-2">
+          <section className="painel">
+            <div className="painel-cab">
+              <span className="painel-titulo">{t("home.lucroPorMes")}</span>
+              <div className="painel-acoes mes-comp">
+                <Link href={`/vendas/${atual.label}`} className="mes-comp-item" title={t("rel.verVendasMes")}>
+                  <small>{t("home.esteMes")}</small>
+                  <b className={sinal(atual.lucro)}>{eur(atual.lucro)}</b>
+                </Link>
+                <Link href={`/vendas/${anterior.label}`} className="mes-comp-item" title={t("rel.verVendasAnterior")}>
+                  <small>{t("rel.mesAnterior")}</small>
+                  <b>{eur(anterior.lucro)}</b>
+                </Link>
+                <span className={"chip-var " + (subiu ? "pos" : "neg")}>
+                  {subiu ? "▲" : "▼"} {eur(Math.abs(variacao))}
+                </span>
+              </div>
+            </div>
+            <GraficoLucro dados={mensal} />
+          </section>
 
-      <section className="bloco">
-        <h2>{t("home.resumoFinanceiro")}</h2>
-        <ResumoCartoes resumo={resumo} />
-      </section>
+          <div className="g-col">
+            <section className="painel">
+              <div className="painel-cab">
+                <span className="painel-titulo">{t("home.resumoFinanceiro")}</span>
+              </div>
+              <div className="linhas-kv">
+                {linhas.map((l) => (
+                  <div className="kv" key={l.rotulo}>
+                    <span className="kv-rotulo" style={{ "--kv-c": l.c }}>{l.rotulo}</span>
+                    <span className={"kv-valor " + (l.classe || "")}>{l.valor}</span>
+                  </div>
+                ))}
+                <div className="kv destaque">
+                  <span className="kv-rotulo" style={{ "--kv-c": "var(--cor-pagina)" }}>{t("resumo.teuLucro")}</span>
+                  <span className="kv-valor">{eur(resumo.meuLucro)}</span>
+                </div>
+              </div>
+            </section>
 
-      <section className="bloco">
-        <h2>{t("home.esteMes")}</h2>
-        <RelatorioMensal relatorio={relatorio} />
-      </section>
-
-      <section className="bloco">
-        <h2>{t("home.naoVende")} <span className="conta">{t("home.parados", { n: diasAlerta })}</span></h2>
-        <ListaParado pedidos={estado.pedidos} diasAlerta={diasAlerta} />
-      </section>
-
-      <section className="bloco">
-        <h2>{t("home.atalhos")}</h2>
-        <div className="atalhos">
-          <Link href="/pedidos?vista=stock" className="atalho">
-            <span className="atalho-icone"><Icone id="pedidos" /></span>
-            <span className="atalho-texto">
-              <span className="atalho-label">{t("nav.pedidos")}</span>
-              <span className="atalho-sub">{t("home.atalhoStock", { emStock, total: totalItens })}</span>
-            </span>
-            <span className="atalho-seta">›</span>
-          </Link>
-          <Link href="/lucro" className="atalho">
-            <span className="atalho-icone"><Icone id="lucro" /></span>
-            <span className="atalho-texto">
-              <span className="atalho-label">{t("nav.lucro")}</span>
-              <span className="atalho-sub">{t("home.atalhoLucro")}</span>
-            </span>
-            <span className="atalho-seta">›</span>
-          </Link>
-          <Link href="/contas" className="atalho">
-            <span className="atalho-icone"><Icone id="contas" /></span>
-            <span className="atalho-texto">
-              <span className="atalho-label">{t("nav.contas")}</span>
-              <span className="atalho-sub">{t("home.atalhoContas")}</span>
-            </span>
-            <span className="atalho-seta">›</span>
-          </Link>
+            <section className="painel">
+              <div className="painel-cab">
+                <span className="painel-titulo">{t("home.naoVende")}</span>
+                <span className="painel-sub">{t("home.parados", { n: diasAlerta })}</span>
+              </div>
+              <ListaParado pedidos={estado.pedidos} diasAlerta={diasAlerta} />
+            </section>
+          </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

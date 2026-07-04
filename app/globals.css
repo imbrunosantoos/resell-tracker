@@ -1795,3 +1795,114 @@ input:focus-visible, select:focus-visible { outline: none; } /* já têm anel pr
   background: rgba(var(--rgb-pagina, 52, 211, 153), 0.10);
   border-color: color-mix(in srgb, var(--cor-pagina, var(--accent)) 26%, transparent);
 }
+
+/* =========================================================
+   Layout v3 das páginas — painéis definidos em grelhas de
+   2 colunas no desktop (colapsam a 1 coluna em ecrãs estreitos).
+   ========================================================= */
+.g-main { display: grid; gap: 18px; margin-top: 20px; }
+.g-2 { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.g-meio { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.g-col { display: grid; gap: 18px; align-content: start; min-width: 0; }
+@media (max-width: 1099px) { .g-2, .g-meio { grid-template-columns: 1fr; } }
+
+/* Painel: superfície de vidro com cabeçalho próprio (título + sub + ações) */
+.painel {
+  min-width: 0;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0) 44%),
+    var(--vidro);
+  -webkit-backdrop-filter: var(--vidro-blur);
+          backdrop-filter: var(--vidro-blur);
+  border: 1px solid var(--vidro-borda);
+  border-radius: var(--radius);
+  box-shadow: var(--sombra);
+  padding: 18px 20px;
+  animation: surge 0.5s ease backwards;
+}
+.painel-cab {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.painel-titulo {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.9px;
+}
+.painel-titulo::before {
+  content: ""; width: 16px; height: 2px; border-radius: 2px; flex-shrink: 0;
+  background: linear-gradient(90deg, var(--cor-pagina, var(--accent)), transparent);
+  box-shadow: 0 0 8px rgba(var(--rgb-pagina, 52, 211, 153), 0.5);
+}
+.painel-sub { font-size: 12px; color: var(--dim); font-weight: 500; }
+.painel-sub a { color: var(--cor-pagina, var(--accent)); }
+.painel-acoes { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* Superfícies de dados que já são vidro perdem a "caixa" dentro de um painel
+   (evita vidro dentro de vidro) */
+.painel .grafico, .painel .caixa, .painel .defin-lista {
+  background: none; border: none; box-shadow: none; padding: 0;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.painel .defin-linha { padding-left: 2px; padding-right: 2px; }
+
+/* Lista compacta rótulo → valor (resumo financeiro no dashboard) */
+.linhas-kv { display: flex; flex-direction: column; }
+.kv {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 9px 2px; border-top: 1px solid var(--line-soft);
+}
+.linhas-kv .kv:first-child { border-top: none; padding-top: 2px; }
+.kv-rotulo { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.kv-rotulo::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  background: var(--kv-c, var(--dim));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--kv-c, transparent) 60%, transparent);
+}
+.kv-valor { font-family: var(--mono); font-size: 14.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.kv.destaque {
+  margin-top: 10px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--cor-pagina, var(--accent)) 40%, transparent);
+  border-radius: var(--radius-sm);
+  background: rgba(var(--rgb-pagina, 52, 211, 153), 0.08);
+}
+.kv.destaque .kv-valor { font-size: 19px; color: var(--cor-pagina, var(--accent)); }
+
+/* Comparativo do mês embutido no cabeçalho do painel do gráfico */
+.mes-comp { display: flex; align-items: center; gap: 16px; }
+.mes-comp-item { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; text-decoration: none; }
+.mes-comp-item small { font-size: 10px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; }
+.mes-comp-item b { font-family: var(--mono); font-size: 15px; color: var(--text); font-variant-numeric: tabular-nums; }
+.mes-comp-item b.pos { color: var(--pos); }
+.mes-comp-item b.neg { color: var(--neg); }
+.mes-comp-item:hover small { color: var(--muted); }
+.chip-var {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--mono); font-size: 12px; font-weight: 700;
+  padding: 4px 10px; border-radius: 99px;
+}
+.chip-var.pos { color: var(--pos); background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.3); }
+.chip-var.neg { color: var(--neg); background: rgba(251, 113, 133, 0.12); border: 1px solid rgba(251, 113, 133, 0.3); }
+
+/* Barra de topo das páginas (segmentado + ações à direita) */
+.pagina-topo {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.pagina-topo-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Modal largo (formulários de criação) */
+.modal.modal-largo { max-width: 760px; }
+.modal-cab-x { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.modal-cab-x h3 { font-size: 17px; }
+.modal .form-novo {
+  background: none; border: none; padding: 0;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+
+/* densidade no telemóvel */
+@media (max-width: 600px) {
+  .painel { padding: 14px; }
+  .g-main, .g-2, .g-meio, .g-col { gap: 14px; }
+  .pagina-topo-acoes { width: 100%; }
+  .pagina-topo-acoes .btn { flex: 1; }
+}
