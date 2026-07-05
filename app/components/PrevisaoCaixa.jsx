@@ -3,10 +3,11 @@
 import { eur } from "@/lib/calculos";
 import { useIdioma } from "./Idioma";
 
-// Painel de previsão de caixa (aba Vendas): o que está a entrar (vendas
-// pendentes, por horizonte estimado) e o capital ainda preso (em trânsito / em
-// stock). Os horizontes são estimativa — ver nota no rodapé do painel.
-export default function PrevisaoCaixa({ previsao }) {
+// Painel de previsão de caixa (aba Vendas): saldo de caixa acumulado (o que
+// voltou menos o que saiu — recuperar capital ≠ lucrar), o que está a entrar
+// (vendas pendentes, por horizonte estimado) e o capital ainda preso (em
+// trânsito / em stock). Os horizontes são estimativa — nota no rodapé.
+export default function PrevisaoCaixa({ previsao, caixa }) {
   const { t } = useIdioma();
   const { aReceber, emTransito, emStock, baldes } = previsao;
   const maxBalde = Math.max(1, ...baldes.map((b) => b.valor));
@@ -20,6 +21,15 @@ export default function PrevisaoCaixa({ previsao }) {
 
   return (
     <div className="caixa">
+      {caixa && (
+        <div className="caixa-saldo">
+          <span className="caixa-label">{t("caixa.disponivel")}</span>
+          <span className={"caixa-saldo-valor " + (caixa.saldo >= 0 ? "pos" : "neg")}>{eur(caixa.saldo)}</span>
+          <span className="caixa-saldo-formula">
+            {t("caixa.formula", { a: eur(caixa.recebido), b: eur(caixa.investido), c: eur(caixa.despesas) })}
+          </span>
+        </div>
+      )}
       <div className="caixa-resumo">
         {resumo.map((r) => (
           <div className={"caixa-num caixa-" + r.c} key={r.label}>

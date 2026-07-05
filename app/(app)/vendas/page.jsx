@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useEstado } from "@/app/components/contexto";
 import { useIdioma } from "@/app/components/Idioma";
-import { eur, previsaoCaixa } from "@/lib/calculos";
+import { eur, previsaoCaixa, caixaDisponivel } from "@/lib/calculos";
 import { corCategoria } from "@/lib/cores";
 import ModalData from "@/app/components/ModalData";
 import PrevisaoCaixa from "@/app/components/PrevisaoCaixa";
@@ -18,6 +18,7 @@ export default function PaginaVendas() {
   const [vista, setVista] = useState("pendentes"); // "pendentes" | "concluidos"
   const [recebendo, setRecebendo] = useState(null); // { pedido, item } a marcar recebido
   const previsao = useMemo(() => previsaoCaixa(estado), [estado]);
+  const caixa = useMemo(() => caixaDisponivel(estado), [estado]);
 
   return (
     <div className="pagina">
@@ -101,7 +102,7 @@ export default function PaginaVendas() {
             <div className="painel-cab">
               <span className="painel-titulo">{t("caixa.titulo")}</span>
             </div>
-            <PrevisaoCaixa previsao={previsao} />
+            <PrevisaoCaixa previsao={previsao} caixa={caixa} />
           </section>
         </div>
       </div>
