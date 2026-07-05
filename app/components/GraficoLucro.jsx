@@ -43,16 +43,29 @@ function Toolttip({ active, payload, label }) {
   );
 }
 
+// Ponto da série: cheio nos meses fechados, OCO (tracejado) no mês em curso.
+function pontoMes(props) {
+  const { cx, cy, payload, index } = props;
+  if (payload?.emCurso) {
+    return <circle key={"p" + index} cx={cx} cy={cy} r={4} fill="#0E1116" stroke={ACCENT} strokeWidth={2} strokeDasharray="2.5 2" />;
+  }
+  return <circle key={"p" + index} cx={cx} cy={cy} r={2.6} fill={ACCENT} />;
+}
+
 export default function GraficoLucro({ dados }) {
   const { t, idioma } = useIdioma();
   const [montado, setMontado] = useState(false);
   useEffect(() => setMontado(true), []);
   const locale = idioma === "en" ? "en-GB" : idioma === "es" ? "es-ES" : "pt-PT";
 
+  // o mês em curso é marcado (ponto oco + linha tracejada) — não é um mês fechado
+  const mesAtual = new Date().toISOString().slice(0, 7);
   const data = (dados ?? []).map((d) => ({
     mes: rotuloMes(d.mes, locale),
     lucro: Math.round(d.meuLucro * 100) / 100,
+    emCurso: d.mes === mesAtual,
   }));
+  const rotuloEmCurso = data.find((d) => d.emCurso)?.mes;
   if (data.length === 0 || data.every((d) => d.lucro === 0)) {
     return <div className="grafico grafico-vazio">{t("home.semDados")}</div>;
   }
@@ -74,10 +87,16 @@ export default function GraficoLucro({ dados }) {
             <XAxis dataKey="mes" tick={{ fill: "#939BAA", fontSize: 11 }} axisLine={false} tickLine={false} dy={4} interval="preserveStartEnd" />
             <YAxis tick={{ fill: "#5C6675", fontSize: 11 }} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => "€" + v} />
             <ReferenceLine y={0} stroke="rgba(255,255,255,0.16)" />
+            {rotuloEmCurso && (
+              <ReferenceLine
+                x={rotuloEmCurso} stroke="rgba(255,255,255,0.16)" strokeDasharray="4 4"
+                label={{ value: t("grafico.emCurso"), position: "insideBottom", fill: "#5C6675", fontSize: 9.5 }}
+              />
+            )}
             <Tooltip cursor={{ stroke: "rgba(255,255,255,0.14)", strokeWidth: 1 }} content={<Toolttip />} />
             <Area
               type="monotone" dataKey="lucro" stroke={ACCENT} strokeWidth={2.5}
-              fill="url(#lucroGrad)" dot={{ r: 2.6, fill: ACCENT, strokeWidth: 0 }} activeDot={{ r: 4.5 }}
+              fill="url(#lucroGrad)" dot={pontoMes} activeDot={{ r: 4.5 }}
             >
               <LabelList dataKey="lucro" content={rotuloMono(corSinal)} />
             </Area>

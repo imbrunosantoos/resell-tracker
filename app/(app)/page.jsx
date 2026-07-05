@@ -1,9 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { useEstado } from "@/app/components/contexto";
 import { useIdioma } from "@/app/components/Idioma";
-import { eur, toNumber } from "@/lib/calculos";
+import { eur, toNumber, caixaDisponivel } from "@/lib/calculos";
 import { corCategoria } from "@/lib/cores";
 import KpisDashboard from "@/app/components/KpisDashboard";
 import GraficoLucro from "@/app/components/GraficoLucro";
@@ -16,8 +17,9 @@ export default function PaginaInicio() {
   const { t } = useIdioma();
   const diasAlerta = toNumber(estado.config.diasAlerta) || 30;
 
-  const { atual, anterior, variacao } = relatorio;
+  const { atual, anterior, anteriorMesmoPeriodo, variacao, dia } = relatorio;
   const subiu = variacao >= 0;
+  const caixa = useMemo(() => caixaDisponivel(estado), [estado]);
 
   // resumo financeiro em linhas rótulo→valor (cores funcionais nos pontos)
   const sinal = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "");
@@ -29,6 +31,7 @@ export default function PaginaInicio() {
     { c: resumo.lucro >= 0 ? "#34D399" : "#FB7185", rotulo: t("resumo.lucroVendas"), valor: eur(resumo.lucro), classe: sinal(resumo.lucro), href: "/lucro" },
     { c: "#FB7185", rotulo: t("resumo.despesas"), valor: eur(resumo.despesasTotal), classe: resumo.despesasTotal > 0 ? "neg" : "", href: "/despesas" },
     { c: resumo.lucroReal >= 0 ? "#34D399" : "#FB7185", rotulo: t("resumo.lucroReal"), valor: eur(resumo.lucroReal), classe: sinal(resumo.lucroReal), href: "/lucro" },
+    { c: "#22D3EE", rotulo: t("caixa.disponivel"), valor: eur(caixa.saldo), classe: sinal(caixa.saldo), href: "/vendas" },
   ];
 
   // últimas 5 vendas (pendentes + concluídas), mais recentes primeiro
@@ -50,14 +53,14 @@ export default function PaginaInicio() {
               <span className="painel-titulo">{t("home.lucroPorMes")}</span>
               <div className="painel-acoes mes-comp">
                 <Link href={`/vendas/${atual.label}`} className="mes-comp-item" title={t("rel.verVendasMes")}>
-                  <small>{t("home.esteMes")}</small>
+                  <small>{t("home.esteMes")} · {t("rel.dia", { d: dia })}</small>
                   <b className={sinal(atual.lucro)}>{eur(atual.lucro)}</b>
                 </Link>
-                <Link href={`/vendas/${anterior.label}`} className="mes-comp-item" title={t("rel.verVendasAnterior")}>
-                  <small>{t("rel.mesAnterior")}</small>
-                  <b>{eur(anterior.lucro)}</b>
+                <Link href={`/vendas/${anterior.label}`} className="mes-comp-item" title={t("rel.mesCompleto", { v: eur(anterior.lucro) })}>
+                  <small>{t("rel.mesAnterior")} · {t("rel.ateDia", { d: dia })}</small>
+                  <b>{eur(anteriorMesmoPeriodo.lucro)}</b>
                 </Link>
-                <span className={"chip-var " + (subiu ? "pos" : "neg")}>
+                <span className={"chip-var " + (subiu ? "pos" : "neg")} title={t("rel.faceMesPassado")}>
                   {subiu ? "▲" : "▼"} {eur(Math.abs(variacao))}
                 </span>
               </div>

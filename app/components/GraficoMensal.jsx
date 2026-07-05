@@ -57,12 +57,19 @@ export default function GraficoMensal({ dados }) {
   const rotulo = fazRotulo(locale);
 
   const semDados = !dados?.length || dados.every((d) => !d.recebido && !d.investido && !d.meuLucro);
+  // o mês em curso fica translúcido com contorno tracejado — não é um mês fechado
+  const mesAtual = new Date().toISOString().slice(0, 7);
   const data = (dados ?? []).map((d) => ({
     mes: rotulo(d.mes),
     lucro: Math.round(d.meuLucro * 100) / 100,
     recebido: Math.round(d.recebido * 100) / 100,
     investido: Math.round(d.investido * 100) / 100,
+    emCurso: d.mes === mesAtual,
   }));
+  // props de célula: normal cheia; mês em curso translúcido + tracejado
+  const celula = (cor, d) => (d.emCurso
+    ? { fill: cor, fillOpacity: 0.4, stroke: cor, strokeWidth: 1.5, strokeDasharray: "4 3" }
+    : { fill: cor });
 
   const eixos = (
     <>
@@ -91,7 +98,7 @@ export default function GraficoMensal({ dados }) {
               <ReferenceLine y={0} stroke="rgba(255,255,255,0.16)" />
               <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<Tip />} />
               <Bar dataKey="lucro" name={t("vendas.lucro")} radius={[6, 6, 0, 0]} maxBarSize={46}>
-                {data.map((d, i) => <Cell key={i} fill={d.lucro >= 0 ? POS : NEG} />)}
+                {data.map((d, i) => <Cell key={i} {...celula(d.lucro >= 0 ? POS : NEG, d)} />)}
                 <LabelList dataKey="lucro" content={rotuloMono(corSinal)} />
               </Bar>
             </BarChart>
@@ -101,9 +108,11 @@ export default function GraficoMensal({ dados }) {
               <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<Tip />} />
               <Legend wrapperStyle={{ fontSize: 12 }} iconType="circle" />
               <Bar dataKey="recebido" name={t("grafico.recebido")} fill={POS} radius={[5, 5, 0, 0]} maxBarSize={30}>
+                {data.map((d, i) => <Cell key={i} {...celula(POS, d)} />)}
                 <LabelList dataKey="recebido" content={rotuloMono(POS)} />
               </Bar>
               <Bar dataKey="investido" name={t("grafico.investido")} fill={INV} radius={[5, 5, 0, 0]} maxBarSize={30}>
+                {data.map((d, i) => <Cell key={i} {...celula(INV, d)} />)}
                 <LabelList dataKey="investido" content={rotuloMono(INV)} />
               </Bar>
             </BarChart>
