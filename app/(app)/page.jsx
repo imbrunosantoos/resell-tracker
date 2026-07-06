@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
 import Link from "next/link";
 import { useEstado } from "@/app/components/contexto";
 import { useIdioma } from "@/app/components/Idioma";
-import { eur, toNumber, caixaDisponivel } from "@/lib/calculos";
+import { eur, toNumber } from "@/lib/calculos";
 import { corCategoria } from "@/lib/cores";
 import KpisDashboard from "@/app/components/KpisDashboard";
 import GraficoLucro from "@/app/components/GraficoLucro";
@@ -19,7 +18,6 @@ export default function PaginaInicio() {
 
   const { atual, anterior, anteriorMesmoPeriodo, variacao, dia } = relatorio;
   const subiu = variacao >= 0;
-  const caixa = useMemo(() => caixaDisponivel(estado), [estado]);
 
   // resumo financeiro em linhas rótulo→valor (cores funcionais nos pontos)
   const sinal = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "");
@@ -31,7 +29,6 @@ export default function PaginaInicio() {
     { c: resumo.lucro >= 0 ? "#34D399" : "#FB7185", rotulo: t("resumo.lucroVendas"), valor: eur(resumo.lucro), classe: sinal(resumo.lucro), href: "/lucro" },
     { c: "#FB7185", rotulo: t("resumo.despesas"), valor: eur(resumo.despesasTotal), classe: resumo.despesasTotal > 0 ? "neg" : "", href: "/despesas" },
     { c: resumo.lucroReal >= 0 ? "#34D399" : "#FB7185", rotulo: t("resumo.lucroReal"), valor: eur(resumo.lucroReal), classe: sinal(resumo.lucroReal), href: "/lucro" },
-    { c: "#22D3EE", rotulo: t("caixa.disponivel"), valor: eur(caixa.saldo), classe: sinal(caixa.saldo), href: "/vendas" },
   ];
 
   // últimas 5 vendas (pendentes + concluídas), mais recentes primeiro

@@ -1920,18 +1920,3 @@ a.kv:hover { background: rgba(255, 255, 255, 0.035); }
 a.kv:hover::after { opacity: 1; }
 a.kv.destaque::after { right: 8px; }
 
-/* Saldo de caixa acumulado (topo do painel de previsão, aba Vendas) */
-.caixa-saldo {
-  display: flex; flex-direction: column; gap: 3px;
-  padding: 13px 15px; margin-bottom: 16px;
-  border: 1px solid color-mix(in srgb, var(--cor-pagina, var(--accent)) 35%, transparent);
-  border-radius: var(--radius-sm);
-  background: rgba(var(--rgb-pagina, 45, 212, 191), 0.07);
-}
-.caixa-saldo-valor {
-  font-family: var(--mono); font-size: 27px; font-weight: 700;
-  letter-spacing: -0.5px; font-variant-numeric: tabular-nums;
-}
-.caixa-saldo-valor.pos { color: var(--pos); }
-.caixa-saldo-valor.neg { color: var(--neg); }
-.caixa-saldo-formula { font-size: 11px; font-family: var(--mono); color: var(--dim); }
