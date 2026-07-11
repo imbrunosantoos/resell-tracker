@@ -96,10 +96,12 @@ npm start
 To use the app on your phone without a domain or HTTPS, on the same Wi-Fi:
 
 1. Copy `.env.example` to `.env.local` and set `COOKIE_INSEGURO=1` (without this, in production the browser rejects the session cookie over HTTP and login won't work).
-2. Start the server listening on the whole network:
+2. Start the server listening on the whole network (`::` binds IPv6 **and**
+   IPv4 — it owns the port on both stacks, so `localhost` can never be
+   hijacked by another dev server squatting on the other stack):
    ```bash
    npm run build
-   npx next start -H 0.0.0.0
+   npx next start -H ::
    ```
 3. Find the computer's IP (e.g. `ipconfig getifaddr en0` on a Mac) and on the phone open `http://<computer-ip>:3000`.
 
